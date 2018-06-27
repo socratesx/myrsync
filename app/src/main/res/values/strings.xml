@@ -1,0 +1,148 @@
+<resources>
+    <string name="app_name" translatable="false">MySync</string>
+    <string name="settings">Settings</string>
+    <string name="button_save">Save</string>
+    <string name="srv_settings">Server Settings</string>
+    <string name="loc_settings">Local Settings</string>
+    <string name="log">Log File</string>
+    <string name="opt">Rsync Options</string>
+    <string name="path">Local Path</string>
+    <string name="Net_ssid">Network SSID</string>
+    <string name="srv_ip">Server IP Address</string>
+    <string name="srv_mod">Rsync Server Mod</string>
+    <string name="rsync_user">Rsync User</string>
+    <string name="srv_port">Port</string>
+    <string name="add_but">Add</string>
+    <string name="add_path">Add Path</string>
+    <string name="get_ssid">Get Current SSID</string>
+    <string name="about">This application is just a wrapper for rsync. This program may be useful for people that want to implement a simple rsync solution in their LAN. The interface is just a front-end for the rsync command that runs in the background.</string>
+    <string name="how_to_use">Enter the rsync server details.</string>
+    <string name="rs_opt">Rsync Options</string>
+    <string name="a">-a</string>
+    <string name="v">-v</string>
+    <string name="z">-z</string>
+    <string name="r">-r</string>
+    <string name="help">How to use this Application\n 1.Server Settings:\n\ta.Server IP Address: Fill in the server\'s listening LAN address (e.g 192.168.1.100). Next, type the listening port (default 873).
+        If you leave this field empty the default port will be used. \n\tb.Rsync User: Enter the user that is permitted to connect to the rsync server.
+        \n\tc.Rsync Server Mod: Type the name of the rsync module that you want to connect to. \n\n2.Local Settings: \n\ta.
+        Add Path: Select the folder that you want to sync with the rsync server. \n\n3. Select the rsync options</string>
+    <string name="rsync_options">\n\t -v, --verbose increase verbosity \n\t -q, --quiet suppress non-error messages \n\t -a, --archive archive mode; equals -rlptgoD (no -H,-A,-X) \n\t
+        -r, --recursive recurse into directories \n\t -u, --update skip files that are newer on the receiver \n\t\t\t --inplace update destination files in-place \n\t\t\t
+        --append append data onto shorter files \n\t\t\t --append-verify \n\t\t\t --append w/old data in file checksum \n\t -p, --perms preserve permissions \n\t -E,
+        --executability preserve executability \n\t -A, --acls preserve ACLs (implies -p) \n\t -X, --xattrs preserve extended attributes \n\t -o, --owner preserve owner (super-user only) \n\t -g,
+        --group preserve group \n\t\t\t --devices preserve device files (super-user only) \n\t\t\t --specials preserve special files \n\t -D same as --devices --specials \n\t -t,
+        --times preserve modification times \n\t -S, --sparse turn sequences of nulls into sparse blocks \n\t -n, --dry-run perform a trial run with no changes made \n\t -W,
+        --whole-file copy files whole (w/o delta-xfer algorithm) \n\t -e, --rsh=COMMAND specify the remote shell to use \n\t\t\t --rsync-path=PROGRAM specify the rsync to run on remote machine \n\t\t\t
+        --existing skip creating new files on receiver \n\t\t\t --ignore-existing skip updating files that exist on receiver \n\t\t\t --remove-source-files sender removes synchronized files (non-dir) \n\t\t\t
+        --del an alias for \n\t\t\t --delete-during \n\t\t\t --delete delete extraneous files from dest dirs \n\t\t\t --delete-before receiver deletes before xfer, not during \n\t\t\t
+        --delete-during receiver deletes during the transfer \n\t\t\t --delete-delay find deletions during, delete after \n\t\t\t --delete-after receiver deletes after transfer, not during \n\t\t\t
+        --delete-excluded also delete excluded files from dest dirs \n\t\t\t --ignore-missing-args ignore missing source args without error \n\t\t\t
+        --delete-missing-args delete missing source args from destination \n\t\t\t --ignore-errors delete even if there are I/O errors \n\t\t\t --force force deletion of dirs even if not empty \n\t\t\t
+        --max-delete=NUM don\'t delete more than NUM files \n\t\t\t --max-size=SIZE don\'t transfer any file larger than SIZE \n\t\t\t --min-size=SIZE don\'t transfer any file smaller than SIZE \n\t\t\t
+        --partial keep partially transferred files \n\t\t\t --partial-dir=DIR put a partially transferred file into DIR \n\t\t\t --delay-updates put all updated files into place at end \n-m, \n\t\t\t
+        --prune-empty-dirs prune empty directory chains from file-list \n\t\t\t --numeric-ids don\'t map uid/gid values by user/group name \n\t\t\t --usermap=STRING custom username mapping \n\t\t\t
+        --groupmap=STRING custom groupname mapping \n\t\t\t --chown=USER:GROUP simple username/groupname mapping \n\t\t\t --timeout=SECONDS set I/O timeout in seconds \n\t\t\t
+        --contimeout=SECONDS set daemon connection timeout in seconds</string>
+    <string name="save_and_view_command">Save and View Command</string>
+    <string name="save_configuration">Save Configuration</string>
+    <string name="generated_rsync_command">Generated Rsync Command:</string>
+    <string name="title_activity_add_config">Add Rsync Configuration</string>
+    <string name="save">Save</string>
+    <string name="view_command">View Command</string>
+    <string name="edit_config">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="no_data">No Configurations</string>
+    <string name="no_schedulers">No Schedulers</string>
+    <string name="Monday">M</string>
+    <string name="Tuesday">T</string>
+    <string name="Wednesday">W</string>
+    <string name="Thursday">T</string>
+    <string name="Friday">F</string>
+    <string name="Saturday">S</string>
+    <string name="Sunday">S</string>
+    <string name="create_schedule">Create Schedule</string>
+    <string name="app_about">About</string>
+    <string name="exit">Exit</string>
+    <string name="app_help">Help</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_title_social_recommendations">Enable social recommendations</string>
+    <string name="pref_description_social_recommendations">Recommendations for people to contact
+        based on your message history
+    </string>
+
+    <string name="pref_title_display_name">Display name</string>
+    <string name="pref_default_display_name">John Smith</string>
+
+    <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
+    <string-array name="pref_example_list_titles">
+        <item>Always</item>
+        <item>When possible</item>
+        <item>Never</item>
+    </string-array>
+    <string-array name="pref_example_list_values">
+        <item>1</item>
+        <item>0</item>
+        <item>-1</item>
+    </string-array>
+
+    <!-- Example settings for Data & Sync -->
+    <string name="pref_header_data_sync">Data &amp; sync</string>
+
+    <string name="pref_title_sync_frequency">Sync frequency</string>
+    <string-array name="pref_sync_frequency_titles">
+        <item>15 minutes</item>
+        <item>30 minutes</item>
+        <item>1 hour</item>
+        <item>3 hours</item>
+        <item>6 hours</item>
+        <item>Never</item>
+    </string-array>
+    <string-array name="pref_sync_frequency_values">
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>180</item>
+        <item>360</item>
+        <item>-1</item>
+    </string-array>
+
+    <string-array name="list_preference_entries">
+        <item>Entry 1</item>
+        <item>Entry 2</item>
+        <item>Entry 3</item>
+    </string-array>
+
+    <string-array name="list_preference_entry_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string-array name="multi_select_list_preference_default_value" />
+
+    <string name="pref_title_system_sync_settings">System sync settings</string>
+
+    <!-- Example settings for Notifications -->
+    <string name="pref_header_notifications">Notifications</string>
+
+    <string name="pref_title_new_message_notifications">New message notifications</string>
+
+    <string name="pref_title_ringtone">Ringtone</string>
+    <string name="pref_ringtone_silent">Silent</string>
+
+    <string name="pref_title_vibrate">Vibrate</string>
+    <string name="notifications">Notifications</string>
+    <string name="display_a_notification_when_an_rsync_job_starts">Display a Notification When an Rsync Job Starts</string>
+    <string name="notifications_off">Notifications Off</string>
+    <string name="notifications_on">Notifications On</string>
+</resources>

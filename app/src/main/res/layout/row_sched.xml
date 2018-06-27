@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:backgroundTint="?android:attr/textColorTertiary"
+    tools:backgroundTintMode="src_over">
+
+    <TextView
+        android:id="@+id/tv_wednesday"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/rectangle_transp"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="W"
+        android:textSize="8sp"
+        app:layout_constraintStart_toEndOf="@+id/tv_tuesday"
+        app:layout_constraintTop_toTopOf="@+id/tv_tuesday" />
+
+    <TextView
+        android:id="@+id/tv_thursday"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="T"
+        android:textSize="8sp"
+        android:background="@drawable/rectangle_transp"
+        app:layout_constraintStart_toEndOf="@+id/tv_wednesday"
+        app:layout_constraintTop_toTopOf="@+id/tv_wednesday" />
+
+    <TextView
+        android:id="@+id/tv_friday"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="F"
+        android:textSize="8sp"
+        android:background="@drawable/rectangle_transp"
+        app:layout_constraintStart_toEndOf="@+id/tv_thursday"
+        app:layout_constraintTop_toTopOf="@+id/tv_thursday" />
+
+    <TextView
+        android:id="@+id/tv_tuesday"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="T"
+        android:textSize="8sp"
+        android:background="@drawable/rectangle_transp"
+        app:layout_constraintStart_toEndOf="@+id/tv_monday"
+        app:layout_constraintTop_toTopOf="@+id/tv_monday" />
+
+    <TextView
+        android:id="@+id/tv_sched_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical|center_horizontal"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_monday"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="8dp"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="M"
+        android:textSize="8dp"
+        android:background="@drawable/rectangle_transp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tv_sched_repeat"
+        app:layout_constraintStart_toEndOf="@+id/tv_sched_repeat" />
+
+    <TextView
+        android:id="@+id/tv_saturday"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/rectangle_transp"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="S"
+        android:textSize="8sp"
+        app:layout_constraintStart_toEndOf="@+id/tv_friday"
+        app:layout_constraintTop_toTopOf="@+id/tv_friday" />
+
+    <TextView
+        android:id="@+id/tv_sunday"
+        android:layout_width="15dp"
+        android:layout_height="15dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/rectangle_transp"
+        android:gravity="center_vertical|center_horizontal"
+        android:text="S"
+        android:textSize="8sp"
+        app:layout_constraintStart_toEndOf="@+id/tv_saturday"
+        app:layout_constraintTop_toTopOf="@+id/tv_saturday" />
+
+    <TextView
+        android:id="@+id/tv_sched_repeat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Repeat:"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_sched_name" />
+
+    <ImageButton
+        android:id="@+id/bt_delete_sched"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_delete"
+        android:onClick="sched_clickHandler"/>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Start Time:"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_sched_repeat" />
+
+    <TextView
+        android:id="@+id/tv_sched_showtime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textSize="12sp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/textView3"
+        app:layout_constraintStart_toEndOf="@+id/textView3" />
+
+    <ImageButton
+        android:id="@+id/bt_edit_sched"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="@+id/textView3"
+        app:layout_constraintEnd_toEndOf="@+id/tv_sunday"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/tv_sched_name"
+        app:srcCompat="@android:color/transparent"
+        android:onClick="sched_clickHandler"/>
+</android.support.constraint.ConstraintLayout>

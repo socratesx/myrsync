@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/status"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tv_config_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Configuration:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_get_config_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tv_config_status"
+        app:layout_constraintStart_toEndOf="@+id/tv_config_status" />
+
+    <TextView
+        android:id="@+id/tv_scheduler_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Scheduler:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_config_status" />
+
+    <TextView
+        android:id="@+id/tv_get_scheduler_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tv_scheduler_status"
+        app:layout_constraintStart_toEndOf="@+id/tv_scheduler_status" />
+
+    <TextView
+        android:id="@+id/tv_get_nextrun"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_get_lastrun"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_get_nextrun" />
+
+    <TextView
+        android:id="@+id/tv_next_run"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="Next Run:"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tv_get_nextrun"
+        app:layout_constraintEnd_toStartOf="@+id/tv_get_nextrun" />
+
+    <TextView
+        android:id="@+id/Last_Run"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:text="Last Run:"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tv_get_lastrun"
+        app:layout_constraintEnd_toStartOf="@+id/tv_get_lastrun" />
+
+    <TextView
+        android:id="@+id/tv_result_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Last Result:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status" />
+
+    <TextView
+        android:id="@+id/tv_get_result"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Never Run"
+        app:layout_constraintBaseline_toBaselineOf="@+id/tv_result_status"
+        app:layout_constraintStart_toEndOf="@+id/tv_result_status" />
+
+    <ImageView
+        android:id="@+id/img_error_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/transparent"
+        android:tint="@color/red"
+        android:visibility="invisible"
+        app:layout_constraintStart_toEndOf="@+id/tv_get_result"
+        app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status"
+        app:srcCompat="@android:drawable/stat_notify_error" />
+
+    <ImageView
+        android:id="@+id/img_success_status"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:tint="@color/green"
+        android:visibility="invisible"
+        app:layout_constraintStart_toEndOf="@+id/tv_get_result"
+        app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status"
+        app:srcCompat="@drawable/ok_icon" />
+</android.support.constraint.ConstraintLayout>
