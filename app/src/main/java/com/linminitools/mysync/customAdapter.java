@@ -105,7 +105,8 @@ class customAdapter extends BaseAdapter {
                     }
                     tv_conf_name.setText(conf.name);
                     tv_sched_name.setText(sched.name);
-                    tv_next_run.setText(sched.getNextAlarm());
+                    if (context.getSharedPreferences("CMD",MODE_PRIVATE).getBoolean("is_running",false)) tv_next_run.setText("Running");
+                    else tv_next_run.setText(sched.getNextAlarm());
 
                     SharedPreferences result_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
                     Log.d("SHAREDPREFS", "last_result_" + String.valueOf(conf.id));

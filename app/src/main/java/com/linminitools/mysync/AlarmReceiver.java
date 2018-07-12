@@ -7,14 +7,27 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
+import android.os.Parcel;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.preference.Preference;
+import android.preference.PreferenceManager;
+import android.preference.RingtonePreference;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.TimePicker;
 
+import java.net.URI;
 import java.util.Calendar;
 
+import javax.xml.transform.URIResolver;
+
 import static android.content.Context.MODE_PRIVATE;
+import static android.support.v4.app.NotificationCompat.*;
 import static com.linminitools.mysync.MainActivity.configs;
 import static com.linminitools.mysync.MainActivity.schedulers;
 import static com.linminitools.mysync.MainActivity.settings;
@@ -27,11 +40,13 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         SharedPreferences sched_prefs = ctx.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
-        SharedPreferences settings_prefs = ctx.getSharedPreferences("settings",MODE_PRIVATE);
+        //SharedPreferences settings_prefs = ctx.getSharedPreferences("settings",MODE_PRIVATE);
+
+        SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 
         configs.clear();
         schedulers.clear();
-        settings.put("Notifications",settings_prefs.getBoolean("Notifications",true));
+        //settings.put("Notifications",settings_prefs.getBoolean("Notifications",true));
 
         for(int c=1; c<100;c++){
             if (config_prefs.getString("rs_ip_"+String.valueOf(c),"").isEmpty()){
@@ -82,41 +97,64 @@ public class AlarmReceiver extends BroadcastReceiver {
             String message;
             try {
                 RS_Configuration c = configs.get(pos);
-                c.executeConfig();
+                c.executeConfig(ctx);
                 message = "Rsync configuration " + c.name + " started on " + Calendar.getInstance().getTime().toString();
                 }catch (IndexOutOfBoundsException e){
                 message = "Rsync Configuration Not Found! Job is Cancelled";
                 }
 
-            if (settings.get("Notifications")) {
+            if (set_prefs.getBoolean("notifications",true)) {
+
+                Uri ring_path=Uri.parse(set_prefs.getString("ringtone", RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI));
+                Ringtone ring = RingtoneManager.getRingtone(ctx,ring_path);
+
+
+
                 if (Build.VERSION.SDK_INT < 26) {
-                    NotificationCompat.Builder not = new NotificationCompat.Builder(ctx);
+                    Builder not = new Builder(ctx);
                     not.setContentTitle("MYSYNC Status");
                     not.setSmallIcon(R.mipmap.ic_launcher);
-                    not.setStyle(new NotificationCompat.BigTextStyle().bigText(message));
+                    not.setStyle(new BigTextStyle().bigText(message));
                     not.setContentText(message);
                     Notification n = not.build();
 
                     NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                     nm.notify(1, n);
+
                 } else {
-                    NotificationCompat.Builder not = new NotificationCompat.Builder(ctx, NotificationChannel.DEFAULT_CHANNEL_ID);
+                    Builder not = new Builder(ctx, NotificationChannel.DEFAULT_CHANNEL_ID);
 
                     not.setContentTitle("MYSYNC Status");
-                    not.setStyle(new NotificationCompat.BigTextStyle().bigText(message));
+                    not.setStyle(new BigTextStyle().bigText(message));
                     not.setContentText(message);
                     not.setSmallIcon(R.mipmap.ic_launcher);
                     Notification n = not.build();
 
                     NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
                     nm.notify(1, n);
+
 
                 }
+
+                if (set_prefs.getBoolean("vibrate",true)){
+                    Vibrator vib = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vib.vibrate(VibrationEffect.createOneShot(350,1));
+                    }
+                    else{
+                        vib.vibrate(350);
+                    }
+
+                }
+                Log.d("ALARMRECEIVE","ONE");
+                ring.play();
+
 
             }
 
         }
     }
+
 }
 
 

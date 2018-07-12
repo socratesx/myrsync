@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
@@ -20,6 +21,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
@@ -53,12 +55,16 @@ public class MainActivity extends AppCompatActivity {
         configs.clear();
         schedulers.clear();
 
+
+
         SharedPreferences config_prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
         SharedPreferences sched_prefs = appContext.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences settings_prefs = appContext.getSharedPreferences("settings",MODE_PRIVATE);
         SharedPreferences alarm_times = appContext.getSharedPreferences("alarm_times",MODE_PRIVATE);
 
         settings.put("Notifications",settings_prefs.getBoolean("Notifications",true));
+        settings.put("Vibration",settings_prefs.getBoolean("Vibration",true));
+        settings.put("Sound",settings_prefs.getBoolean("Sound",true));
 
         for(int i=1; i<100;i++){
             if (config_prefs.getString("rs_ip_"+String.valueOf(i),"").isEmpty()){
@@ -266,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     // Adapter for the viewpager using FragmentPagerAdapter
-    class ViewPagerAdapter extends FragmentPagerAdapter {
+    class ViewPagerAdapter extends FragmentStatePagerAdapter {
         private final List<Fragment> mFragmentList = new java.util.ArrayList<>();
         private final List<String> mFragmentTitleList = new ArrayList<>();
 

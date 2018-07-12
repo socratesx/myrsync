@@ -93,6 +93,7 @@ public class Scheduler extends MainActivity{
         if (!Alarm_List.isEmpty()) Alarm_List.clear();
 
         Calendar cal = Calendar.getInstance();
+        Calendar saved_cal = new GregorianCalendar();
         cal.setFirstDayOfWeek(Calendar.MONDAY);
         //cal.get(Calendar.DATE);
         long week_interval= 604800000;        // 1 week in milliseconds
@@ -119,6 +120,9 @@ public class Scheduler extends MainActivity{
 
         String[] all_days={"SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"};
         String[] days_list={""};
+        int today_number=saved_cal.get(DAY_OF_WEEK);
+        int day_of_month=saved_cal.get(Calendar.DAY_OF_MONTH);
+
         try {
             days_list = this.days.substring(1, this.days.length() - 1).toUpperCase().split("[.]");
             //Log.d("DAY_", days_list[0-days_list.length]);
@@ -127,27 +131,33 @@ public class Scheduler extends MainActivity{
             for (int i = 0; i <= 6; i++) {
                 weekdays.put(all_days[i], i + 1);
             }
-
+            int count=0;
             for (String d : days_list) {
-                int delta = cal.get(DAY_OF_WEEK) - weekdays.get(d);
+                int delta = today_number - weekdays.get(d);
+                cal = getInstance();
+                Log.d("DELTA_",String.valueOf(cal.get(DAY_OF_WEEK))+" "+String.valueOf(weekdays.get(d)));
                 int request = (100 * this.id) + weekdays.get(d);
                 cal.set(Calendar.HOUR_OF_DAY, this.d.getCurrentHour());
                 cal.set(Calendar.MINUTE, this.d.getCurrentMinute());
                 if (delta>0) {
-                    cal.set(Calendar.DAY_OF_WEEK, weekdays.get(d));
-                    Log.d("HOUR_0", "DELTA>=0 " +String.valueOf(delta) );
+                    cal.set(Calendar.DAY_OF_MONTH,day_of_month-Math.abs(delta)+7);
+                    Log.d("HOUR_0", "DELTA>0 " +String.valueOf(delta) + " " +String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
+                    Log.d("COUNTER",String.valueOf(count));
                 }
                 else if (delta==0){
                     Calendar now = Calendar.getInstance();
                     long time_now=now.getTimeInMillis();
                     long delta2 = time_selected - time_now;
-                    if(delta2<0)  cal.set(Calendar.DAY_OF_MONTH,cal.get(Calendar.DAY_OF_MONTH)+6);
+                    if(delta2<0)  cal.set(Calendar.DAY_OF_MONTH,day_of_month+7);
+                    Log.d("COUNTER",String.valueOf(count));
+                    Log.d("HOUR_0", "DELTA=0 " +String.valueOf(delta) + " "+String.valueOf(cal.get(Calendar.DAY_OF_MONTH)) );
                 }
                 else{
-                    cal.set(Calendar.DAY_OF_MONTH,cal.get(Calendar.DAY_OF_MONTH)+Math.abs(delta));
-                    Log.d("HOUR_0", "DELTA<0 "+ String.valueOf(delta));
+                    cal.set(Calendar.DAY_OF_MONTH,day_of_month+Math.abs(delta));
+                    Log.d("HOUR_0", "DELTA<0 "+ String.valueOf(delta) + " " +String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
+                    Log.d("COUNTER",String.valueOf(count));
                 }
-
+                count=count+1;
                 scheduler_time = cal.getTimeInMillis();
                 Log.d("HOUR_1", String.valueOf(scheduler_time));
 

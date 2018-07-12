@@ -160,7 +160,7 @@ public class addConfig extends AppCompatActivity {
     }
 
 
-    protected void saveConfig(View v){
+    public void saveConfig(View v){
         Map<String,String> configMap=processForm(v);
 
         String rs_options = configMap.get("rs_options");

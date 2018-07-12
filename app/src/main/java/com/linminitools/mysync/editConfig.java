@@ -113,7 +113,7 @@ public class editConfig extends addConfig {
                         toast.show();
                     }
                     else if (request==2){
-                        c.executeConfig();
+                        c.executeConfig(getApplication().getBaseContext());
 
                         CharSequence text = "Rsync Job Started";
                         int duration = Toast.LENGTH_SHORT;

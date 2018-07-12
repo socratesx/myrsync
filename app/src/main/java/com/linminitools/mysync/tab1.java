@@ -2,6 +2,7 @@ package com.linminitools.mysync;
 
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
@@ -14,7 +15,7 @@ import android.widget.ListView;
 import static android.app.Activity.RESULT_OK;
 import static com.linminitools.mysync.MainActivity.schedulers;
 
-public class tab1 extends android.support.v4.app.Fragment {
+public class tab1 extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

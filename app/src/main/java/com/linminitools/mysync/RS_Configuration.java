@@ -1,5 +1,6 @@
 package com.linminitools.mysync;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -61,15 +62,15 @@ public class RS_Configuration {
         prefseditor.apply();
     }
 
-    protected void executeConfig(){
+    protected void executeConfig(final Context context){
 
 
-        final SharedPreferences prefs = appContext.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+        final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
 
         final int id = this.id;
 
-        final String options = this.rs_options+"O--no-o";
-        final String log = prefs.getString("log",appContext.getApplicationInfo().dataDir+"/logfile.log");
+        final String options = this.rs_options+"O";
+        final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
         final String local_path=this.local_path;
 
         if(!this.rs_user.isEmpty()) this.rs_user=this.rs_user+"@";
@@ -85,13 +86,18 @@ public class RS_Configuration {
                 @Override
                 public void run() {
                     try {
+                        SharedPreferences pref = context.getSharedPreferences("CMD",MODE_PRIVATE);
+                        SharedPreferences.Editor pref_Edit= pref.edit();
+
+                        pref_Edit.putBoolean("is_running",true);
+                        pref_Edit.commit();
 
                         ProcessBuilder p = new ProcessBuilder("rsync",options,"--log-file",log,local_path,cmd);
                         //p.redirectErrorStream(true);
 
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
-                        p.directory(new File(appContext.getApplicationInfo().dataDir));
+                        p.directory(new File(context.getApplicationInfo().dataDir));
                         Process process=p.start();
 
                         //BufferedReader std_output = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -113,13 +119,14 @@ public class RS_Configuration {
                         }
                         */
                         String result = builder_2.toString();
+                        Log.d("CMD_RESULT",result);
                         if (result.equals("")) result="OK";
                         else result="Warning! Check Log!";
 
                         Log.d("RESULT",result);
                         Log.d("SHAREDPREFS", "last_result_"+String.valueOf(id));
 
-                        SharedPreferences prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
+                        SharedPreferences prefs =  context.getSharedPreferences("configs", MODE_PRIVATE);
                         SharedPreferences.Editor prefseditor = prefs.edit();
                         prefseditor.putString("last_result_"+String.valueOf(id),result);
 
@@ -130,6 +137,8 @@ public class RS_Configuration {
                         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm");
                         prefseditor.putString("last_run_"+String.valueOf(id),formatter.format(time));
                         prefseditor.commit();
+                        pref_Edit.putBoolean("is_running",false);
+                        pref_Edit.commit();
 
                     }
 
