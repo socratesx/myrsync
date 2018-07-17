@@ -1,11 +1,9 @@
 package com.linminitools.mysync;
 
+import android.content.Context;
 import android.os.Bundle;
-import android.support.design.widget.TabLayout;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +14,10 @@ import static android.app.Activity.RESULT_OK;
 import static com.linminitools.mysync.MainActivity.schedulers;
 
 public class tab1 extends Fragment {
+
+    Handler h= new Handler();
+    ListView status;
+    Thread t;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -29,20 +31,62 @@ public class tab1 extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState) {
         // Setup any handles to view objects here
         //        // EditText etFoo = (EditText) view.findViewById(R.id.etFoo);
-        ListView status = view.findViewById(R.id.status_list);
+        status = view.findViewById(R.id.status_list);
         status.setEmptyView(view.findViewById(android.R.id.empty));
         customAdapter adapter = new customAdapter(this.getContext(),schedulers,1);
 
         status.setAdapter(adapter);
 
     }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        try{
+            status.setEmptyView(getView().findViewById(android.R.id.empty));
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        t=refresh(getContext());
+        t.start();
+    }
+
+
     @Override
     public void onPause(){
         super.onPause();
+        t.interrupt();
         onActivityResult(1,RESULT_OK,null);
         Log.d("ONPAUSE","TRUE");
-        //getFragmentManager().beginTransaction().replace(R.id.pager,new tab1(),"tab1").commit();
+
     }
+
+    public Thread refresh(final Context ctx) {
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while (!this.isInterrupted()) {
+                        h.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                customAdapter adapter = new customAdapter(ctx,schedulers,1);
+                                status.setAdapter(adapter);
+                            }
+                        });
+                        sleep(2000);
+                    }
+                }
+                catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        };
+        return t;
+    }
+
+
 
 }
 

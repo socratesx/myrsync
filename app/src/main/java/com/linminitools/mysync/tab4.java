@@ -1,24 +1,14 @@
 package com.linminitools.mysync;
 
 
-import android.arch.lifecycle.LifecycleOwner;
-import android.arch.lifecycle.LiveData;
-import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProvider;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -31,61 +21,76 @@ import static com.linminitools.mysync.MainActivity.appContext;
 
 public class tab4 extends Fragment{
 
+        TextView tv_log;
+        Handler h= new Handler();
+        File log_file;
+        Thread log_thread;
 
         @Override
         public void onActivityCreated(Bundle savedInstanceState){
             super.onActivityCreated(savedInstanceState);
-            //new logFragment();
 
         }
-
-
-
 
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.tab4, container, false);
             rootView.setTag("tab4");
+
+            SharedPreferences prefs = getContext().getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+            String log = prefs.getString("log", appContext.getApplicationInfo().dataDir + "/logfile.log");
+            log_file = new File(log);
+
+            tv_log= rootView.findViewById(R.id.log_view);
+            tv_log.setText(readLogFile());
             return rootView;
         }
 
-        public static class logFragment extends Fragment{
-
-            @Override
-            public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
-
-                ViewGroup viewlog = (ViewGroup) inflater.inflate(R.layout.logview, container, false);
-
-
-                final LogViewModel mModel = ViewModelProviders.of(this).get(LogViewModel.class);
-                final TextView log = this.getView().findViewById(R.id.tv_log);
-
-                // Create the observer which updates the UI.
-                final Observer<String> LogObserver = new Observer<String>() {
-                    @Override
-                    public void onChanged(@Nullable final String newName) {
-                        // Update the UI, in this case, a TextView.
-                        log.setText(newName);
-                        Log.d("OBSERVER_ON_CHANGED", mModel.returnLog());
-                    }
-                };
-
-                mModel.log_string.getCurrentName().observe(this, LogObserver);
-                return viewlog;
-            }
+        @Override
+        public void onResume(){
+            super.onResume();
+            log_thread=refresh();
+            log_thread.start();
         }
 
- /*
-    @Override
-    public void onViewCreated(View v, Bundle savedInstanceState) {
+        @Override
+        public void onPause(){
+            super.onPause();
+            log_thread.interrupt();
+        }
 
-        SharedPreferences prefs = appContext.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
-        String log = prefs.getString("log", appContext.getApplicationInfo().dataDir + "/logfile.log");
-        File file = new File(log);
 
+    public Thread refresh() {
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    while (this.isAlive()) {
+                        Log.d("Thread","isAlive");
+                        h.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                tv_log.invalidate();
+                                tv_log.setText(readLogFile());
+                            }
+                        });
+                        sleep(2000);
+                    }
+                }
+                catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        };
+        return t;
+    }
+
+
+    public String readLogFile(){
+
+        File file = log_file;
         StringBuilder text = new StringBuilder();
-        final TextView tv = v.findViewById(R.id.tv_log);
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
@@ -100,14 +105,9 @@ public class tab4 extends Fragment{
         } catch (IOException e) {
             text.append(e.getMessage());
         }
-
-
-        Log.d("LOG", text.toString());
-        tv.setText(text);
-
-
+        return text.toString();
     }
-*/
+
 
 }
 

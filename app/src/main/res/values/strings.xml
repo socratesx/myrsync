@@ -32,15 +32,7 @@
         --executability preserve executability \n\t -A, --acls preserve ACLs (implies -p) \n\t -X, --xattrs preserve extended attributes \n\t -o, --owner preserve owner (super-user only) \n\t -g,
         --group preserve group \n\t\t\t --devices preserve device files (super-user only) \n\t\t\t --specials preserve special files \n\t -D same as --devices --specials \n\t -t,
         --times preserve modification times \n\t -S, --sparse turn sequences of nulls into sparse blocks \n\t -n, --dry-run perform a trial run with no changes made \n\t -W,
-        --whole-file copy files whole (w/o delta-xfer algorithm) \n\t -e, --rsh=COMMAND specify the remote shell to use \n\t\t\t --rsync-path=PROGRAM specify the rsync to run on remote machine \n\t\t\t
-        --existing skip creating new files on receiver \n\t\t\t --ignore-existing skip updating files that exist on receiver \n\t\t\t --remove-source-files sender removes synchronized files (non-dir) \n\t\t\t
-        --del an alias for \n\t\t\t --delete-during \n\t\t\t --delete delete extraneous files from dest dirs \n\t\t\t --delete-before receiver deletes before xfer, not during \n\t\t\t
-        --delete-during receiver deletes during the transfer \n\t\t\t --delete-delay find deletions during, delete after \n\t\t\t --delete-after receiver deletes after transfer, not during \n\t\t\t
-        --delete-excluded also delete excluded files from dest dirs \n\t\t\t --ignore-missing-args ignore missing source args without error \n\t\t\t
-        --delete-missing-args delete missing source args from destination \n\t\t\t --ignore-errors delete even if there are I/O errors \n\t\t\t --force force deletion of dirs even if not empty \n\t\t\t
-        --max-delete=NUM don\'t delete more than NUM files \n\t\t\t --max-size=SIZE don\'t transfer any file larger than SIZE \n\t\t\t --min-size=SIZE don\'t transfer any file smaller than SIZE \n\t\t\t
-        --partial keep partially transferred files \n\t\t\t --partial-dir=DIR put a partially transferred file into DIR \n\t\t\t --delay-updates put all updated files into place at end \n-m, \n\t\t\t
-        --prune-empty-dirs prune empty directory chains from file-list \n\t\t\t --numeric-ids don\'t map uid/gid values by user/group name \n\t\t\t --usermap=STRING custom username mapping \n\t\t\t
+        --whole-file copy files whole (w/o delta-xfer algorithm) \n\t -m, --prune-empty-dirs prune empty directory chains from file-list \n\t\t\t --numeric-ids don\'t map uid/gid values by user/group name \n\t\t\t --usermap=STRING custom username mapping \n\t\t\t
         --groupmap=STRING custom groupname mapping \n\t\t\t --chown=USER:GROUP simple username/groupname mapping \n\t\t\t --timeout=SECONDS set I/O timeout in seconds \n\t\t\t
         --contimeout=SECONDS set daemon connection timeout in seconds</string>
     <string name="save_and_view_command">Save and View Command</string>

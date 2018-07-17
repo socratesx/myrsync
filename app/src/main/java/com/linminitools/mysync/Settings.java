@@ -3,19 +3,18 @@ package com.linminitools.mysync;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.preference.SwitchPreference;
 import android.support.v4.app.NavUtils;
-import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
-import android.support.v7.app.ActionBar;
 
 public class Settings  extends AppCompatPreferenceActivity {
 
@@ -59,7 +58,7 @@ public class Settings  extends AppCompatPreferenceActivity {
 
             }
             else if (preference instanceof SwitchPreference){
-                Log.d("PREFERENCE", stringValue);
+                Log.d("PREFERENCE_Switch", stringValue);
                 preference.setSummary(stringValue);
             }
 
@@ -67,6 +66,7 @@ public class Settings  extends AppCompatPreferenceActivity {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
                 preference.setSummary(stringValue);
+                Log.d("PREFERENCE_alltherest", stringValue);
             }
             return true;
         }

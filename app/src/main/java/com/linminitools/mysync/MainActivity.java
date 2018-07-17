@@ -8,21 +8,19 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -33,6 +31,9 @@ import android.view.View;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +55,47 @@ public class MainActivity extends AppCompatActivity {
         appContext=getApplicationContext();
         configs.clear();
         schedulers.clear();
+
+        Boolean is_first_run = getSharedPreferences("Install",MODE_PRIVATE).getBoolean("first_run",true);
+
+        if (is_first_run) {
+
+            getSharedPreferences("Install",MODE_PRIVATE).edit().putBoolean("first_run",false).apply();
+            AssetManager AM = this.getAssets();
+
+            try {
+
+                String appFileDirectory = getFilesDir().getPath();
+                String executableFilePath = appFileDirectory + "/rsync";
+
+                File old_file = new File(executableFilePath);
+                old_file.delete();
+
+                getSharedPreferences("Install",MODE_PRIVATE).edit().putString("rsync_binary",executableFilePath).apply();
+
+                InputStream in = AM.open("rsync_binary/rsync", AssetManager.ACCESS_BUFFER);
+                Log.d("PATH", executableFilePath);
+                File rsync_executable = new File(executableFilePath);
+
+
+                FileOutputStream fos = new FileOutputStream(rsync_executable);
+                byte[] buffer = new byte[in.available()];
+
+                in.read(buffer);
+                in.close();
+
+                fos.write(buffer);
+
+                fos.close();
+                in.close();
+
+                rsync_executable.setExecutable(true);
+
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
 
 
@@ -159,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
 
             }
+
 
     }
 
@@ -515,6 +558,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
+
 
     public void sched_clickHandler(View v){
 

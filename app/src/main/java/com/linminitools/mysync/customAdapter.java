@@ -1,10 +1,7 @@
 package com.linminitools.mysync;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.app.AlarmManagerCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,10 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.mysync.MainActivity.appContext;
 import static com.linminitools.mysync.MainActivity.configs;
 
 
@@ -36,8 +31,6 @@ class customAdapter extends BaseAdapter {
         this.data=new String[data.size()];
         this.fromTab=request_code;
 
-        Log.d("CONTEXT", context.toString());
-
 
         if (!data.isEmpty()) {
             for (Object c : data) {
@@ -52,12 +45,7 @@ class customAdapter extends BaseAdapter {
 
         }
 
-
-
-
-
-        inflater = (LayoutInflater) context
-        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
 
         @Override

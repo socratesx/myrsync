@@ -1,5 +1,6 @@
 package com.linminitools.mysync;
 
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
@@ -8,9 +9,13 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.io.File;
+import java.io.PrintWriter;
 
 /**
  * A {@link android.preference.PreferenceActivity} which implements and proxies the necessary calls
@@ -70,34 +75,53 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
     protected void onPostResume() {
         super.onPostResume();
         getDelegate().onPostResume();
+        Log.d("PREF","onPostresume");
     }
 
     @Override
     protected void onTitleChanged(CharSequence title, int color) {
         super.onTitleChanged(title, color);
         getDelegate().setTitle(title);
+        Log.d("PREF","onTitleChanged");
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         getDelegate().onConfigurationChanged(newConfig);
+        Log.d("PREF","onConfigChanged");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         getDelegate().onStop();
+        Log.d("PREF","onStop");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         getDelegate().onDestroy();
+        Log.d("PREF","onDestroy");
+
+        SharedPreferences prefs = getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+        String log = prefs.getString("log", getApplicationInfo().dataDir + "/logfile.log");
+        File log_file = new File(log);
+        try{
+            PrintWriter writer = new PrintWriter(log_file);
+            writer.print("");
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+
     }
 
     public void invalidateOptionsMenu() {
         getDelegate().invalidateOptionsMenu();
+        Log.d("PREF","INVALIDATE");
     }
 
     private AppCompatDelegate getDelegate() {

@@ -8,14 +8,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.Format;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.linminitools.mysync.MainActivity.appContext;
-import static com.linminitools.mysync.MainActivity.configs;
 
 
 public class RS_Configuration {
@@ -82,6 +80,7 @@ public class RS_Configuration {
         Log.d("RSYNC Local Path",local_path);
 
 
+
             Thread t = new Thread(){
                 @Override
                 public void run() {
@@ -91,8 +90,9 @@ public class RS_Configuration {
 
                         pref_Edit.putBoolean("is_running",true);
                         pref_Edit.commit();
+                        String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
 
-                        ProcessBuilder p = new ProcessBuilder("rsync",options,"--log-file",log,local_path,cmd);
+                        ProcessBuilder p = new ProcessBuilder(rsync_bin,options,"--log-file",log,local_path,cmd);
                         //p.redirectErrorStream(true);
 
                         Map<String, String> env = p.environment();
