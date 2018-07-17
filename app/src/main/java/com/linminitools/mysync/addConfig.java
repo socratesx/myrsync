@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -39,6 +40,8 @@ public class addConfig extends AppCompatActivity {
         save.setEnabled(false);
         view.setEnabled(false);
     }
+
+
 
     public void addPath(View v){
         Uri selectedUri = Uri.parse(Environment.getDataDirectory().toString());
@@ -97,6 +100,7 @@ public class addConfig extends AppCompatActivity {
 
 
         String options="-";
+        /*
         CheckBox cba= findViewById(R.id.cb_a);
         CheckBox cbr= findViewById(R.id.cb_r);
         CheckBox cbz= findViewById(R.id.cb_z);
@@ -114,9 +118,19 @@ public class addConfig extends AppCompatActivity {
         if (cbv.isChecked()) {
             options=options.concat("v");
         }
+        */
 
+
+        String[] availableOptions={"a","r","z","v","n","p","t","O","q","m","u","g"};
+
+        for(String check_box : availableOptions){
+            int resID = getResources().getIdentifier("cb_" + check_box, "id", getPackageName());
+            CheckBox cb = findViewById(resID);
+            if(cb.isChecked()){
+                options=options.concat(check_box);
+            }
+        }
         if (options=="-"){options="";}
-
 
         String log="";
         String rs_user=String.valueOf(et_rs_user.getText()) ;
@@ -206,10 +220,11 @@ public class addConfig extends AppCompatActivity {
     public void rsync_help(View v){
 
         ImageButton bt = findViewById(R.id.bt_help_rsync);
-
+        Log.d("RSYNC_HELP","CLICKED");
         bt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("RSYNC_HELP","CLICKED Twice");
                 AlertDialog.Builder alertDialogBuilder =
                         new AlertDialog.Builder(v.getContext())
                                 .setTitle("Rsync Options Help")

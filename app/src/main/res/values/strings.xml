@@ -26,15 +26,10 @@
         If you leave this field empty the default port will be used. \n\tb.Rsync User: Enter the user that is permitted to connect to the rsync server.
         \n\tc.Rsync Server Mod: Type the name of the rsync module that you want to connect to. \n\n2.Local Settings: \n\ta.
         Add Path: Select the folder that you want to sync with the rsync server. \n\n3. Select the rsync options</string>
-    <string name="rsync_options">\n\t -v, --verbose increase verbosity \n\t -q, --quiet suppress non-error messages \n\t -a, --archive archive mode; equals -rlptgoD (no -H,-A,-X) \n\t
-        -r, --recursive recurse into directories \n\t -u, --update skip files that are newer on the receiver \n\t\t\t --inplace update destination files in-place \n\t\t\t
-        --append append data onto shorter files \n\t\t\t --append-verify \n\t\t\t --append w/old data in file checksum \n\t -p, --perms preserve permissions \n\t -E,
-        --executability preserve executability \n\t -A, --acls preserve ACLs (implies -p) \n\t -X, --xattrs preserve extended attributes \n\t -o, --owner preserve owner (super-user only) \n\t -g,
-        --group preserve group \n\t\t\t --devices preserve device files (super-user only) \n\t\t\t --specials preserve special files \n\t -D same as --devices --specials \n\t -t,
-        --times preserve modification times \n\t -S, --sparse turn sequences of nulls into sparse blocks \n\t -n, --dry-run perform a trial run with no changes made \n\t -W,
-        --whole-file copy files whole (w/o delta-xfer algorithm) \n\t -m, --prune-empty-dirs prune empty directory chains from file-list \n\t\t\t --numeric-ids don\'t map uid/gid values by user/group name \n\t\t\t --usermap=STRING custom username mapping \n\t\t\t
-        --groupmap=STRING custom groupname mapping \n\t\t\t --chown=USER:GROUP simple username/groupname mapping \n\t\t\t --timeout=SECONDS set I/O timeout in seconds \n\t\t\t
-        --contimeout=SECONDS set daemon connection timeout in seconds</string>
+    <string name="rsync_options">\n\t -v, increase verbosity \n\t -q, suppress non-error messages \n\t -a, archive mode; equals -rlptgoD  \n\t  -z, compress file data during the transfer \n\t
+        -r, recurse into directories \n\t -u, skip files that are newer on the receiver \n\t -p, preserve permissions \n\t -o, preserve owner (super-user only) \n\t -g, preserve group \n\t -t,
+        preserve modification times \n\t -n, perform a trial run with no changes made (dry run) \n\t -m, prune empty directory chains from file-list \n\t -O, omit directories from --times
+        </string>
     <string name="save_and_view_command">Save and View Command</string>
     <string name="save_configuration">Save Configuration</string>
     <string name="generated_rsync_command">Generated Rsync Command:</string>
