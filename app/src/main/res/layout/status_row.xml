@@ -61,15 +61,16 @@
 
     <TextView
         android:id="@+id/tv_next_run"
-        android:layout_width="wrap_content"
+        android:layout_width="60dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
         android:text="Next Run:"
         app:layout_constraintBaseline_toBaselineOf="@+id/tv_get_config_name"
-        app:layout_constraintStart_toStartOf="@+id/Last_Run" />
+        app:layout_constraintEnd_toStartOf="@+id/tv_get_nextrun" />
 
     <TextView
         android:id="@+id/Last_Run"
-        android:layout_width="wrap_content"
+        android:layout_width="60dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:text="Last Run:"

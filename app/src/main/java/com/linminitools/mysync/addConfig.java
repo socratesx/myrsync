@@ -10,12 +10,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -218,27 +216,15 @@ public class addConfig extends AppCompatActivity {
     }
 
     public void rsync_help(View v){
-
-        ImageButton bt = findViewById(R.id.bt_help_rsync);
-        Log.d("RSYNC_HELP","CLICKED");
-        bt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d("RSYNC_HELP","CLICKED Twice");
-                AlertDialog.Builder alertDialogBuilder =
-                        new AlertDialog.Builder(v.getContext())
-                                .setTitle("Rsync Options Help")
-                                .setMessage(getResources().getString(R.string.rsync_options))
-                                .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int which) {
-                                    }
-                                })
-                        ;
-                AlertDialog alertDialog = alertDialogBuilder.show();
-            }
-        });
-
+        AlertDialog.Builder alertDialogBuilder =
+                new AlertDialog.Builder(v.getContext())
+                        .setTitle("Rsync Options Help")
+                        .setMessage(getResources().getString(R.string.rsync_options))
+                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        })
+                ;
+        alertDialogBuilder.show();
     }
-
-
 }
