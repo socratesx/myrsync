@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/status"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -60,7 +59,6 @@
         app:layout_constraintTop_toBottomOf="@+id/tv_get_nextrun" />
 
     <TextView
-        android:id="@+id/tv_next_run"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
@@ -69,7 +67,6 @@
         app:layout_constraintEnd_toStartOf="@+id/tv_get_nextrun" />
 
     <TextView
-        android:id="@+id/Last_Run"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
@@ -107,7 +104,8 @@
         android:visibility="invisible"
         app:layout_constraintStart_toEndOf="@+id/tv_get_result"
         app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status"
-        app:srcCompat="@android:drawable/stat_notify_error" />
+        app:srcCompat="@android:drawable/stat_notify_error"
+        android:contentDescription="error" />
 
     <ImageView
         android:id="@+id/img_success_status"
@@ -119,5 +117,6 @@
         android:visibility="invisible"
         app:layout_constraintStart_toEndOf="@+id/tv_get_result"
         app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status"
-        app:srcCompat="@drawable/ok_icon" />
+        app:srcCompat="@drawable/ok_icon"
+        android:contentDescription="success" />
 </android.support.constraint.ConstraintLayout>

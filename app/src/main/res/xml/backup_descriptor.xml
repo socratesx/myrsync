@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- TODO Remove the following "exclude" elements to make them a part of the auto backup -->
+    <!-- Exclude the shared preferences file that contains the GCM registrationId -->
+    <exclude
+        domain="sharedpref"
+        path="CMD.xml" />
+    <exclude
+        domain="sharedpref"
+        path="configs.xml" />
+    <exclude
+        domain="sharedpref"
+        path="alarm_times.xml" />
+    <exclude
+        domain="sharedpref"
+        path="settings.xml" />
+    <exclude
+        domain="sharedpref"
+        path="Rsync_Command_build.xml" />
+    <exclude
+        domain="sharedpref"
+        path="Rsync_Config_path.xml" />
+    <exclude
+        domain="sharedpref"
+        path="schedulers.xml" />
+    <exclude
+        domain="sharedpref"
+        path="Install.xml" />
+</full-backup-content>

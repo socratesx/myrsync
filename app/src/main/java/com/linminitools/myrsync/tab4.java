@@ -1,11 +1,10 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +16,7 @@ import java.io.FileReader;
 import java.io.IOException;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.mysync.MainActivity.appContext;
+import static com.linminitools.myrsync.MainActivity.appContext;
 
 public class tab4 extends Fragment{
 
@@ -62,12 +61,11 @@ public class tab4 extends Fragment{
 
 
     public Thread refresh() {
-        Thread t = new Thread() {
+        return new Thread() {
             @Override
             public void run() {
                 try {
                     while (this.isAlive()) {
-                        Log.d("Thread","isAlive");
                         h.post(new Runnable() {
                             @Override
                             public void run() {
@@ -83,7 +81,6 @@ public class tab4 extends Fragment{
                 }
             }
         };
-        return t;
     }
 
 

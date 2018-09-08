@@ -1,4 +1,4 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -11,26 +11,17 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Parcel;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.preference.Preference;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.widget.TimePicker;
 
-import java.net.URI;
 import java.util.Calendar;
-
-import javax.xml.transform.URIResolver;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.support.v4.app.NotificationCompat.*;
-import static com.linminitools.mysync.MainActivity.configs;
-import static com.linminitools.mysync.MainActivity.schedulers;
-import static com.linminitools.mysync.MainActivity.settings;
+import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.MainActivity.schedulers;
 
 
 public class AlarmReceiver extends BroadcastReceiver {
@@ -67,7 +58,6 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         for (int c = 1; c < 100; c++) {
             if (sched_prefs.getInt("id_" + String.valueOf(c), -1) < 0) {
-                Log.d("SCHEDULERS", "GETINT=-1");
                 break;
             } else {
                 TimePicker tp = new TimePicker(ctx);
@@ -112,7 +102,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
                 if (Build.VERSION.SDK_INT < 26) {
                     Builder not = new Builder(ctx);
-                    not.setContentTitle("MYSYNC Status");
+                    not.setContentTitle("myRSync Status");
                     not.setSmallIcon(R.mipmap.ic_launcher);
                     not.setStyle(new BigTextStyle().bigText(message));
                     not.setContentText(message);
@@ -124,7 +114,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 } else {
                     Builder not = new Builder(ctx, NotificationChannel.DEFAULT_CHANNEL_ID);
 
-                    not.setContentTitle("MYSYNC Status");
+                    not.setContentTitle("myRSync Status");
                     not.setStyle(new BigTextStyle().bigText(message));
                     not.setContentText(message);
                     not.setSmallIcon(R.mipmap.ic_launcher);
@@ -146,7 +136,6 @@ public class AlarmReceiver extends BroadcastReceiver {
                     }
 
                 }
-                Log.d("ALARMRECEIVE","ONE");
                 ring.play();
 
 

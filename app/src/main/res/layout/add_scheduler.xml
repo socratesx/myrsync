@@ -20,7 +20,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="@string/create_schedule"
+                android:text="Set Scheduler Options"
                 android:textAlignment="center"
                 android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -236,6 +236,17 @@
                 android:text="Select Configuration"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/ed_name" />
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:backgroundTint="@android:color/transparent"
+                android:onClick="scheduler_info"
+                app:layout_constraintStart_toEndOf="@+id/timePicker"
+                app:layout_constraintTop_toBottomOf="@+id/Create_Schedule"
+                app:srcCompat="@drawable/ic_info_black_24dp"
+                android:contentDescription="info button" />
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
 </android.support.constraint.ConstraintLayout>

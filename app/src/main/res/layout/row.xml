@@ -19,7 +19,8 @@
         app:layout_constraintEnd_toStartOf="@+id/bt_delete"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:color/transparent" />
+        app:srcCompat="@android:color/transparent"
+        android:contentDescription="edit scheduler" />
 
     <TextView
         android:id="@+id/list_item_id"
@@ -27,6 +28,7 @@
         android:layout_height="19dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -35,9 +37,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
+        android:backgroundTint="@android:color/transparent"
         android:contentDescription="@string/delete"
         android:onClick="config_clickHandler"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_delete" />
+        app:srcCompat="@drawable/delete_row" />
 
 </android.support.constraint.ConstraintLayout>

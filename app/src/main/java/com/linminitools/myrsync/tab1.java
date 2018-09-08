@@ -1,17 +1,16 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
 import static android.app.Activity.RESULT_OK;
-import static com.linminitools.mysync.MainActivity.schedulers;
+import static com.linminitools.myrsync.MainActivity.schedulers;
 
 public class tab1 extends Fragment {
 
@@ -58,12 +57,11 @@ public class tab1 extends Fragment {
         super.onPause();
         t.interrupt();
         onActivityResult(1,RESULT_OK,null);
-        Log.d("ONPAUSE","TRUE");
 
     }
 
     public Thread refresh(final Context ctx) {
-        Thread t = new Thread() {
+         return new Thread() {
             @Override
             public void run() {
                 try {
@@ -83,7 +81,6 @@ public class tab1 extends Fragment {
                 }
             }
         };
-        return t;
     }
 
 

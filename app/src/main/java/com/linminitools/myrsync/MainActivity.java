@@ -1,4 +1,4 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -24,10 +25,14 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -42,9 +47,12 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 1;
-    public static ArrayList<RS_Configuration> configs = new ArrayList<RS_Configuration>();
+    @NonNull
+    public static ArrayList<RS_Configuration> configs = new ArrayList<>();
+    @NonNull
     public static ArrayList<Scheduler> schedulers = new ArrayList<>();
     public static Context appContext;
+    @NonNull
     public static Map<String,Boolean> settings = new HashMap<>();
 
 
@@ -74,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
                 getSharedPreferences("Install",MODE_PRIVATE).edit().putString("rsync_binary",executableFilePath).apply();
 
                 InputStream in = AM.open("rsync_binary/rsync", AssetManager.ACCESS_BUFFER);
-                Log.d("PATH", executableFilePath);
+
                 File rsync_executable = new File(executableFilePath);
 
 
@@ -125,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
         }
         for(int i=1; i<100;i++) {
             if (sched_prefs.getInt("id_"+String.valueOf(i), -1)<0) {
-                Log.d("SCHEDULERS","GETINT=-1");
                 break;
             } else {
                 TimePicker tp=new TimePicker(this);
@@ -213,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
@@ -226,16 +233,22 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.me_about) {
+            SpannableString s = new SpannableString(getResources().getString(R.string.about));
+            Linkify.addLinks(s,Linkify.ALL);
             AlertDialog.Builder alertDialogBuilder =
                     new AlertDialog.Builder(this)
                             .setTitle("About")
-                            .setMessage(getResources().getString(R.string.about))
+                            .setMessage(s)
                             .setPositiveButton("Close", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                 }
                             })
                             ;
             AlertDialog alertDialog = alertDialogBuilder.show();
+            TextView textView = alertDialog.findViewById(android.R.id.message);
+
+            textView.setTextSize(12);
+            textView.setMovementMethod(LinkMovementMethod.getInstance());
         }
 
         if (id == R.id.me_help) {
@@ -283,36 +296,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
 
         ViewPager viewPager = findViewById(R.id.pager);
-        //ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         ViewPagerAdapter v = (ViewPagerAdapter) viewPager.getAdapter();
         v.refresh_adapter();
-        // Add Fragments to adapter one by one
-        /*
-        adapter.addFragment(new tab1(), "Overview");
-        adapter.addFragment(new tab2(), "Configurations");
-        adapter.addFragment(new tab3(), "Schedulers");
-        adapter.addFragment(new tab4(), "Log");
-        */
+
+
         viewPager.setAdapter(v);
         viewPager.setCurrentItem(requestCode);
-        Log.d("RESULTCODE",String.valueOf(resultCode));
+
         TabLayout tabLayout =  findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
-        /*
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        // removes the existing fragment calling onDestroy
-        if (resultCode==1) ft.replace(R.id.pager, new tab1(), "tab1");
-        if (resultCode==2) ft.replace(R.id.pager, new tab2(), "tab2");
-        if (resultCode==3) ft.replace(R.id.pager, new tab3(), "tab3");
-        if (resultCode==4) ft.replace(R.id.pager, new tab4(), "tab4");
-        ft.commitNowAllowingStateLoss();
-        */
     }
-
-    //@TargetApi(Build.VERSION_CODES.O)
-
-
 
     // Adapter for the viewpager using FragmentPagerAdapter
     class ViewPagerAdapter extends FragmentStatePagerAdapter {
@@ -339,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
+        @NonNull
         public ViewPagerAdapter refresh_adapter(){
             mFragmentList.clear();
             mFragmentTitleList.clear();
@@ -359,12 +354,12 @@ public class MainActivity extends AppCompatActivity {
 
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
-    public static String getPath(final Context context, final Uri uri) {
+    public static String getPath(@NonNull final Context context, @NonNull final Uri uri) {
 
-        final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+        final boolean isKitKat = true;
 
         // DocumentProvider
-        if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
+        if (DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
@@ -384,8 +379,8 @@ public class MainActivity extends AppCompatActivity {
                 else {
 
                     path="/storage";
-                    for (int i=0;i<split.length;i++) {
-                        path = path + "/" + split[i];
+                    for (String aSplit : split) {
+                        path = path + "/" + aSplit;
                     }
                     return path;
                 }
@@ -407,12 +402,16 @@ public class MainActivity extends AppCompatActivity {
                 final String type = split[0];
 
                 Uri contentUri = null;
-                if ("image".equals(type)) {
-                    contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-                } else if ("video".equals(type)) {
-                    contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
-                } else if ("audio".equals(type)) {
-                    contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                switch (type) {
+                    case "image":
+                        contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+                        break;
+                    case "video":
+                        contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
+                        break;
+                    case "audio":
+                        contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                        break;
                 }
 
                 final String selection = "_id=?";
@@ -440,7 +439,7 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    public static String getDataColumn(Context context, Uri uri, String selection,
+    public static String getDataColumn(Context context, @NonNull Uri uri, String selection,
                                        String[] selectionArgs) {
 
         Cursor cursor = null;
@@ -504,7 +503,7 @@ public class MainActivity extends AppCompatActivity {
     private void requestPermission() {
 
         if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            Toast.makeText(MainActivity.this, "Write External Storage permission allows us to do store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
+            Toast.makeText(MainActivity.this, "Write External Storage permission allows us to store images. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
         } else {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
         }
@@ -524,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void config_clickHandler(View v){
+    public void config_clickHandler(@NonNull View v){
 
         if (v.getTag(R.id.bt_edit)!=null) {
             int pos = (int) v.getTag(R.id.bt_edit);
@@ -538,16 +537,25 @@ public class MainActivity extends AppCompatActivity {
             AlertDialog.Builder alertDialogBuilder =
                     new AlertDialog.Builder(this)
                             .setTitle("Delete Configuration")
-                            .setMessage("Are you sure?")
+                            .setMessage("This action will delete this configuration and all its schedulers. Are you sure?")
                             .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
                                     configs.get(pos).deleteFromDisk();
                                     configs.remove(pos);
+
+                                    ArrayList<Scheduler> connected_schedulers_to_deleted_configuration=new ArrayList<>();
+                                    for (Scheduler s : schedulers){
+                                        if (pos==s.config_pos){
+                                            connected_schedulers_to_deleted_configuration.add(s);
+                                            s.deleteFromDisk();
+                                        }
+                                    }
+                                    schedulers.removeAll(connected_schedulers_to_deleted_configuration);
                                     onActivityResult(1,RESULT_OK,null);
                                 }
                             })
                             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
+                                public void onClick(@NonNull DialogInterface dialog, int which) {
                                     dialog.cancel();
                                 }
                             });
@@ -561,7 +569,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    public void sched_clickHandler(View v){
+    public void sched_clickHandler(@NonNull View v){
 
         if (v.getTag(R.id.bt_edit_sched)!=null) {
             int pos = (int) v.getTag(R.id.bt_edit_sched);
@@ -586,7 +594,7 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             })
                             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
+                                public void onClick(@NonNull DialogInterface dialog, int which) {
                                     dialog.cancel();
                                 }
                             });

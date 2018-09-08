@@ -1,8 +1,8 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,10 +10,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.Map;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.mysync.MainActivity.appContext;
+import static com.linminitools.myrsync.MainActivity.appContext;
 
 
 public class RS_Configuration {
@@ -75,13 +76,10 @@ public class RS_Configuration {
 
         final String cmd = "rsync://"+this.rs_user+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
 
-        Log.d("RSYNC Log Path",log);
-        Log.d("RSYNC CMD", cmd);
-        Log.d("RSYNC Local Path",local_path);
-
 
 
             Thread t = new Thread(){
+                @SuppressLint("ApplySharedPref")
                 @Override
                 public void run() {
                     try {
@@ -119,12 +117,9 @@ public class RS_Configuration {
                         }
                         */
                         String result = builder_2.toString();
-                        Log.d("CMD_RESULT",result);
+
                         if (result.equals("")) result="OK";
                         else result="Warning! Check Log!";
-
-                        Log.d("RESULT",result);
-                        Log.d("SHAREDPREFS", "last_result_"+String.valueOf(id));
 
                         SharedPreferences prefs =  context.getSharedPreferences("configs", MODE_PRIVATE);
                         SharedPreferences.Editor prefseditor = prefs.edit();
@@ -133,8 +128,8 @@ public class RS_Configuration {
 
                         Calendar cal = Calendar.getInstance();
                         long time = cal.getTimeInMillis();
-
-                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm");
+                        Locale current_locale = context.getResources().getConfiguration().locale;
+                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
                         prefseditor.putString("last_run_"+String.valueOf(id),formatter.format(time));
                         prefseditor.commit();
                         pref_Edit.putBoolean("is_running",false);
@@ -145,7 +140,6 @@ public class RS_Configuration {
 
                     catch (IOException e) {
                         e.printStackTrace();
-                        Log.d("EXCEPTION", e.getMessage());
                     }
                 }
             };

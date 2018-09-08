@@ -1,24 +1,19 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Map;
 
-import static com.linminitools.mysync.MainActivity.appContext;
-import static com.linminitools.mysync.MainActivity.configs;
+import static com.linminitools.myrsync.MainActivity.appContext;
+import static com.linminitools.myrsync.MainActivity.configs;
 
 public class editConfig extends addConfig {
 
@@ -32,10 +27,13 @@ public class editConfig extends addConfig {
         Button bt_add = findViewById(R.id.bt_add);
         Button bt_exec = findViewById(R.id.bt_execute);
 
+        ImageButton info = findViewById(R.id.ib_info_daemon);
+        info.setImageResource(R.drawable.ic_info_black_24dp);
+
         save.setEnabled(true);
         view.setEnabled(true);
         bt_add.setText("Change Path");
-        bt_exec.setVisibility(View.VISIBLE);
+        bt_exec.setEnabled(true);
 
         Intent i = getIntent();
         final int p = i.getIntExtra("pos", 0);
@@ -89,7 +87,7 @@ public class editConfig extends addConfig {
 
     }
 
-    protected void actionConfig(View v, int id, int position, int request){
+    public void actionConfig(View v, int id, int position, int request){
         Map<String,String> configMap=processForm(v);
 
         if (!configMap.get("rs_ip").isEmpty() &&
@@ -138,11 +136,6 @@ public class editConfig extends addConfig {
             Toast toast = Toast.makeText(appContext, text, duration);
             toast.show();
         }
-
-        for (RS_Configuration c : configs){
-            Log.d("EDIT RS_CONFIG",c.id+ " Options="+c.rs_options);
-
-            }
 
         this.finish();
     }

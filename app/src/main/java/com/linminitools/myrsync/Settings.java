@@ -1,4 +1,4 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -13,7 +13,6 @@ import android.preference.SwitchPreference;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.MenuItem;
 
 public class Settings  extends AppCompatPreferenceActivity {
@@ -58,7 +57,7 @@ public class Settings  extends AppCompatPreferenceActivity {
 
             }
             else if (preference instanceof SwitchPreference){
-                Log.d("PREFERENCE_Switch", stringValue);
+
                 preference.setSummary(stringValue);
             }
 
@@ -66,7 +65,6 @@ public class Settings  extends AppCompatPreferenceActivity {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
                 preference.setSummary(stringValue);
-                Log.d("PREFERENCE_alltherest", stringValue);
             }
             return true;
         }

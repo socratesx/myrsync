@@ -1,4 +1,4 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -10,6 +10,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.support.v7.app.AppCompatActivity;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -19,10 +23,11 @@ import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
-import static com.linminitools.mysync.MainActivity.appContext;
-import static com.linminitools.mysync.MainActivity.configs;
-import static com.linminitools.mysync.MainActivity.getPath;
+import static com.linminitools.myrsync.MainActivity.appContext;
+import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.MainActivity.getPath;
 
 
 public class addConfig extends AppCompatActivity {
@@ -87,9 +92,9 @@ public class addConfig extends AppCompatActivity {
 
 
 
-    protected Map<String,String> processForm(View v){
+    public Map<String,String> processForm(View v){
 
-        Map<String,String> configMap = new HashMap<String,String>();
+        Map<String,String> configMap = new HashMap<>();
 
         EditText et_srv_ip= findViewById(R.id.ed_srv_ip);
         EditText et_srv_port= findViewById(R.id.ed_srv_port);
@@ -123,6 +128,7 @@ public class addConfig extends AppCompatActivity {
 
         for(String check_box : availableOptions){
             int resID = getResources().getIdentifier("cb_" + check_box, "id", getPackageName());
+            Log.d("RESID",String.valueOf(resID));
             CheckBox cb = findViewById(resID);
             if(cb.isChecked()){
                 options=options.concat(check_box);
@@ -199,6 +205,7 @@ public class addConfig extends AppCompatActivity {
             config.local_path = local_path;
             config.saveToDisk();
             configs.add(config);
+            this.finish();
 
         }
         else{
@@ -212,7 +219,6 @@ public class addConfig extends AppCompatActivity {
         }
 
 
-        this.finish();
     }
 
     public void rsync_help(View v){
@@ -226,5 +232,23 @@ public class addConfig extends AppCompatActivity {
                         })
                 ;
         alertDialogBuilder.show();
+    }
+
+    public void rsync_daemon_info(View v){
+        SpannableString s = new SpannableString(getResources().getString(R.string.rsync_daemon_info));
+        Pattern p = Pattern.compile("https://download.samba.org/pub/rsync/rsyncd.conf.html");
+        Linkify.addLinks(s,p,null);
+
+        AlertDialog d= new AlertDialog.Builder(v.getContext())
+                        .setTitle("Build Rsync Configuration")
+                        .setMessage(s)
+                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        }).show();
+        TextView textView = d.findViewById(android.R.id.message);
+
+        textView.setTextSize(13);
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
     }
 }

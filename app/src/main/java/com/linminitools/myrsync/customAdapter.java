@@ -1,8 +1,7 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +12,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.mysync.MainActivity.configs;
+import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.MainActivity.schedulers;
 
 
 class customAdapter extends BaseAdapter {
@@ -87,18 +87,14 @@ class customAdapter extends BaseAdapter {
                     RS_Configuration conf;
                     try{
                         conf= configs.get(sched.config_pos);
-                    }catch (IndexOutOfBoundsException e){
-                        conf= configs.get(0);
-                        sched.config_pos=conf.id;
-                    }
+
                     tv_conf_name.setText(conf.name);
                     tv_sched_name.setText(sched.name);
                     if (context.getSharedPreferences("CMD",MODE_PRIVATE).getBoolean("is_running",false)) tv_next_run.setText("Running");
                     else tv_next_run.setText(sched.getNextAlarm());
 
                     SharedPreferences result_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
-                    Log.d("SHAREDPREFS", "last_result_" + String.valueOf(conf.id));
-                    Log.d("CONTEXT", context.toString());
+
                     String result = result_prefs.getString("last_result_" + String.valueOf(conf.id), "Never Run");
                     String last_run = result_prefs.getString("last_run_" + String.valueOf(conf.id), "Never Run");
                     tv_last_run.setText(last_run);
@@ -107,8 +103,11 @@ class customAdapter extends BaseAdapter {
                     if (result.equals("OK")) {
                         vi.findViewById(R.id.img_success_status).setVisibility(View.VISIBLE);
                     } else if (result.equals("Warning! Check Log!")) {
-                        Log.d("RESULT_1", result);
+
                         error.setVisibility(View.VISIBLE);
+                    }
+                    }catch (IndexOutOfBoundsException e){
+                        schedulers.remove(sched);
                     }
                 }
 
@@ -134,14 +133,7 @@ class customAdapter extends BaseAdapter {
 
 
                     String days = sched.days;
-                    Log.d ("DAYS",days);
-                    Log.d ("NAME",sched.name);
                     String[] active_days = days.split("[.]");
-                    Log.d("ACTIVE DAYS", String.valueOf(active_days.length));
-
-                    for (int i=0; i<active_days.length;i++) {
-                        Log.d("ACTIVE DAYS", String.valueOf(active_days[i]));
-                        }
 
                         for (String d : active_days) {
                         if (!d.isEmpty()) {

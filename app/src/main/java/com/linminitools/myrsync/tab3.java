@@ -1,4 +1,4 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 
 import android.content.Context;
@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import static com.linminitools.mysync.MainActivity.schedulers;
+import static com.linminitools.myrsync.MainActivity.schedulers;
 
 
 public class tab3 extends android.support.v4.app.Fragment {

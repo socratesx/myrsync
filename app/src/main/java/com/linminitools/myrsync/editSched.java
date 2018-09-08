@@ -1,4 +1,4 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.linminitools.mysync.MainActivity.appContext;
-import static com.linminitools.mysync.MainActivity.configs;
-import static com.linminitools.mysync.MainActivity.schedulers;
+import static com.linminitools.myrsync.MainActivity.appContext;
+import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.MainActivity.schedulers;
 
 
 public class editSched extends addScheduler {
@@ -35,7 +35,7 @@ public class editSched extends addScheduler {
         ed_name.setText(sched.name);
 
         TimePicker tp = findViewById(R.id.timePicker);
-        Log.d("DAYTIME BEFORE SAVE", String.valueOf(sched.hour) + String.valueOf(sched.min));
+
         tp.setIs24HourView(true);
 
         tp.setCurrentHour(sched.hour);
@@ -45,13 +45,13 @@ public class editSched extends addScheduler {
 
         Spinner sp = findViewById(R.id.sp_configs);
 
-        List<String> listLoadToSpinner = new ArrayList<String>();
+        List<String> listLoadToSpinner = new ArrayList<>();
 
         for (RS_Configuration c : configs) {
             listLoadToSpinner.add(c.name);
         }
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
                 appContext,
                 android.R.layout.simple_spinner_dropdown_item,
                 listLoadToSpinner);
@@ -123,13 +123,13 @@ public class editSched extends addScheduler {
             String name = String.valueOf(tv.getText());
             Spinner sp = findViewById(R.id.sp_configs);
 
-            List<String> listLoadToSpinner = new ArrayList<String>();
+            List<String> listLoadToSpinner = new ArrayList<>();
 
             for (RS_Configuration c : configs){
                 listLoadToSpinner.add(c.name);
             }
 
-            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(
+            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
                     appContext,
                     android.R.layout.simple_spinner_dropdown_item,
                     listLoadToSpinner);

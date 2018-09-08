@@ -73,7 +73,7 @@
         android:layout_marginStart="8dp"
         android:gravity="center_vertical|center_horizontal"
         android:text="M"
-        android:textSize="8dp"
+        android:textSize="8sp"
         android:background="@drawable/rectangle_transp"
         app:layout_constraintBaseline_toBaselineOf="@+id/tv_sched_repeat"
         app:layout_constraintStart_toEndOf="@+id/tv_sched_repeat" />
@@ -119,10 +119,12 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_marginTop="16dp"
+        android:backgroundTint="@android:color/transparent"
+        android:onClick="sched_clickHandler"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:drawable/ic_delete"
-        android:onClick="sched_clickHandler"/>
+        app:srcCompat="@drawable/delete_row"
+        android:contentDescription="delete" />
 
     <TextView
         android:id="@+id/textView3"
@@ -157,5 +159,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tv_sched_name"
         app:srcCompat="@android:color/transparent"
-        android:onClick="sched_clickHandler"/>
+        android:onClick="sched_clickHandler"
+        android:contentDescription="edit scheduler" />
 </android.support.constraint.ConstraintLayout>

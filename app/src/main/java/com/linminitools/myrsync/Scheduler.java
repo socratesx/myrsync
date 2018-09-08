@@ -1,15 +1,13 @@
-package com.linminitools.mysync;
+package com.linminitools.myrsync;
 
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 
-import android.support.v4.app.AlarmManagerCompat;
-import android.support.v7.util.SortedList;
-import android.util.Log;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -21,11 +19,9 @@ import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import static android.content.Context.ALARM_SERVICE;
-import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.mysync.MainActivity.appContext;
 import static java.util.Calendar.DAY_OF_WEEK;
 import static java.util.Calendar.getInstance;
 
@@ -62,6 +58,7 @@ public class Scheduler extends MainActivity{
     }
 
 
+    @SuppressLint("ApplySharedPref")
     protected void saveToDisk(){
 
         SharedPreferences prefs = appContext.getSharedPreferences("schedulers", MODE_PRIVATE);
@@ -77,6 +74,7 @@ public class Scheduler extends MainActivity{
 
     }
 
+    @SuppressLint("ApplySharedPref")
     protected void deleteFromDisk(){
         SharedPreferences prefs = appContext.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
@@ -108,10 +106,6 @@ public class Scheduler extends MainActivity{
         long scheduler_time = cal.getTimeInMillis();
         final long time_selected = scheduler_time;
 
-
-        Log.d("DATE", String.valueOf(cal.get(DAY_OF_WEEK)));
-        Log.d("HOUR_SELECTED", String.valueOf(scheduler_time));
-
         Intent futureIntent = new Intent();
         futureIntent.setAction("android.media.action.DISPLAY_NOTIFICATION");
         futureIntent.addCategory("com.linminitools.mysync");
@@ -135,31 +129,25 @@ public class Scheduler extends MainActivity{
             for (String d : days_list) {
                 int delta = today_number - weekdays.get(d);
                 cal = getInstance();
-                Log.d("DELTA_",String.valueOf(cal.get(DAY_OF_WEEK))+" "+String.valueOf(weekdays.get(d)));
+
                 int request = (100 * this.id) + weekdays.get(d);
                 cal.set(Calendar.HOUR_OF_DAY, this.d.getCurrentHour());
                 cal.set(Calendar.MINUTE, this.d.getCurrentMinute());
                 if (delta>0) {
                     cal.set(Calendar.DAY_OF_MONTH,day_of_month-Math.abs(delta)+7);
-                    Log.d("HOUR_0", "DELTA>0 " +String.valueOf(delta) + " " +String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
-                    Log.d("COUNTER",String.valueOf(count));
+
                 }
                 else if (delta==0){
                     Calendar now = Calendar.getInstance();
                     long time_now=now.getTimeInMillis();
                     long delta2 = time_selected - time_now;
                     if(delta2<0)  cal.set(Calendar.DAY_OF_MONTH,day_of_month+7);
-                    Log.d("COUNTER",String.valueOf(count));
-                    Log.d("HOUR_0", "DELTA=0 " +String.valueOf(delta) + " "+String.valueOf(cal.get(Calendar.DAY_OF_MONTH)) );
                 }
                 else{
                     cal.set(Calendar.DAY_OF_MONTH,day_of_month+Math.abs(delta));
-                    Log.d("HOUR_0", "DELTA<0 "+ String.valueOf(delta) + " " +String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
-                    Log.d("COUNTER",String.valueOf(count));
                 }
                 count=count+1;
                 scheduler_time = cal.getTimeInMillis();
-                Log.d("HOUR_1", String.valueOf(scheduler_time));
 
                 PendingIntent broadcast = PendingIntent.getBroadcast(ctx, request, futureIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                 al.setRepeating(AlarmManager.RTC_WAKEUP, scheduler_time, week_interval, broadcast);
@@ -169,7 +157,6 @@ public class Scheduler extends MainActivity{
             }
 
             Collections.sort(Alarm_Times);
-            Log.d("SORTED_LIST", Alarm_Times.toString());
 
         }
         catch (StringIndexOutOfBoundsException e){
@@ -197,7 +184,6 @@ public class Scheduler extends MainActivity{
         Calendar now = Calendar.getInstance();
         long time = now.getTimeInMillis();
 
-        Log.d("COMPARE___",String.valueOf(now.get(Calendar.DAY_OF_WEEK)));
         int today = now.get(Calendar.DAY_OF_WEEK);
 
         Map<Integer,String> all_days= new HashMap();
@@ -213,7 +199,7 @@ public class Scheduler extends MainActivity{
         String today_string=all_days.get(today);
         try {
             String[] days_list = this.days.substring(1, this.days.length() - 1).toUpperCase().split("[.]");
-            List<String> sched_days = new ArrayList<String>(Arrays.asList(days_list));
+            List<String> sched_days = new ArrayList<>(Arrays.asList(days_list));
             long next_time = 0;
             int count = 0;
             Calendar scheduler_time = Calendar.getInstance();
@@ -221,10 +207,9 @@ public class Scheduler extends MainActivity{
             scheduler_time.set(Calendar.MINUTE,this.min);
 
             long delta = scheduler_time.getTimeInMillis() - time;
-            Log.d("DELTA", String.valueOf(delta));
+
             if(delta>0) {
                 while (!sched_days.contains(all_days.get(today))) {
-                    Log.d("DELTA", "WENT INTO THE WHILE"+today);
                     count = count + 1;
                     today = today + 1;
                     if (today > 7) today = 1;
@@ -241,14 +226,13 @@ public class Scheduler extends MainActivity{
                 }
 
             }
-
                 next_time = count * 86400000 + delta;
-                Log.d("NEXT_TIME", String.valueOf(next_time));
+
 
             time = time + next_time;
             if(next_time<0) time=time+604800000;
-
-            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm");
+            Locale current_locale = appContext.getResources().getConfiguration().locale;
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
             return formatter.format(time);
         }
