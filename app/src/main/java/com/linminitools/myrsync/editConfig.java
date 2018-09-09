@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.MainActivity.configs;
@@ -57,7 +58,7 @@ public class editConfig extends addConfig {
 
         String rs_options = config.rs_options;
 
-        if (rs_options == "-") {
+        if (Objects.equals(rs_options, "-")) {
             rs_options = "";
         }
 
@@ -87,7 +88,7 @@ public class editConfig extends addConfig {
 
     }
 
-    public void actionConfig(View v, int id, int position, int request){
+    private void actionConfig(View v, int id, int position, int request){
         Map<String,String> configMap=processForm(v);
 
         if (!configMap.get("rs_ip").isEmpty() &&

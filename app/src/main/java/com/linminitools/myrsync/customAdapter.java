@@ -18,11 +18,11 @@ import static com.linminitools.myrsync.MainActivity.schedulers;
 
 class customAdapter extends BaseAdapter {
 
-        Context context;
-        String[] data;
+        private final Context context;
+        private final String[] data;
         private static LayoutInflater inflater = null;
-        private int fromTab;
-        private ArrayList<Scheduler> original_data = new ArrayList<>();
+        private final int fromTab;
+        private final ArrayList<Scheduler> original_data = new ArrayList<>();
 
 
 

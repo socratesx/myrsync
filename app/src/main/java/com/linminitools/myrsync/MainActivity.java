@@ -43,17 +43,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSION_REQUEST_CODE = 1;
     @NonNull
-    public static ArrayList<RS_Configuration> configs = new ArrayList<>();
+    public static final ArrayList<RS_Configuration> configs = new ArrayList<>();
     @NonNull
-    public static ArrayList<Scheduler> schedulers = new ArrayList<>();
+    public static final ArrayList<Scheduler> schedulers = new ArrayList<>();
     public static Context appContext;
     @NonNull
-    public static Map<String,Boolean> settings = new HashMap<>();
+    private static final Map<String,Boolean> settings = new HashMap<>();
 
 
     @Override
@@ -297,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
 
         ViewPager viewPager = findViewById(R.id.pager);
         ViewPagerAdapter v = (ViewPagerAdapter) viewPager.getAdapter();
-        v.refresh_adapter();
+        Objects.requireNonNull(v).refresh_adapter();
 
 
         viewPager.setAdapter(v);
@@ -313,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
         private final List<Fragment> mFragmentList = new java.util.ArrayList<>();
         private final List<String> mFragmentTitleList = new ArrayList<>();
 
-        public ViewPagerAdapter(FragmentManager manager) {
+        ViewPagerAdapter(FragmentManager manager) {
             super(manager);
         }
 
@@ -327,14 +328,13 @@ public class MainActivity extends AppCompatActivity {
             return mFragmentList.size();
         }
 
-        public void addFragment(Fragment fragment, String title) {
+        void addFragment(Fragment fragment, String title) {
             mFragmentList.add(fragment);
             mFragmentTitleList.add(title);
 
         }
 
-        @NonNull
-        public ViewPagerAdapter refresh_adapter(){
+        void refresh_adapter(){
             mFragmentList.clear();
             mFragmentTitleList.clear();
             this.addFragment(new tab1(), "Overview");
@@ -342,7 +342,6 @@ public class MainActivity extends AppCompatActivity {
             this.addFragment(new tab3(), "Schedulers");
             this.addFragment(new tab4(), "Log");
 
-            return this;
         }
 
         @Override
@@ -365,24 +364,24 @@ public class MainActivity extends AppCompatActivity {
                 final String docId = DocumentsContract.getDocumentId(uri);
                 final String[] split = docId.split(":");
                 final String type = split[0];
-                String path="";
+                StringBuilder path;
                 if ("primary".equalsIgnoreCase(type)) {
-                    path=Environment.getExternalStorageDirectory().toString();
+                    path = new StringBuilder(Environment.getExternalStorageDirectory().toString());
 
                     for (int i=0;i<split.length;i++){
-                        if (i>0) path=path+"/"+split[i];
+                        if (i>0) path.append("/").append(split[i]);
                     }
                     //return Environment.getExternalStorageDirectory() + "/" + split[1];
-                    return path;
+                    return path.toString();
                 }
 
                 else {
 
-                    path="/storage";
+                    path = new StringBuilder("/storage");
                     for (String aSplit : split) {
-                        path = path + "/" + aSplit;
+                        path.append("/").append(aSplit);
                     }
-                    return path;
+                    return path.toString();
                 }
 
             }
@@ -419,7 +418,7 @@ public class MainActivity extends AppCompatActivity {
                         split[1]
                 };
 
-                return getDataColumn(context, contentUri, selection, selectionArgs);
+                return getDataColumn(context, Objects.requireNonNull(contentUri), selection, selectionArgs);
             }
         }
         // MediaStore (and general)
@@ -439,8 +438,8 @@ public class MainActivity extends AppCompatActivity {
         return null;
     }
 
-    public static String getDataColumn(Context context, @NonNull Uri uri, String selection,
-                                       String[] selectionArgs) {
+    private static String getDataColumn(Context context, @NonNull Uri uri, String selection,
+                                        String[] selectionArgs) {
 
         Cursor cursor = null;
         final String column = "_data";
@@ -467,7 +466,7 @@ public class MainActivity extends AppCompatActivity {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is ExternalStorageProvider.
      */
-    public static boolean isExternalStorageDocument(Uri uri) {
+    private static boolean isExternalStorageDocument(Uri uri) {
         return "com.android.externalstorage.documents".equals(uri.getAuthority());
     }
 
@@ -475,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is DownloadsProvider.
      */
-    public static boolean isDownloadsDocument(Uri uri) {
+    private static boolean isDownloadsDocument(Uri uri) {
         return "com.android.providers.downloads.documents".equals(uri.getAuthority());
     }
 
@@ -483,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is MediaProvider.
      */
-    public static boolean isMediaDocument(Uri uri) {
+    private static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
     }
 
@@ -491,7 +490,7 @@ public class MainActivity extends AppCompatActivity {
      * @param uri The Uri to check.
      * @return Whether the Uri authority is Google Photos.
      */
-    public static boolean isGooglePhotosUri(Uri uri) {
+    private static boolean isGooglePhotosUri(Uri uri) {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
 
@@ -510,7 +509,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case PERMISSION_REQUEST_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

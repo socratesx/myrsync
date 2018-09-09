@@ -17,18 +17,23 @@ import static android.content.Context.MODE_PRIVATE;
 import static com.linminitools.myrsync.MainActivity.appContext;
 
 
-public class RS_Configuration {
+class RS_Configuration {
 
-    protected String rs_ip, rs_user, rs_module, rs_options, local_path,name;
-    protected String rs_port="873";
-    protected  int id;
+    String rs_ip;
+    String rs_user;
+    String rs_module;
+    String rs_options;
+    String local_path;
+    final String name;
+    String rs_port="873";
+    final int id;
 
     RS_Configuration(int id){
         this.id=id;
         this.name="config_"+String.valueOf(id);
     }
     
-    protected void saveToDisk(){
+    void saveToDisk(){
         
         SharedPreferences prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
@@ -46,7 +51,7 @@ public class RS_Configuration {
         
     }
     
-    protected void deleteFromDisk(){
+    void deleteFromDisk(){
         SharedPreferences prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
 
@@ -61,7 +66,7 @@ public class RS_Configuration {
         prefseditor.apply();
     }
 
-    protected void executeConfig(final Context context){
+    void executeConfig(final Context context){
 
 
         final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
@@ -104,7 +109,7 @@ public class RS_Configuration {
                         //StringBuilder builder_1 = new StringBuilder();
                         StringBuilder builder_2 = new StringBuilder();
                         //String out_line = null;
-                        String err_line = null;
+                        String err_line;
 
                         while ( (err_line = std_error.readLine()) != null) {
                             builder_2.append(err_line);

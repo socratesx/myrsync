@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
@@ -31,8 +32,6 @@ import static com.linminitools.myrsync.MainActivity.getPath;
 
 
 public class addConfig extends AppCompatActivity {
-
-    private int id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +71,7 @@ public class addConfig extends AppCompatActivity {
                 path_prefseditor.apply();
 
                 TextView tv_path= findViewById(R.id.tv_path);
-                if (!local_path.isEmpty()) {
+                if (!Objects.requireNonNull(local_path).isEmpty()) {
                     tv_path.setText(path_prefs.getString("local_path", ""));
                     tv_path.setVisibility(View.VISIBLE);
 
@@ -92,7 +91,7 @@ public class addConfig extends AppCompatActivity {
 
 
 
-    public Map<String,String> processForm(View v){
+    Map<String,String> processForm(View v){
 
         Map<String,String> configMap = new HashMap<>();
 
@@ -134,7 +133,7 @@ public class addConfig extends AppCompatActivity {
                 options=options.concat(check_box);
             }
         }
-        if (options=="-"){options="";}
+        if (Objects.equals(options, "-")){options="";}
 
         String log="";
         String rs_user=String.valueOf(et_rs_user.getText()) ;

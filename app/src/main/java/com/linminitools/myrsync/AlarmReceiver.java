@@ -14,25 +14,29 @@ import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.TimePicker;
 
 import java.util.Calendar;
+import java.util.Objects;
 
 import static android.content.Context.MODE_PRIVATE;
-import static android.support.v4.app.NotificationCompat.*;
+import static android.support.v4.app.NotificationCompat.BigTextStyle;
+import static android.support.v4.app.NotificationCompat.Builder;
 import static com.linminitools.myrsync.MainActivity.configs;
 import static com.linminitools.myrsync.MainActivity.schedulers;
 
 
 public class AlarmReceiver extends BroadcastReceiver {
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onReceive(Context ctx, Intent i) {
 
         SharedPreferences sched_prefs = ctx.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
         //SharedPreferences settings_prefs = ctx.getSharedPreferences("settings",MODE_PRIVATE);
-
+        Log.d("ALARM MANAGER MYSYNC","CALLED");
         SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 
         configs.clear();
@@ -76,7 +80,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
 
 
-        if ((i.getAction()).equals("android.intent.action.BOOT_COMPLETED" )) {
+        if ((Objects.requireNonNull(i.getAction())).equals("android.intent.action.BOOT_COMPLETED" )) {
             for (Scheduler s : schedulers){
                 s.setAlarm(ctx);
                 }
@@ -109,19 +113,19 @@ public class AlarmReceiver extends BroadcastReceiver {
                     Notification n = not.build();
 
                     NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-                    nm.notify(1, n);
+                    Objects.requireNonNull(nm).notify(1, n);
 
                 } else {
                     Builder not = new Builder(ctx, NotificationChannel.DEFAULT_CHANNEL_ID);
 
-                    not.setContentTitle("myRSync Status");
+                    not.setContentTitle("myRSync Status 1");
                     not.setStyle(new BigTextStyle().bigText(message));
                     not.setContentText(message);
                     not.setSmallIcon(R.mipmap.ic_launcher);
                     Notification n = not.build();
 
                     NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-                    nm.notify(1, n);
+                    Objects.requireNonNull(nm).notify(1, n);
 
 
                 }
@@ -129,10 +133,10 @@ public class AlarmReceiver extends BroadcastReceiver {
                 if (set_prefs.getBoolean("vibrate",true)){
                     Vibrator vib = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        vib.vibrate(VibrationEffect.createOneShot(350,1));
+                        Objects.requireNonNull(vib).vibrate(VibrationEffect.createOneShot(350,1));
                     }
                     else{
-                        vib.vibrate(350);
+                        Objects.requireNonNull(vib).vibrate(350);
                     }
 
                 }

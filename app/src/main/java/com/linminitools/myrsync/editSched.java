@@ -100,7 +100,7 @@ public class editSched extends addScheduler {
 
 
 
-        public void saveAction(View v, int pos) {
+        private void saveAction(View v, int pos) {
 
             TextView tv = findViewById(R.id.ed_name);
             TimePicker tp = findViewById(R.id.timePicker);

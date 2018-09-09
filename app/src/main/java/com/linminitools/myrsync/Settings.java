@@ -17,7 +17,7 @@ import android.view.MenuItem;
 
 public class Settings  extends AppCompatPreferenceActivity {
 
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+    private static final Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
 

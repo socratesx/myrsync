@@ -7,7 +7,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-
+import android.util.Log;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.util.Calendar.DAY_OF_WEEK;
 import static java.util.Calendar.getInstance;
@@ -30,9 +31,10 @@ public class Scheduler extends MainActivity{
     //ArrayList<String> days;
     TimePicker d;
     String days,name;
-    int id, hour, min, config_pos;
-    private String today;
-    private long triggerTime;
+    private int id;
+    int hour;
+    int min;
+    int config_pos;
     private List<PendingIntent> Alarm_List;
     private List<Long> Alarm_Times;
 
@@ -52,14 +54,14 @@ public class Scheduler extends MainActivity{
 
     }
 
-    protected void update(){
+    void update(){
         this.hour=d.getCurrentHour();
         this.min=d.getCurrentMinute();
     }
 
 
     @SuppressLint("ApplySharedPref")
-    protected void saveToDisk(){
+    void saveToDisk(){
 
         SharedPreferences prefs = appContext.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
@@ -75,7 +77,7 @@ public class Scheduler extends MainActivity{
     }
 
     @SuppressLint("ApplySharedPref")
-    protected void deleteFromDisk(){
+    void deleteFromDisk(){
         SharedPreferences prefs = appContext.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
 
@@ -108,12 +110,12 @@ public class Scheduler extends MainActivity{
 
         Intent futureIntent = new Intent();
         futureIntent.setAction("android.media.action.DISPLAY_NOTIFICATION");
-        futureIntent.addCategory("com.linminitools.mysync");
+        futureIntent.addCategory("com.linminitools.myrsync");
         futureIntent.putExtra("Time",scheduler_time);
         futureIntent.putExtra("config",config_pos);
 
         String[] all_days={"SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"};
-        String[] days_list={""};
+        String[] days_list;
         int today_number=saved_cal.get(DAY_OF_WEEK);
         int day_of_month=saved_cal.get(Calendar.DAY_OF_MONTH);
 
@@ -150,9 +152,12 @@ public class Scheduler extends MainActivity{
                 scheduler_time = cal.getTimeInMillis();
 
                 PendingIntent broadcast = PendingIntent.getBroadcast(ctx, request, futureIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-                al.setRepeating(AlarmManager.RTC_WAKEUP, scheduler_time, week_interval, broadcast);
+                Objects.requireNonNull(al).setRepeating(AlarmManager.RTC_WAKEUP, scheduler_time, week_interval, broadcast);
                 Alarm_List.add(broadcast);
                 Alarm_Times.add(scheduler_time);
+                for (long t :Alarm_Times){
+                    Log.d("AL_TIME",String.valueOf(t));
+                }
 
             }
 
@@ -171,13 +176,9 @@ public class Scheduler extends MainActivity{
     public void cancelAlarm(Context ctx){
         AlarmManager al = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
         for (PendingIntent pi : Alarm_List){
-            al.cancel(pi);
+            Objects.requireNonNull(al).cancel(pi);
         }
         Alarm_List.clear();
-    }
-
-    public List<PendingIntent> getAlarmList(){
-        return Alarm_List;
     }
 
     public String getNextAlarm(){
@@ -186,7 +187,7 @@ public class Scheduler extends MainActivity{
 
         int today = now.get(Calendar.DAY_OF_WEEK);
 
-        Map<Integer,String> all_days= new HashMap();
+        @SuppressWarnings("unchecked") Map<Integer,String> all_days= new HashMap();
         all_days.put(2,"MONDAY");
         all_days.put(3,"TUESDAY");
         all_days.put(4,"WEDNESDAY");
@@ -200,7 +201,7 @@ public class Scheduler extends MainActivity{
         try {
             String[] days_list = this.days.substring(1, this.days.length() - 1).toUpperCase().split("[.]");
             List<String> sched_days = new ArrayList<>(Arrays.asList(days_list));
-            long next_time = 0;
+            long next_time;
             int count = 0;
             Calendar scheduler_time = Calendar.getInstance();
             scheduler_time.set(Calendar.HOUR_OF_DAY,this.hour);

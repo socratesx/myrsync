@@ -3,23 +3,26 @@ package com.linminitools.myrsync;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import java.util.Objects;
+
 import static android.app.Activity.RESULT_OK;
 import static com.linminitools.myrsync.MainActivity.schedulers;
 
 public class tab1 extends Fragment {
 
-    Handler h= new Handler();
-    ListView status;
-    Thread t;
+    private final Handler h= new Handler();
+    private ListView status;
+    private Thread t;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.tab1, container, false);
         rootView.setTag("tab1");
@@ -27,7 +30,7 @@ public class tab1 extends Fragment {
         return rootView;
     }
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         // Setup any handles to view objects here
         //        // EditText etFoo = (EditText) view.findViewById(R.id.etFoo);
         status = view.findViewById(R.id.status_list);
@@ -42,7 +45,7 @@ public class tab1 extends Fragment {
     public void onResume(){
         super.onResume();
         try{
-            status.setEmptyView(getView().findViewById(android.R.id.empty));
+            status.setEmptyView(Objects.requireNonNull(getView()).findViewById(android.R.id.empty));
         }
         catch (Exception e){
             e.printStackTrace();
@@ -60,7 +63,7 @@ public class tab1 extends Fragment {
 
     }
 
-    public Thread refresh(final Context ctx) {
+    private Thread refresh(final Context ctx) {
          return new Thread() {
             @Override
             public void run() {
