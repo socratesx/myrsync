@@ -1,43 +1,30 @@
 package com.linminitools.myrsync;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.TimePicker;
 
-import java.util.Calendar;
 import java.util.Objects;
 
 import static android.content.Context.MODE_PRIVATE;
-import static android.support.v4.app.NotificationCompat.BigTextStyle;
-import static android.support.v4.app.NotificationCompat.Builder;
 import static com.linminitools.myrsync.MainActivity.configs;
 import static com.linminitools.myrsync.MainActivity.schedulers;
 
 
 public class AlarmReceiver extends BroadcastReceiver {
 
-    @SuppressWarnings("deprecation")
+
     @Override
     public void onReceive(Context ctx, Intent i) {
 
         SharedPreferences sched_prefs = ctx.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
         //SharedPreferences settings_prefs = ctx.getSharedPreferences("settings",MODE_PRIVATE);
-        Log.d("ALARM MANAGER MYSYNC","CALLED");
-        SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        Log.d("ALARM_MANAGER_MYSYNC","CALLED");
+        //SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 
         configs.clear();
         schedulers.clear();
@@ -85,8 +72,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                 s.setAlarm(ctx);
                 }
         }
-
-        if ((i.getAction()).equals("android.media.action.DISPLAY_NOTIFICATION")) {
+        /*
+        if ((i.getAction()).equals("android.media.action.RUN")) {
             int pos = i.getIntExtra("config", 0);
             String message;
             try {
@@ -145,7 +132,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
             }
 
-        }
+        }   */
     }
 
 }

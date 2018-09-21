@@ -1,8 +1,21 @@
 package com.linminitools.myrsync;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.linminitools.myrsync.MainActivity.appContext;
@@ -68,7 +82,7 @@ class RS_Configuration {
 
     void executeConfig(final Context context){
 
-
+        send_notification(context);
         final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
 
         final int id = this.id;
@@ -152,6 +166,83 @@ class RS_Configuration {
             t.start();
 
 
+
+    }
+
+    private void send_notification(Context ctx){
+
+        SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        Locale current_locale = ctx.getResources().getConfiguration().locale;
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+
+        String message = "Rsync configuration " + this.name + " started on " +  formatter.format(Calendar.getInstance().getTime());
+
+
+        if (set_prefs.getBoolean("notifications",true)) {
+
+            Uri ring_path=Uri.parse(set_prefs.getString("ringtone", RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI));
+            Ringtone ring = RingtoneManager.getRingtone(ctx,ring_path);
+
+            Intent intent = new Intent(ctx, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent, 0);
+
+
+
+            if (Build.VERSION.SDK_INT < 26) {
+                NotificationCompat.Builder not = new NotificationCompat.Builder(ctx);
+                not.setContentTitle("myRSync Job Started")
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+                        .setContentText(message)
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true);
+                Notification n = not.build();
+
+                NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+                Objects.requireNonNull(nm).notify(1, n);
+
+            } else {
+
+                int importance = NotificationManager.IMPORTANCE_DEFAULT;
+                NotificationChannel channel = new NotificationChannel("MY_CHANNEL", "Notification", importance);
+                channel.setDescription("Description");
+                // Register the channel with the system; you can't change the importance
+                // or other notification behaviors after this
+                NotificationManager notificationManager = ctx.getSystemService(NotificationManager.class);
+                notificationManager.createNotificationChannel(channel);
+
+                NotificationCompat.Builder not = new NotificationCompat.Builder(ctx,channel.getId());
+
+                not.setContentTitle("myRSync Job Started")
+                        .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+                        .setContentText(message)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentIntent(pendingIntent)
+                        .setSmallIcon(R.drawable.ic_stat_name)
+                        .setAutoCancel(true);
+
+                Notification n = not.build();
+
+                NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+                Objects.requireNonNull(nm).notify(1, n);
+
+            }
+
+            if (set_prefs.getBoolean("vibrate",true)){
+                Vibrator vib = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    Objects.requireNonNull(vib).vibrate(VibrationEffect.createOneShot(350,1));
+                }
+                else{
+                    Objects.requireNonNull(vib).vibrate(350);
+                }
+
+            }
+            ring.play();
+
+
+        }
 
     }
 }

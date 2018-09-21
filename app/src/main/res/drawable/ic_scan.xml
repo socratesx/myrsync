@@ -1,0 +1,72 @@
+<vector android:height="24dp" android:viewportHeight="96"
+    android:viewportWidth="96" android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#CBCBCB" android:fillType="evenOdd"
+        android:pathData="M0,0h96v96h-96v-35h1v-1h33v-6h-33v-1h-1v-2h1v-1h33v-6h-33v-1h-1v-2h1v-1h33v-6h-33v-1h-1v-33z"
+        android:strokeColor="#CBCBCB" android:strokeWidth="0.1"/>
+    <path android:fillColor="#CBCBCB" android:fillType="evenOdd"
+        android:pathData="M4,36h1v2h-1v-2zM6,36h1v2h-1v-2zM83,37h1v1h-1v1h-1v-1h1v-1zM81,42h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM4,46h1v2h-1v-2zM6,46h1v2h-1v-2zM4,56h1v2h-1v-2zM6,56h1v2h-1v-2z"
+        android:strokeColor="#CBCBCB" android:strokeWidth="0.1"/>
+    <path android:fillColor="#101010" android:fillType="evenOdd"
+        android:pathData="M45,3h14v1h3v1h3v1h2v1h1v1h2v1h2v1h1v1h1v1h1v1h1v2h1v1h1v1h1v2h1v2h1v2h1v3h-7v-2h-1v-2h-1v-2h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-2v-1h-2v-1h-2v-1h-5v-1h-6v1h-4v1h-3v1h-2v1h-2v1h-1v1h-1v1h-1v3h1v1h1v1h1v1h1v1h1v1h1v1h-20v-19h2v1h1v1h1v1h1v1h1v1h1v1h2v-1h1v-1h1v-1h2v-1h1v-1h2v-1h2v-1h3v-1h3v-1z"
+        android:strokeColor="#101010" android:strokeWidth="0.1"/>
+    <path android:fillColor="#101010" android:fillType="evenOdd"
+        android:pathData="M73,29h18v1h1v1h1v2h1v28h-1v2h-1v1h-1v1h-18v-1h-1v-1h-1v-2h-1v-28h1v-2h1v-1h1v-1zM0,34h34v6h-34v-6zM4,39h3v-4h-3v4zM79,37h4v1h1v2h-1v-2h-3v3h2v1h1v1h-1v-1h-2v3h-1v-8z"
+        android:strokeColor="#101010" android:strokeWidth="0.1"/>
+    <path android:fillColor="#101010" android:fillType="evenOdd"
+        android:pathData="M0,44h34v6h-34v-6zM4,49h3v-4h-3v4zM74,50h3v1h-1v1h1v2h-3v-1h2v-1h-2v-2zM78,50h1v1h2v-1h1v1h1v-1h3v1h1v-1h2v1h-2v2h2v1h-2v-1h-1v1h-1v-3h-2v3h-1v-3h-1v3h-1v1h-1v-3h-1v-2zM0,54h34v6h-34v-6zM4,59h3v-4h-3v4z"
+        android:strokeColor="#101010" android:strokeWidth="0.1"/>
+    <path android:fillColor="#101010" android:fillType="evenOdd"
+        android:pathData="M21,69h7v2h1v2h1v2h1v1h1v1h1v2h1v1h1v1h1v1h2v1h2v1h2v1h2v1h5v1h5v-1h5v-1h3v-1h2v-1h1v-1h2v-1h1v-3h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h19v1h1v3h-1v16h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-2v1h-1v1h-1v1h-2v1h-2v1h-1v1h-3v1h-4v1h-13v-1h-4v-1h-2v-1h-2v-1h-2v-1h-1v-1h-2v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-2h-1v-1h-1v-3h-1v-2h-1v-3h-1v-1z"
+        android:strokeColor="#101010" android:strokeWidth="0.1"/>
+    <path android:fillColor="#F2F2F2" android:fillType="evenOdd"
+        android:pathData="M74,34h16v16h-3v1h-1v-1h-5v1h-2v-1h-1v2h1v3h1v-1h1v-2h1v2h2v-3h1v3h1v-1h1v1h3v3h-16v-3h4v-2h-2v-1h1v-1h-3v-16zM79,37v8h1v-3h1v1h1v1h1v1h2v-1h-1v-1h-1v-2h1v-4h-5zM80,38h2v1h1v1h-1v1h-2v-3zM88,51h2v1h1v1h-3v-2zM74,70h4v1h-4v-1z"
+        android:strokeColor="#F2F2F2" android:strokeWidth="0.1"/>
+    <path android:fillColor="#747474" android:fillType="evenOdd"
+        android:pathData="M24,7h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1zM32,8h1v1h-1v1h-1v1h-1v-1h1v-1h1v-1zM45,10h3v1h-3v-1zM73,10h1v1h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1zM91,29h1v1h1v1h-1v-1h-1v-1zM73,33h18v19h-1v-1h-1v-1h1v-16h-16v18h2v1h-2v3h-1v-23zM4,35h3v1h-3v-1zM4,38h3v1h-3v-1z"
+        android:strokeColor="#747474" android:strokeWidth="0.1"/>
+    <path android:fillColor="#747474" android:fillType="evenOdd"
+        android:pathData="M4,45h3v1h-3v-1zM4,48h3v1h-3v-1zM89,53h2v3h-1v-2h-1v-1zM4,55h3v1h-3v-1zM75,57h14v1h-14v-1zM4,58h3v1h-3v-1zM92,63h1v1h-1v1h-1v-1h1v-1zM71,71h4v1h-4v-1zM61,72h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM36,80h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM81,88h1v5h-1v-5zM36,89h1v1h2v1h2v1h2v1h-2v-1h-2v-1h-2v-1h-1v-1zM62,91h2v1h-2v-1z"
+        android:strokeColor="#747474" android:strokeWidth="0.1"/>
+    <path android:fillColor="#B4B4B4" android:fillType="evenOdd"
+        android:pathData="M40,3h3v1h-3v-1zM34,6h1v1h-1v1h-1v-1h1v-1zM68,6h2v1h1v1h-1v-1h-2v-1zM25,7h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM31,8h1v1h-1v1h-1v-1h1v-1zM48,10h2v1h-2v-1zM74,10h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1zM44,11h2v1h-2v-1zM64,13h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1zM38,14h1v1h-1v1h-1v1h-1v1h-1v-1h1v-1h1v-1h1v-1zM78,15h1v1h1v2h1v1h-1v-1h-1v-2h-1v-1zM69,18h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM20,21h1v5h1v1h-1v-1h-1v-5zM42,24h1v2h-1v-2zM83,25h1v1h-1v1h-1v-1h1v-1zM82,50h1v1h-1v1h-1v-1h1v-1zM80,60h1v1h-1v1h-1v-1h1v-1zM60,70h3v1h-2v2h1v1h-1v-1h-1v-3zM21,72h1v3h1v2h1v2h1v1h-1v-1h-1v-2h-1v-2h-1v-3z"
+        android:strokeColor="#B4B4B4" android:strokeWidth="0.1"/>
+    <path android:fillColor="#B4B4B4" android:fillType="evenOdd"
+        android:pathData="M31,74h1v1h1v1h-1v-1h-1v-1zM82,74h1v7h-1v-7zM63,75h1v1h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1zM25,81h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM64,81h1v1h-1v1h-1v-1h1v-1zM53,85h2v1h-2v-1zM74,87h1v1h1v1h1v1h2v2h1v1h2v1h-2v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1zM35,89h1v1h1v1h-1v-1h-1v-1zM68,89h1v1h-1v1h-2v1h-2v-1h2v-1h2v-1z"
+        android:strokeColor="#B4B4B4" android:strokeWidth="0.1"/>
+    <path android:fillColor="#494949" android:fillType="evenOdd"
+        android:pathData="M50,2h4v1h-4v-1zM43,3h2v1h-2v-1zM40,4h2v1h-2v-1zM67,6h1v1h2v1h1v1h-1v-1h-2v-1h-1v-1zM49,9h6v1h-6v-1zM58,10h2v1h2v1h2v1h-2v-1h-2v-1h-2v-1zM28,11h2v1h-2v-1zM76,14h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM37,20h1v1h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1zM21,25h7v1h-7v-1zM21,68h5v1h-5v-1zM61,71h7v1h-7v-1zM81,76h1v8h-1v-8zM66,77h1v1h1v1h-1v-1h-1v-1zM24,78h1v1h1v1h-1v-1h-1v-1zM33,78h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1zM67,80h1v1h-1v1h-1v-1h1v-1z"
+        android:strokeColor="#494949" android:strokeWidth="0.1"/>
+    <path android:fillColor="#494949" android:fillType="evenOdd"
+        android:pathData="M28,83h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1zM62,83h2v1h-2v1h-2v-1h2v-1zM72,85h2v1h-2v1h-1v1h-1v-1h1v-1h1v-1zM49,86h5v1h-5v-1zM68,88h1v1h-1v1h-2v1h-1v-1h1v-1h2v-1zM43,92h2v1h-2v-1zM58,92h2v1h-2v-1zM49,93h4v1h-4v-1z"
+        android:strokeColor="#494949" android:strokeWidth="0.1"/>
+    <path android:fillColor="#878787" android:fillType="evenOdd"
+        android:pathData="M45,2h3v1h-3v-1zM56,2h3v1h-3v-1zM20,4h2v1h1v1h1v1h-1v-1h-2v11h-1v-13zM39,4h1v1h-1v1h-2v1h-1v-1h1v-1h2v-1zM71,8h1v1h1v1h-1v-1h-1v-1zM68,16h1v1h1v1h-1v-1h-1v-1zM79,18h1v1h1v2h1v2h-1v-2h-1v-2h-1v-1zM74,25h1v1h7v1h-7v-1h-1v-1zM72,29h1v1h-1v1h-1v-1h1v-1zM83,43h1v1h1v1h-1v-1h-1v-1zM71,63h1v1h1v1h-1v-1h-1v-1zM75,71h6v1h1v1h1v1h-1v-1h-1v-1h-6v-1zM32,76h1v1h1v1h-1v-1h-1v-1zM65,81h1v1h-1v1h-1v-1h1v-1zM42,84h2v1h-2v-1zM59,84h1v1h-1v1h-4v-1h4v-1zM46,85h2v1h-2v-1z"
+        android:strokeColor="#878787" android:strokeWidth="0.1"/>
+    <path android:fillColor="#878787" android:fillType="evenOdd"
+        android:pathData="M74,86h1v1h1v1h-1v-1h-1v-1zM45,93h2v1h-2v-1zM56,93h3v1h-3v-1z"
+        android:strokeColor="#878787" android:strokeWidth="0.1"/>
+    <path android:fillColor="#5C5C5C" android:fillType="evenOdd"
+        android:pathData="M48,2h2v1h-2v-1zM54,2h2v1h-2v-1zM62,4h3v1h2v1h-2v-1h-3v-1zM35,18h1v1h1v1h-1v-1h-1v-1zM28,25h8v1h-8v-1zM82,40h2v1h-1v1h-1v-2zM83,51h1v3h-1v-3zM87,51h1v2h-1v-2zM73,56h1v1h1v1h-1v-1h-1v-1zM90,56h1v1h-1v1h-1v-1h1v-1zM21,70h1v2h-1v-2zM68,71h3v1h-3v-1zM64,75h1v1h1v1h-1v-1h-1v-1zM81,84h1v4h-1v-4zM44,85h2v1h-2v-1zM33,87h1v1h1v1h-1v-1h-1v-1zM76,88h1v1h1v1h-1v-1h-1v-1zM79,91h1v1h1v1h-1v-1h-1v-1zM53,93h3v1h-3v-1z"
+        android:strokeColor="#5C5C5C" android:strokeWidth="0.1"/>
+    <path android:fillColor="#646464" android:fillType="evenOdd"
+        android:pathData="M59,3h3v1h-3v-1zM34,7h1v1h-1v1h-1v-1h1v-1zM42,11h2v1h-2v1h-2v1h-2v1h-1v1h-1v1h-1v-1h1v-1h1v-1h1v-1h2v-1h2v-1zM65,13h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1zM70,18h1v1h1v1h1v2h1v2h1v1h-1v-1h-1v-2h-1v-2h-1v-1h-1v-1zM82,24h1v2h-1v-2zM36,25h6v1h-6v-1zM26,68h2v1h1v2h1v2h1v2h1v1h-1v-1h-1v-2h-1v-2h-1v-2h-2v-1zM47,93h2v1h-2v-1z"
+        android:strokeColor="#646464" android:strokeWidth="0.1"/>
+    <path android:fillColor="#DCDCDC" android:fillType="evenOdd"
+        android:pathData="M33,26h8v1h-8v-1zM76,27h2v1h-2v-1zM0,33h1v1h-1v-1zM0,40h1v1h-1v-1zM0,43h1v1h-1v-1zM0,50h1v1h-1v-1zM77,52h1v2h-1v-2zM0,53h1v1h-1v-1zM0,60h1v1h-1v-1zM79,60h1v1h1v-1h4v2h-5v-1h-1v-1zM82,89h1v3h-1v-3z"
+        android:strokeColor="#DCDCDC" android:strokeWidth="0.1"/>
+    <path android:fillColor="#ACACAC" android:fillType="evenOdd"
+        android:pathData="M36,5h1v1h-1v1h-1v-1h1v-1zM36,18h1v1h1v1h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1h-1v-1zM28,84h1v1h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1h-1v-1zM72,86h1v1h-1v1h-1v1h-2v-1h2v-1h1v-1z"
+        android:strokeColor="#ACACAC" android:strokeWidth="0.1"/>
+    <path android:fillColor="#A4A4A4" android:fillType="evenOdd"
+        android:pathData="M54,10h2v1h-2v-1zM20,17h1v4h-1v-4zM20,68h1v2h-1v-2zM81,71h2v2h-1v-1h-1v-1zM34,78h1v1h1v1h-1v-1h-1v-1zM32,87h1v1h1v1h-1v-1h-1v-1z"
+        android:strokeColor="#A4A4A4" android:strokeWidth="0.1"/>
+    <path android:fillColor="#6C6C6C" android:fillType="evenOdd"
+        android:pathData="M56,10h2v1h-2v-1zM22,73h1v2h1v2h-1v-2h-1v-2zM25,80h1v1h1v1h1v1h-1v-1h-1v-1h-1v-1z"
+        android:strokeColor="#6C6C6C" android:strokeWidth="0.1"/>
+    <path android:fillColor="#E4E4E4" android:fillType="evenOdd"
+        android:pathData="M5,36h1v2h-1v-2zM5,46h1v2h-1v-2zM5,56h1v2h-1v-2z"
+        android:strokeColor="#E4E4E4" android:strokeWidth="0.1"/>
+    <path android:fillColor="#9C9C9C" android:fillType="evenOdd"
+        android:pathData="M38,81h1v1h1v1h2v1h-2v-1h-1v-1h-1v-1zM60,92h2v1h-2v-1z"
+        android:strokeColor="#9C9C9C" android:strokeWidth="0.1"/>
+</vector>

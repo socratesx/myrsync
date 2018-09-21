@@ -4,15 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:backgroundTint="?android:attr/textColorTertiary"
-    tools:backgroundTintMode="src_over">
+    tools:backgroundTintMode="src_in">
 
     <TextView
         android:id="@+id/tv_wednesday"
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_marginStart="8dp"
-        android:background="@drawable/rectangle_transp"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="W"
         android:textSize="8sp"
@@ -24,10 +23,10 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_marginStart="8dp"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="T"
         android:textSize="8sp"
-        android:background="@drawable/rectangle_transp"
         app:layout_constraintStart_toEndOf="@+id/tv_wednesday"
         app:layout_constraintTop_toTopOf="@+id/tv_wednesday" />
 
@@ -36,10 +35,10 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_marginStart="8dp"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="F"
         android:textSize="8sp"
-        android:background="@drawable/rectangle_transp"
         app:layout_constraintStart_toEndOf="@+id/tv_thursday"
         app:layout_constraintTop_toTopOf="@+id/tv_thursday" />
 
@@ -48,10 +47,10 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_marginStart="8dp"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="T"
         android:textSize="8sp"
-        android:background="@drawable/rectangle_transp"
         app:layout_constraintStart_toEndOf="@+id/tv_monday"
         app:layout_constraintTop_toTopOf="@+id/tv_monday" />
 
@@ -71,10 +70,10 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_marginStart="8dp"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="M"
         android:textSize="8sp"
-        android:background="@drawable/rectangle_transp"
         app:layout_constraintBaseline_toBaselineOf="@+id/tv_sched_repeat"
         app:layout_constraintStart_toEndOf="@+id/tv_sched_repeat" />
 
@@ -83,7 +82,7 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_marginStart="8dp"
-        android:background="@drawable/rectangle_transp"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="S"
         android:textSize="8sp"
@@ -95,7 +94,7 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:layout_marginStart="8dp"
-        android:background="@drawable/rectangle_transp"
+        android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="S"
         android:textSize="8sp"
@@ -120,11 +119,11 @@
         android:layout_marginEnd="16dp"
         android:layout_marginTop="16dp"
         android:backgroundTint="@android:color/transparent"
+        android:contentDescription="delete"
         android:onClick="sched_clickHandler"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/delete_row"
-        android:contentDescription="delete" />
+        app:srcCompat="@drawable/delete_row" />
 
     <TextView
         android:id="@+id/textView3"
@@ -153,12 +152,12 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:background="@android:color/transparent"
+        android:contentDescription="edit scheduler"
+        android:onClick="sched_clickHandler"
         app:layout_constraintBottom_toBottomOf="@+id/textView3"
         app:layout_constraintEnd_toEndOf="@+id/tv_sunday"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/tv_sched_name"
-        app:srcCompat="@android:color/transparent"
-        android:onClick="sched_clickHandler"
-        android:contentDescription="edit scheduler" />
+        app:srcCompat="@android:color/transparent" />
 </android.support.constraint.ConstraintLayout>

@@ -19,9 +19,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -40,8 +37,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -132,6 +129,32 @@ public class MainActivity extends AppCompatActivity {
                 configs.add(config);
             }
         }
+
+        Map<String,?> sched_keys = sched_prefs.getAll();
+
+        for(Map.Entry<String,?> entry : sched_keys.entrySet()){
+            if (entry.getKey().contains("id_")) {
+                String id=String.valueOf(entry.getValue());
+
+
+                TimePicker tp=new TimePicker(this);
+                tp.setIs24HourView(true);
+
+                tp.setCurrentHour(sched_prefs.getInt("hour_"+id,0));
+                tp.setCurrentMinute(sched_prefs.getInt("min_"+id,0));
+                String days = sched_prefs.getString("days_"+id,"");
+                String name = sched_prefs.getString("name_"+id,"");
+                int config_pos=sched_prefs.getInt("config_pos_"+id,0);
+                Scheduler sched = new Scheduler(days,tp,(Integer) entry.getValue());
+                sched.name=name;
+                sched.config_pos=config_pos;
+                schedulers.add(sched);
+                Log.d("map_", id);
+            }
+        }
+        Collections.sort(schedulers);
+
+        /*
         for(int i=1; i<100;i++) {
             if (sched_prefs.getInt("id_"+String.valueOf(i), -1)<0) {
                 break;
@@ -151,6 +174,7 @@ public class MainActivity extends AppCompatActivity {
                 schedulers.add(sched);
             }
         }
+        */
 
         if (Build.VERSION.SDK_INT >= 23)
         {
@@ -309,47 +333,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    // Adapter for the viewpager using FragmentPagerAdapter
-    class ViewPagerAdapter extends FragmentStatePagerAdapter {
-        private final List<Fragment> mFragmentList = new java.util.ArrayList<>();
-        private final List<String> mFragmentTitleList = new ArrayList<>();
 
-        ViewPagerAdapter(FragmentManager manager) {
-            super(manager);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            return mFragmentList.get(position);
-        }
-
-        @Override
-        public int getCount() {
-            return mFragmentList.size();
-        }
-
-        void addFragment(Fragment fragment, String title) {
-            mFragmentList.add(fragment);
-            mFragmentTitleList.add(title);
-
-        }
-
-        void refresh_adapter(){
-            mFragmentList.clear();
-            mFragmentTitleList.clear();
-            this.addFragment(new tab1(), "Overview");
-            this.addFragment(new tab2(), "Configurations");
-            this.addFragment(new tab3(), "Schedulers");
-            this.addFragment(new tab4(), "Log");
-
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return mFragmentTitleList.get(position);
-        }
-
-    }
 
 
     @TargetApi(Build.VERSION_CODES.KITKAT)

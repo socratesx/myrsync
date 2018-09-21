@@ -20,6 +20,7 @@ public class tab1 extends Fragment {
     private final Handler h= new Handler();
     private ListView status;
     private Thread t;
+    private customAdapter adapter;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -35,9 +36,10 @@ public class tab1 extends Fragment {
         //        // EditText etFoo = (EditText) view.findViewById(R.id.etFoo);
         status = view.findViewById(R.id.status_list);
         status.setEmptyView(view.findViewById(android.R.id.empty));
-        customAdapter adapter = new customAdapter(this.getContext(),schedulers,1);
+        adapter = new customAdapter(this.getContext(),schedulers,1);
 
         status.setAdapter(adapter);
+
 
     }
 
@@ -72,8 +74,16 @@ public class tab1 extends Fragment {
                         h.post(new Runnable() {
                             @Override
                             public void run() {
-                                customAdapter adapter = new customAdapter(ctx,schedulers,1);
+                                //customAdapter adapter = new customAdapter(ctx,schedulers,1);
+                                adapter.notifyDataSetInvalidated();
+                                adapter.notifyDataSetChanged();
+                                int x= status.getScrollX();
+                                int y= status.getScrollY();
                                 status.setAdapter(adapter);
+                                //status.setScrollX(x);
+                                //status.setScrollY(y);
+                                status.scrollBy(x,y);
+
                             }
                         });
                         sleep(2000);

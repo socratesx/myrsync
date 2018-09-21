@@ -2,8 +2,10 @@ package com.linminitools.myrsync;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
@@ -70,7 +72,15 @@ public class addScheduler extends AppCompatActivity {
                 }
             }
 
-            int id = schedulers.size() + 1;
+            int id = 1;
+
+            SharedPreferences sched_prefs = getSharedPreferences("schedulers",MODE_PRIVATE);
+
+            while (sched_prefs.getInt("id_"+String.valueOf(id),-1)>0){
+                id=id+1;
+            }
+
+            Log.d("ID=",String.valueOf(id));
 
             Scheduler sched = new Scheduler(repeat2, tp, id);
             sched.name = name;

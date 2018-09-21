@@ -2,11 +2,12 @@ package com.linminitools.myrsync;
 
 
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.PersistableBundle;
 import android.util.Log;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -26,7 +27,7 @@ import java.util.Objects;
 import static java.util.Calendar.DAY_OF_WEEK;
 import static java.util.Calendar.getInstance;
 
-public class Scheduler extends MainActivity{
+public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
     //ArrayList<String> days;
     TimePicker d;
@@ -35,8 +36,9 @@ public class Scheduler extends MainActivity{
     int hour;
     int min;
     int config_pos;
-    private List<PendingIntent> Alarm_List;
+    //private List<PendingIntent> Alarm_List;
     private List<Long> Alarm_Times;
+    private List<Integer> JobsIds;
 
     public Scheduler(){
         this.name="Scheduler";
@@ -49,9 +51,15 @@ public class Scheduler extends MainActivity{
         this.id=id;
         this.hour=d.getCurrentHour();
         this.min=d.getCurrentMinute();
-        this.Alarm_List= new ArrayList<>();
+        //this.Alarm_List= new ArrayList<>();
         this.Alarm_Times = new ArrayList<>();
+        this.JobsIds = new ArrayList<>();
 
+    }
+
+
+    public int compareTo(Scheduler s){
+        return Integer.compare(this.id,s.id);
     }
 
     void update(){
@@ -86,11 +94,13 @@ public class Scheduler extends MainActivity{
         prefseditor.remove("min_"+String.valueOf(this.id));
         prefseditor.remove("days_"+String.valueOf(this.id));
         prefseditor.remove("name_"+String.valueOf(this.id));
+        prefseditor.remove("config_pos_"+String.valueOf(this.id));
         prefseditor.commit();
     }
 
     public void setAlarm(Context ctx){
-        if (!Alarm_List.isEmpty()) Alarm_List.clear();
+        //if (!Alarm_List.isEmpty()) Alarm_List.clear();
+        if (!Alarm_Times.isEmpty()) Alarm_Times.clear();
 
         Calendar cal = Calendar.getInstance();
         Calendar saved_cal = new GregorianCalendar();
@@ -98,7 +108,7 @@ public class Scheduler extends MainActivity{
         //cal.get(Calendar.DATE);
         long week_interval= 604800000;        // 1 week in milliseconds
         long day_interval= 86400000;         // 1 day in milliseconds
-        AlarmManager al = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
+        //AlarmManager al = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
 
 
 
@@ -108,12 +118,14 @@ public class Scheduler extends MainActivity{
         long scheduler_time = cal.getTimeInMillis();
         final long time_selected = scheduler_time;
 
-        Intent futureIntent = new Intent();
-        futureIntent.setAction("android.media.action.DISPLAY_NOTIFICATION");
+        //ComponentName comp = new ComponentName(getPackageName(),getLocalClassName());
+        /*
+        Intent futureIntent = new Intent(ctx,AlarmReceiver.class);
+        futureIntent.setAction(ACTION_RUN);
         futureIntent.addCategory("com.linminitools.myrsync");
         futureIntent.putExtra("Time",scheduler_time);
         futureIntent.putExtra("config",config_pos);
-
+        */
         String[] all_days={"SUNDAY","MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"};
         String[] days_list;
         int today_number=saved_cal.get(DAY_OF_WEEK);
@@ -135,33 +147,36 @@ public class Scheduler extends MainActivity{
                 int request = (100 * this.id) + weekdays.get(d);
                 cal.set(Calendar.HOUR_OF_DAY, this.d.getCurrentHour());
                 cal.set(Calendar.MINUTE, this.d.getCurrentMinute());
-                if (delta>0) {
-                    cal.set(Calendar.DAY_OF_MONTH,day_of_month-Math.abs(delta)+7);
+                if (delta > 0) {
+                    cal.set(Calendar.DAY_OF_MONTH, day_of_month - Math.abs(delta) + 7);
 
-                }
-                else if (delta==0){
+                } else if (delta == 0) {
                     Calendar now = Calendar.getInstance();
-                    long time_now=now.getTimeInMillis();
+                    long time_now = now.getTimeInMillis();
                     long delta2 = time_selected - time_now;
-                    if(delta2<0)  cal.set(Calendar.DAY_OF_MONTH,day_of_month+7);
+                    if (delta2 < 0) cal.set(Calendar.DAY_OF_MONTH, day_of_month + 7);
+                } else {
+                    cal.set(Calendar.DAY_OF_MONTH, day_of_month + Math.abs(delta));
                 }
-                else{
-                    cal.set(Calendar.DAY_OF_MONTH,day_of_month+Math.abs(delta));
-                }
-                count=count+1;
+                count = count + 1;
                 scheduler_time = cal.getTimeInMillis();
 
-                PendingIntent broadcast = PendingIntent.getBroadcast(ctx, request, futureIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                /*PendingIntent broadcast = PendingIntent.getBroadcast(ctx, request, futureIntent, PendingIntent.FLAG_UPDATE_CURRENT);
                 Objects.requireNonNull(al).setRepeating(AlarmManager.RTC_WAKEUP, scheduler_time, week_interval, broadcast);
-                Alarm_List.add(broadcast);
+                Alarm_List.add(broadcast);  */
                 Alarm_Times.add(scheduler_time);
-                for (long t :Alarm_Times){
-                    Log.d("AL_TIME",String.valueOf(t));
-                }
+            }
+            Collections.sort(Alarm_Times);
+            int jobcount=id*10;
+            for (long t :Alarm_Times){
+                jobcount=jobcount+1;
+                Log.d("AL_TIME",String.valueOf(t));
+                JobsIds.add(jobcount);
+                setWorker(ctx,t,jobcount);
 
             }
 
-            Collections.sort(Alarm_Times);
+
 
         }
         catch (StringIndexOutOfBoundsException e){
@@ -173,12 +188,67 @@ public class Scheduler extends MainActivity{
         }
     }
 
-    public void cancelAlarm(Context ctx){
-        AlarmManager al = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
+
+    private void setWorker(Context ctx, long start, int jobid){
+
+        long delay_till_work_start = start - getInstance().getTimeInMillis();
+
+        if (delay_till_work_start<60000) {
+            if (delay_till_work_start < 0) {
+                delay_till_work_start=86400000+delay_till_work_start;
+            } else {
+                delay_till_work_start = 60000L;
+            }
+        }
+
+
+
+        PersistableBundle perbun=new PersistableBundle();
+        perbun.putInt("config_pos",config_pos);
+        perbun.putInt("jobid",jobid);
+
+        Log.d("DELAY",String.valueOf(delay_till_work_start));
+
+        ComponentName serviceComponent = new ComponentName(ctx, rsyncJobScheduler.class);
+
+        JobInfo.Builder builder= new JobInfo.Builder(jobid, serviceComponent)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .setMinimumLatency(delay_till_work_start)//Long.valueOf(delay_till_work_start))
+                .setExtras(perbun)
+                .setOverrideDeadline(delay_till_work_start+30000)
+                .setPersisted(true);
+        JobInfo rsyncJob= builder.build();
+
+        JobScheduler jobScheduler = (JobScheduler)ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+
+        Objects.requireNonNull(jobScheduler).schedule(rsyncJob);
+        //Log.d("JOB_SCHEDULER_RESULT",String.valueOf(result));
+        //Log.d("JOB_SCHEDULER_PENDING",String.valueOf(jobScheduler.getPendingJob(jobid).getId()) +" - "+ String.valueOf(jobScheduler.getPendingJob(jobid).getMinLatencyMillis()));
+
+    }
+
+
+    public void cancelAlarm(Context ctx) {
+       /* AlarmManager al = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
         for (PendingIntent pi : Alarm_List){
             Objects.requireNonNull(al).cancel(pi);
         }
         Alarm_List.clear();
+            */
+        JobScheduler jobScheduler1 = (JobScheduler) ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        for (JobInfo j : jobScheduler1.getAllPendingJobs()) {
+            if (String.valueOf(this.id).equals(String.valueOf(j.getId()).substring(0, 1))) {
+                Objects.requireNonNull(jobScheduler1).cancel(j.getId());
+            }
+            /*
+            for (Integer i : JobsIds) {
+                JobScheduler jobScheduler = (JobScheduler) ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                Objects.requireNonNull(jobScheduler).cancel(i);
+                Log.d("JOB_ID", String.valueOf(i) + " is cancelled");
+            }
+            */
+
+        }
     }
 
     public String getNextAlarm(){

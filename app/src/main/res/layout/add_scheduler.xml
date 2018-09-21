@@ -59,10 +59,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="8dp"
-                android:background="@android:color/darker_gray"
-                android:backgroundTint="?attr/actionMenuTextColor"
+                android:background="#809e9e9e"
                 android:backgroundTintMode="src_over"
-                android:foregroundTint="@android:color/holo_red_dark"
                 android:minWidth="40dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textView2" />
@@ -238,15 +236,16 @@
                 app:layout_constraintTop_toBottomOf="@+id/ed_name" />
 
             <ImageButton
+                android:id="@+id/ib_scheduler_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:backgroundTint="@android:color/transparent"
+                android:contentDescription="info button"
                 android:onClick="scheduler_info"
                 app:layout_constraintStart_toEndOf="@+id/timePicker"
                 app:layout_constraintTop_toBottomOf="@+id/Create_Schedule"
-                app:srcCompat="@drawable/ic_info_black_24dp"
-                android:contentDescription="info button" />
+                app:srcCompat="@drawable/ic_info_black_24dp" />
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
 </android.support.constraint.ConstraintLayout>
