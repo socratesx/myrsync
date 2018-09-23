@@ -62,6 +62,24 @@ public class MainActivity extends AppCompatActivity {
         configs.clear();
         schedulers.clear();
 
+
+        if (Build.VERSION.SDK_INT >= 23) if (!checkPermission()) requestPermission(); // Code for permission
+        ViewPager viewPager = findViewById(R.id.pager);
+        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+
+        // Add Fragments to adapter one by one
+        adapter.addFragment(new tab1(), "Overview");
+        adapter.addFragment(new tab2(), "Configurations");
+        adapter.addFragment(new tab3(), "Schedulers");
+        adapter.addFragment(new tab4(), "Log");
+
+        viewPager.setAdapter(adapter);
+
+        TabLayout tabLayout =  findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(viewPager);
+
+
+
         Boolean is_first_run = getSharedPreferences("Install",MODE_PRIVATE).getBoolean("first_run",true);
 
         if (is_first_run) {
@@ -96,10 +114,11 @@ public class MainActivity extends AppCompatActivity {
                 in.close();
 
                 rsync_executable.setExecutable(true);
-
+                Log.d("RSYNC_EXEC",rsync_executable.getAbsolutePath());
 
             } catch (Exception e) {
                 e.printStackTrace();
+                Log.d("EXEC_EXception",e.toString());
             }
         }
 
@@ -176,63 +195,7 @@ public class MainActivity extends AppCompatActivity {
         }
         */
 
-        if (Build.VERSION.SDK_INT >= 23)
-        {
-            if (checkPermission())
-            {
-                ViewPager viewPager = findViewById(R.id.pager);
-                ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
 
-                // Add Fragments to adapter one by one
-
-                adapter.addFragment(new tab1(), "Overview");
-                adapter.addFragment(new tab2(), "Configurations");
-                adapter.addFragment(new tab3(), "Schedulers");
-                adapter.addFragment(new tab4(), "Log");
-
-                viewPager.setAdapter(adapter);
-
-                TabLayout tabLayout =  findViewById(R.id.tabs);
-                tabLayout.setupWithViewPager(viewPager);
-
-
-            } else {
-                requestPermission(); // Code for permission
-                ViewPager viewPager = findViewById(R.id.pager);
-                ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-
-
-                // Add Fragments to adapter one by one
-                adapter.addFragment(new tab1(), "Overview");
-                adapter.addFragment(new tab2(), "Configurations");
-                adapter.addFragment(new tab3(), "Schedulers");
-                adapter.addFragment(new tab4(), "Log");
-
-                viewPager.setAdapter(adapter);
-
-                TabLayout tabLayout =  findViewById(R.id.tabs);
-                tabLayout.setupWithViewPager(viewPager);
-            }
-        }
-        else
-            {
-
-            ViewPager viewPager = findViewById(R.id.pager);
-            ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-
-            // Add Fragments to adapter one by one
-            adapter.addFragment(new tab1(), "Overview");
-            adapter.addFragment(new tab2(), "Configurations");
-            adapter.addFragment(new tab3(), "Schedulers");
-            adapter.addFragment(new tab4(), "Log");
-
-            viewPager.setAdapter(adapter);
-
-            TabLayout tabLayout =  findViewById(R.id.tabs);
-            tabLayout.setupWithViewPager(viewPager);
-
-
-            }
 
 
     }
@@ -319,6 +282,13 @@ public class MainActivity extends AppCompatActivity {
 
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data){
+
+        if (requestCode==41) {
+
+            
+
+            Log.d("ACTIVITY TAB4","RESULT");
+        }
 
         ViewPager viewPager = findViewById(R.id.pager);
         ViewPagerAdapter v = (ViewPagerAdapter) viewPager.getAdapter();

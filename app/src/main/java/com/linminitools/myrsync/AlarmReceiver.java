@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.TimePicker;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -47,24 +49,28 @@ public class AlarmReceiver extends BroadcastReceiver {
         }
 
 
-        for (int c = 1; c < 100; c++) {
-            if (sched_prefs.getInt("id_" + String.valueOf(c), -1) < 0) {
-                break;
-            } else {
-                TimePicker tp = new TimePicker(ctx);
+        Map<String,?> sched_keys = sched_prefs.getAll();
+
+        for(Map.Entry<String,?> entry : sched_keys.entrySet()){
+            if (entry.getKey().contains("id_")) {
+                String id=String.valueOf(entry.getValue());
+
+                TimePicker tp=new TimePicker(ctx);
                 tp.setIs24HourView(true);
 
-                tp.setCurrentHour(sched_prefs.getInt("hour_" + String.valueOf(c), 0));
-                tp.setCurrentMinute(sched_prefs.getInt("min_" + String.valueOf(c), 0));
-                String days = sched_prefs.getString("days_" + String.valueOf(c), "");
-                String name = sched_prefs.getString("name_" + String.valueOf(c), "");
-                int config_pos = sched_prefs.getInt("config_pos_" + String.valueOf(c), 0);
-                Scheduler sched = new Scheduler(days, tp, c);
-                sched.name = name;
-                sched.config_pos = config_pos;
+                tp.setCurrentHour(sched_prefs.getInt("hour_"+id,0));
+                tp.setCurrentMinute(sched_prefs.getInt("min_"+id,0));
+                String days = sched_prefs.getString("days_"+id,"");
+                String name = sched_prefs.getString("name_"+id,"");
+                int config_pos=sched_prefs.getInt("config_pos_"+id,0);
+                Scheduler sched = new Scheduler(days,tp,(Integer) entry.getValue());
+                sched.name=name;
+                sched.config_pos=config_pos;
                 schedulers.add(sched);
+                Log.d("map_", id);
             }
         }
+        Collections.sort(schedulers);
 
 
         if ((Objects.requireNonNull(i.getAction())).equals("android.intent.action.BOOT_COMPLETED" )) {
@@ -72,67 +78,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 s.setAlarm(ctx);
                 }
         }
-        /*
-        if ((i.getAction()).equals("android.media.action.RUN")) {
-            int pos = i.getIntExtra("config", 0);
-            String message;
-            try {
-                RS_Configuration c = configs.get(pos);
-                c.executeConfig(ctx);
-                message = "Rsync configuration " + c.name + " started on " + Calendar.getInstance().getTime().toString();
-                }catch (IndexOutOfBoundsException e){
-                message = "Rsync Configuration Not Found! Job is Cancelled";
-                }
 
-            if (set_prefs.getBoolean("notifications",true)) {
-
-                Uri ring_path=Uri.parse(set_prefs.getString("ringtone", RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI));
-                Ringtone ring = RingtoneManager.getRingtone(ctx,ring_path);
-
-
-
-                if (Build.VERSION.SDK_INT < 26) {
-                    Builder not = new Builder(ctx);
-                    not.setContentTitle("myRSync Status");
-                    not.setSmallIcon(R.mipmap.ic_launcher);
-                    not.setStyle(new BigTextStyle().bigText(message));
-                    not.setContentText(message);
-                    Notification n = not.build();
-
-                    NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-                    Objects.requireNonNull(nm).notify(1, n);
-
-                } else {
-                    Builder not = new Builder(ctx, NotificationChannel.DEFAULT_CHANNEL_ID);
-
-                    not.setContentTitle("myRSync Status 1");
-                    not.setStyle(new BigTextStyle().bigText(message));
-                    not.setContentText(message);
-                    not.setSmallIcon(R.mipmap.ic_launcher);
-                    Notification n = not.build();
-
-                    NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-                    Objects.requireNonNull(nm).notify(1, n);
-
-
-                }
-
-                if (set_prefs.getBoolean("vibrate",true)){
-                    Vibrator vib = (Vibrator) ctx.getSystemService(Context.VIBRATOR_SERVICE);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        Objects.requireNonNull(vib).vibrate(VibrationEffect.createOneShot(350,1));
-                    }
-                    else{
-                        Objects.requireNonNull(vib).vibrate(350);
-                    }
-
-                }
-                ring.play();
-
-
-            }
-
-        }   */
     }
 
 }

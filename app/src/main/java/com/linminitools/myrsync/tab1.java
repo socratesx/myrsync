@@ -77,12 +77,12 @@ public class tab1 extends Fragment {
                                 //customAdapter adapter = new customAdapter(ctx,schedulers,1);
                                 adapter.notifyDataSetInvalidated();
                                 adapter.notifyDataSetChanged();
-                                int x= status.getScrollX();
-                                int y= status.getScrollY();
-                                status.setAdapter(adapter);
+                                //int x= status.getScrollX();
+                                //int y= status.getScrollY();
+                                //status.setAdapter(adapter);
                                 //status.setScrollX(x);
                                 //status.setScrollY(y);
-                                status.scrollBy(x,y);
+
 
                             }
                         });

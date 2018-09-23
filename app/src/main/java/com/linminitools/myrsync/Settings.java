@@ -13,6 +13,7 @@ import android.preference.SwitchPreference;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 
 public class Settings  extends AppCompatPreferenceActivity {
@@ -58,7 +59,8 @@ public class Settings  extends AppCompatPreferenceActivity {
             }
             else if (preference instanceof SwitchPreference){
 
-                preference.setSummary(stringValue);
+                Log.d("LOG_CLEAR VALUE" ,stringValue);
+                ((SwitchPreference) preference).setChecked(false);
             }
 
             else {

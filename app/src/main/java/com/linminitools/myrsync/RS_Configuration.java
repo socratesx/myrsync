@@ -154,6 +154,7 @@ class RS_Configuration {
                         pref_Edit.putBoolean("is_running",false);
                         pref_Edit.commit();
 
+
                     }
 
 
@@ -180,7 +181,7 @@ class RS_Configuration {
 
         if (set_prefs.getBoolean("notifications",true)) {
 
-            Uri ring_path=Uri.parse(set_prefs.getString("ringtone", RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI));
+            Uri ring_path=Uri.parse(set_prefs.getString("ringtone", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION).getPath()));
             Ringtone ring = RingtoneManager.getRingtone(ctx,ring_path);
 
             Intent intent = new Intent(ctx, MainActivity.class);
