@@ -49,16 +49,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".tab1" />
-        <activity android:name=".tab2" />
-        <activity android:name=".tab3" />
-        <activity android:name=".tab4" />
+
         <activity android:name=".Scheduler" />
         <activity
             android:name=".editConfig"
             android:label="Edit Configuration"
             android:windowSoftInputMode="stateHidden"
-            android:parentActivityName=".tab2"
+            android:parentActivityName=".FragmentInitializer"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -68,7 +65,7 @@
             android:name=".editSched"
             android:windowSoftInputMode="stateHidden"
             android:label="Edit Scheduler Settings"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".FragmentInitializer"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -78,7 +75,7 @@
             android:name=".addConfig"
             android:label="@string/title_activity_add_config"
             android:windowSoftInputMode="stateHidden"
-            android:parentActivityName=".tab2"
+            android:parentActivityName=".FragmentInitializer"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -88,7 +85,7 @@
             android:name=".addScheduler"
             android:label="Create a Scheduler"
             android:windowSoftInputMode="stateHidden"
-            android:parentActivityName=".tab3"
+            android:parentActivityName=".FragmentInitializer"
             android:theme="@style/Theme.AppCompat.Light.DarkActionBar"/>
         <activity
             android:name=".Settings"
@@ -98,6 +95,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+        <activity android:name=".FragmentInitializer" />
 
     </application>
 

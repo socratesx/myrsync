@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
@@ -46,7 +45,6 @@ public class addConfig extends AppCompatActivity {
 
 
     public void addPath(View v){
-        Uri selectedUri = Uri.parse(Environment.getDataDirectory().toString());
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         startActivityForResult(Intent.createChooser(i,"Choose Directory"),1);
     }
@@ -60,8 +58,7 @@ public class addConfig extends AppCompatActivity {
                 // Get the URI that points to the selected path
 
                 Uri pathUri = data.getData();
-                Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri,
-                        DocumentsContract.getTreeDocumentId(pathUri));
+                Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
                 String local_path = getPath(this, dirUri);
 
 
@@ -76,7 +73,7 @@ public class addConfig extends AppCompatActivity {
                     tv_path.setVisibility(View.VISIBLE);
 
                     Button tv_addpath = findViewById(R.id.bt_add);
-                    tv_addpath.setText("Change Path");
+                    tv_addpath.setText(R.string.change_path);
 
                     Button save = findViewById(R.id.bt_save);
                     Button view = findViewById(R.id.bt_view);
@@ -91,7 +88,7 @@ public class addConfig extends AppCompatActivity {
 
 
 
-    Map<String,String> processForm(View v){
+    Map<String,String> processForm(){
 
         Map<String,String> configMap = new HashMap<>();
 
@@ -99,6 +96,7 @@ public class addConfig extends AppCompatActivity {
         EditText et_srv_port= findViewById(R.id.ed_srv_port);
         EditText et_rs_user= findViewById(R.id.ed_rsync_user);
         EditText et_rs_mod= findViewById(R.id.ed_rsync_mod);
+        EditText et_config_name = findViewById(R.id.et_rsync_alias);
 
 
         String options="-";
@@ -116,11 +114,11 @@ public class addConfig extends AppCompatActivity {
         }
         if (Objects.equals(options, "-")){options="";}
 
-        String log="";
         String rs_user=String.valueOf(et_rs_user.getText()) ;
         String rs_ip=String.valueOf(et_srv_ip.getText());
         String rs_port=String.valueOf(et_srv_port.getText());
         String rs_module=String.valueOf(et_rs_mod.getText());
+        String rs_name = String.valueOf(et_config_name.getText());
         String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
         if (rs_port.isEmpty()) { rs_port="873";}
 
@@ -130,6 +128,7 @@ public class addConfig extends AppCompatActivity {
         configMap.put("rs_module",rs_module);
         configMap.put("local_path",local_path);
         configMap.put("rs_options",options);
+        configMap.put("rs_name",rs_name);
 
         return configMap;
     }
@@ -138,7 +137,7 @@ public class addConfig extends AppCompatActivity {
 
     public void viewCommand(View v){
 
-        Map<String,String> configMap=processForm(v);
+        Map<String,String> configMap=processForm();
 
         String options = configMap.get("rs_options");
         String rs_user = configMap.get("rs_user");
@@ -159,7 +158,7 @@ public class addConfig extends AppCompatActivity {
 
 
     public void saveConfig(View v){
-        Map<String,String> configMap=processForm(v);
+        Map<String,String> configMap=processForm();
 
         String rs_options = configMap.get("rs_options");
         String rs_user = configMap.get("rs_user");
@@ -167,15 +166,21 @@ public class addConfig extends AppCompatActivity {
         String rs_port = configMap.get("rs_port");
         String rs_module = configMap.get("rs_module");
         String local_path = configMap.get("local_path");
+        String rs_name = configMap.get("rs_name");
 
 
 
         if (!rs_ip.isEmpty() && !rs_module.isEmpty() && !local_path.isEmpty()) {
 
+            int id = 1;
 
-            int counter=configs.size()+1;
+            SharedPreferences config_prefs = getSharedPreferences("configs",MODE_PRIVATE);
 
-            RS_Configuration config = new RS_Configuration(counter);
+            while (config_prefs.getInt("rs_id_"+String.valueOf(id),-1)>0){
+                id=id+1;
+            }
+
+            RS_Configuration config = new RS_Configuration(id);
 
             config.rs_ip = rs_ip;
             config.rs_user = rs_user;
@@ -183,6 +188,7 @@ public class addConfig extends AppCompatActivity {
             config.rs_options = rs_options;
             config.rs_module = rs_module;
             config.local_path = local_path;
+            config.name= rs_name;
             config.saveToDisk();
             configs.add(config);
             this.finish();

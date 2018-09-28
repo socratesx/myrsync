@@ -7,7 +7,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ViewPagerAdapter extends FragmentStatePagerAdapter {
+class ViewPagerAdapter extends FragmentStatePagerAdapter {
 
     // Adapter for the viewpager using FragmentPagerAdapter
 
@@ -28,7 +28,7 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
         return mFragmentList.size();
     }
 
-    void addFragment(Fragment fragment, String title) {
+    private void addFragment(Fragment fragment, String title) {
         mFragmentList.add(fragment);
         mFragmentTitleList.add(title);
 
@@ -37,10 +37,17 @@ public class ViewPagerAdapter extends FragmentStatePagerAdapter {
     void refresh_adapter(){
         mFragmentList.clear();
         mFragmentTitleList.clear();
-        this.addFragment(new tab1(), "Overview");
-        this.addFragment(new tab2(), "Configurations");
-        this.addFragment(new tab3(), "Schedulers");
-        this.addFragment(new tab4(), "Log");
+
+        FragmentInitializer tab1 = new FragmentInitializer(new tab1());
+        FragmentInitializer tab2 = new FragmentInitializer(new tab2());
+        FragmentInitializer tab3 = new FragmentInitializer(new tab3());
+        FragmentInitializer tab4 = new FragmentInitializer(new tab4());
+
+        // Add Fragments to adapter one by one
+        this.addFragment(tab1.fHolder, "Overview");
+        this.addFragment(tab2.fHolder, "Configurations");
+        this.addFragment(tab3.fHolder, "Schedulers");
+        this.addFragment(tab4.fHolder, "Log");
 
     }
 

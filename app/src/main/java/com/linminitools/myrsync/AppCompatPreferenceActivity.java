@@ -1,22 +1,15 @@
 package com.linminitools.myrsync;
 
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceManager;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatDelegate;
-import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.prefs.Preferences;
 
 /**
  * A {@link android.preference.PreferenceActivity} which implements and proxies the necessary calls
@@ -101,21 +94,6 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
     protected void onDestroy() {
         super.onDestroy();
         getDelegate().onDestroy();
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        Log.d("ONDESTROY",String.valueOf(settings.getBoolean("clear_log",false)));
-        if (settings.getBoolean("clear_log",false)){
-
-            SharedPreferences prefs = getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
-            String log = prefs.getString("log", getApplicationInfo().dataDir + "/logfile.log");
-            File log_file = new File(log);
-            try{
-                PrintWriter writer = new PrintWriter(log_file);
-                writer.print("cleared");
-            }
-            catch (Exception e){
-                e.printStackTrace();
-            }
-        }
 
     }
 

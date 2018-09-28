@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        app:layout_constraintTop_toTopOf="parent"
         tools:context=".MainActivity">
 
         <LinearLayout
@@ -34,6 +35,22 @@
                 android:layout_height="wrap_content">
 
                 <EditText
+                    android:id="@+id/et_rsync_alias"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:ems="10"
+                    android:hint="@string/configuration_name"
+                    android:inputType="text"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toEndOf="@+id/ed_srv_ip"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:importantForAutofill="no"
+                    tools:targetApi="o" />
+
+                <EditText
                     android:id="@+id/ed_rsync_user"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -45,7 +62,9 @@
                     android:visibility="visible"
                     app:layout_constraintEnd_toEndOf="@+id/ed_srv_ip"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/ed_srv_ip" />
+                    app:layout_constraintTop_toBottomOf="@+id/ed_srv_ip"
+                    android:importantForAutofill="no"
+                    tools:targetApi="o" />
 
                 <EditText
                     android:id="@+id/ed_rsync_mod"
@@ -60,7 +79,9 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="@+id/ed_rsync_user"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/ed_rsync_user" />
+                    app:layout_constraintTop_toBottomOf="@+id/ed_rsync_user"
+                    android:importantForAutofill="no"
+                    tools:targetApi="o" />
 
                 <EditText
                     android:id="@+id/ed_srv_ip"
@@ -77,7 +98,9 @@
                     app:layout_constraintEnd_toStartOf="@+id/ed_srv_port"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@+id/et_rsync_alias"
+                    android:importantForAutofill="no"
+                    tools:targetApi="o" />
 
                 <EditText
                     android:id="@+id/ed_srv_port"
@@ -90,9 +113,11 @@
                     android:hint="@string/srv_port"
                     android:inputType="number"
                     android:visibility="visible"
+                    android:importantForAutofill="no"
                     app:layout_constraintBaseline_toBaselineOf="@+id/ed_srv_ip"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/ed_srv_ip" />
+                    app:layout_constraintStart_toEndOf="@+id/ed_srv_ip"
+                    tools:targetApi="o" />
 
                 <ImageButton
                     android:id="@+id/ib_info_daemon"
@@ -101,11 +126,12 @@
                     android:layout_marginStart="8dp"
                     android:layout_marginTop="16dp"
                     android:backgroundTint="@android:color/transparent"
+                    android:contentDescription="@string/info"
                     android:onClick="rsync_daemon_info"
                     app:layout_constraintStart_toStartOf="@+id/ed_srv_port"
                     app:layout_constraintTop_toBottomOf="@+id/ed_srv_port"
-                    app:srcCompat="@drawable/ic_info_black_24dp"
-                    android:contentDescription="info button" />
+                    app:srcCompat="@drawable/ic_info_black_24dp" />
+
             </android.support.constraint.ConstraintLayout>
 
             <TextView
@@ -177,7 +203,7 @@
                     android:layout_height="35dp"
                     android:layout_marginTop="16dp"
                     android:checked="false"
-                    android:hint="-n"
+                    android:hint="@string/n"
                     android:textSize="18sp"
                     app:layout_constraintStart_toStartOf="@+id/cb_a"
                     app:layout_constraintTop_toBottomOf="@+id/cb_a" />
@@ -189,7 +215,7 @@
                     android:layout_marginBottom="8dp"
                     android:layout_marginTop="16dp"
                     android:checked="false"
-                    android:hint="-g"
+                    android:hint="@string/g"
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/cb_O"
@@ -206,7 +232,8 @@
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/cb_p"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_p" />
+                    app:layout_constraintTop_toBottomOf="@+id/cb_p"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_u"
@@ -219,7 +246,8 @@
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/cb_t"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_t" />
+                    app:layout_constraintTop_toBottomOf="@+id/cb_t"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_q"
@@ -233,7 +261,8 @@
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/cb_n"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_n" />
+                    app:layout_constraintTop_toBottomOf="@+id/cb_n"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_p"
@@ -244,7 +273,8 @@
                     android:hint="-p"
                     android:textSize="18sp"
                     app:layout_constraintStart_toStartOf="@+id/cb_r"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_r" />
+                    app:layout_constraintTop_toBottomOf="@+id/cb_r"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_t"
@@ -255,7 +285,8 @@
                     android:hint="-t"
                     android:textSize="18sp"
                     app:layout_constraintStart_toStartOf="@+id/cb_z"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_z" />
+                    app:layout_constraintTop_toBottomOf="@+id/cb_z"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_O"
@@ -266,7 +297,8 @@
                     android:hint="-O"
                     android:textSize="18sp"
                     app:layout_constraintStart_toStartOf="@+id/cb_v"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_v" />
+                    app:layout_constraintTop_toBottomOf="@+id/cb_v"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_a"
@@ -275,13 +307,14 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="8dp"
                     android:checked="false"
-                    android:hint="@string/a"
+                    android:hint="-a"
                     android:textSize="18sp"
                     app:layout_constraintEnd_toStartOf="@+id/cb_r"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_r"
@@ -289,25 +322,28 @@
                     android:layout_height="35dp"
                     android:layout_marginStart="24dp"
                     android:layout_marginTop="8dp"
-                    android:hint="@string/r"
+                    android:hint="-r"
                     android:textSize="18sp"
                     app:layout_constraintEnd_toStartOf="@+id/cb_z"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toEndOf="@+id/cb_a"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="HardcodedText" />
 
+                <!--suppress AndroidDomInspection -->
                 <CheckBox
                     android:id="@+id/cb_z"
                     android:layout_width="0dp"
                     android:layout_height="35dp"
                     android:layout_marginStart="24dp"
                     android:layout_marginTop="8dp"
-                    android:hint="@string/z"
+                    android:hint="-z"
                     android:textSize="18sp"
                     app:layout_constraintEnd_toStartOf="@+id/cb_v"
                     app:layout_constraintHorizontal_bias="0.5"
                     app:layout_constraintStart_toEndOf="@+id/cb_r"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="HardcodedText" />
 
                 <CheckBox
                     android:id="@+id/cb_v"
@@ -316,11 +352,12 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginStart="24dp"
                     android:layout_marginTop="8dp"
-                    android:hint="@string/v"
+                    android:hint="-v"
                     android:textSize="18sp"
                     app:layout_constraintEnd_toStartOf="@+id/bt_help_rsync"
                     app:layout_constraintStart_toEndOf="@+id/cb_z"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:ignore="HardcodedText" />
 
                 <ImageButton
                     android:id="@+id/bt_help_rsync"
@@ -329,11 +366,11 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginTop="8dp"
                     android:backgroundTint="@android:color/transparent"
+                    android:contentDescription="@string/options_help"
                     android:onClick="rsync_help"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/help"
-                    android:contentDescription="options help" />
+                    app:srcCompat="@drawable/baseline_help_black_24" />
 
             </android.support.constraint.ConstraintLayout>
 
@@ -408,7 +445,7 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginTop="16dp"
                     android:enabled="false"
-                    android:text="Run Now!"
+                    android:text="@string/run_now"
                     android:visibility="visible"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/tv_rs_cmd_View" />

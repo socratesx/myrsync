@@ -5,91 +5,89 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/tv_config_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
-        android:text="Configuration:"
+        android:backgroundTintMode="src_in"
+        app:layout_constraintBottom_toBottomOf="@+id/img_error_status"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/tv_get_scheduler_name" />
 
     <TextView
         android:id="@+id/tv_get_config_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        app:layout_constraintBaseline_toBaselineOf="@+id/tv_config_status"
-        app:layout_constraintStart_toEndOf="@+id/tv_config_status" />
-
-    <TextView
-        android:id="@+id/tv_scheduler_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="Scheduler:"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="@string/configuration_name"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_config_status" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_get_scheduler_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        app:layout_constraintBaseline_toBaselineOf="@+id/tv_scheduler_status"
-        app:layout_constraintStart_toEndOf="@+id/tv_scheduler_status" />
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="@string/scheduler_name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_get_config_name" />
 
     <TextView
         android:id="@+id/tv_get_nextrun"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintStart_toStartOf="@+id/tv_get_result"
+        app:layout_constraintTop_toTopOf="@+id/tv_next_run" />
 
     <TextView
         android:id="@+id/tv_get_lastrun"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:layout_marginTop="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/tv_get_result"
         app:layout_constraintTop_toBottomOf="@+id/tv_get_nextrun" />
 
     <TextView
+        android:id="@+id/tv_next_run"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:text="Next Run:"
-        app:layout_constraintBaseline_toBaselineOf="@+id/tv_get_config_name"
-        app:layout_constraintEnd_toStartOf="@+id/tv_get_nextrun" />
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/next_run"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_get_scheduler_name" />
 
     <TextView
+        android:id="@+id/tv_last_run"
         android:layout_width="60dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:text="Last Run:"
-        app:layout_constraintBaseline_toBaselineOf="@+id/tv_get_lastrun"
-        app:layout_constraintEnd_toStartOf="@+id/tv_get_lastrun" />
+        android:layout_height="17dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/last_run"
+        app:layout_constraintStart_toStartOf="@+id/tv_next_run"
+        app:layout_constraintTop_toBottomOf="@+id/tv_next_run" />
 
     <TextView
         android:id="@+id/tv_result_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="Last Result:"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status" />
+        android:text="@string/last_result"
+        app:layout_constraintStart_toStartOf="@+id/tv_last_run"
+        app:layout_constraintTop_toBottomOf="@+id/tv_last_run" />
 
     <TextView
         android:id="@+id/tv_get_result"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="Never Run"
+        android:layout_marginStart="8dp"
+        android:text="@string/never_run"
         app:layout_constraintBaseline_toBaselineOf="@+id/tv_result_status"
         app:layout_constraintStart_toEndOf="@+id/tv_result_status" />
 
@@ -97,26 +95,24 @@
         android:id="@+id/img_error_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="8dp"
         android:background="@android:color/transparent"
+        android:contentDescription="@string/error"
         android:tint="@color/red"
         android:visibility="invisible"
         app:layout_constraintStart_toEndOf="@+id/tv_get_result"
-        app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status"
-        app:srcCompat="@android:drawable/stat_notify_error"
-        android:contentDescription="error" />
+        app:layout_constraintTop_toTopOf="@+id/tv_get_result"
+        app:srcCompat="@android:drawable/stat_notify_error" />
 
     <ImageView
         android:id="@+id/img_success_status"
         android:layout_width="22dp"
         android:layout_height="22dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="8dp"
+        android:contentDescription="@string/success"
         android:tint="@color/green"
         android:visibility="invisible"
         app:layout_constraintStart_toEndOf="@+id/tv_get_result"
-        app:layout_constraintTop_toBottomOf="@+id/tv_scheduler_status"
-        app:srcCompat="@drawable/ok_icon"
-        android:contentDescription="success" />
+        app:layout_constraintTop_toTopOf="@+id/tv_get_result"
+        app:srcCompat="@drawable/baseline_check_circle_black_48" />
 </android.support.constraint.ConstraintLayout>

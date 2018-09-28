@@ -3,11 +3,8 @@ package com.linminitools.myrsync;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -51,7 +48,7 @@ public class tab4 extends Fragment{
             export.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    export_log(view);
+                    export_log();
                 }
             });
 
@@ -60,7 +57,7 @@ public class tab4 extends Fragment{
         clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                clear_log(view);
+                clear_log();
             }
         });
             return rootView;
@@ -82,6 +79,7 @@ public class tab4 extends Fragment{
 
     private Thread refresh() {
         return new Thread() {
+            @SuppressWarnings("CatchMayIgnoreException")
             @Override
             public void run() {
                 try {
@@ -97,7 +95,7 @@ public class tab4 extends Fragment{
                     }
                 }
                 catch(Exception e){
-                    e.printStackTrace();
+                    e.getMessage();
                 }
             }
         };
@@ -125,7 +123,7 @@ public class tab4 extends Fragment{
         return text.toString();
     }
 
-    public void clear_log(View v){
+    private void clear_log(){
         try{
             PrintWriter writer = new PrintWriter(log_file);
             writer.print("cleared");
@@ -136,9 +134,7 @@ public class tab4 extends Fragment{
 
     }
 
-    public void export_log(View v){
-
-        Uri selectedUri = Uri.parse(Environment.getDataDirectory().toString());
+    private void export_log(){
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         Objects.requireNonNull(getActivity()).startActivityForResult(Intent.createChooser(i,"Choose Directory"),41);
     }

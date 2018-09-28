@@ -20,7 +20,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Set Scheduler Options"
+                android:text="@string/set_scheduler_options"
                 android:textAlignment="center"
                 android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -33,12 +33,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
-                android:hint="Enter Name"
+                android:hint="@string/enter_name"
                 android:inputType="text"
                 android:minWidth="70dp"
                 android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/Create_Schedule" />
+                app:layout_constraintTop_toBottomOf="@+id/Create_Schedule"
+                android:importantForAutofill="no"
+                tools:targetApi="o" />
 
             <TextView
                 android:id="@+id/tv_picktime"
@@ -46,7 +48,7 @@
                 android:layout_height="24dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="24dp"
-                android:text="Pick aTime"
+                android:text="@string/pick_a_time"
                 android:textAlignment="center"
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -81,7 +83,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
-                android:text="Repeat"
+                android:text="@string/repeat"
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/timePicker" />
@@ -94,16 +96,17 @@
                 android:layout_marginTop="8dp"
                 android:background="@drawable/toggle_selector"
                 android:checked="true"
-                android:text="@string/Monday"
+                android:text="M"
                 android:textAllCaps="false"
-                android:textOff="@string/Monday"
-                android:textOn="@string/Monday"
+                android:textOff="M"
+                android:textOn="M"
                 android:textSize="14sp"
                 app:layout_constraintEnd_toStartOf="@+id/tb_tuesday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_repeat"
-                tools:text="@string/Monday" />
+                tools:text="M"
+                tools:ignore="HardcodedText" />
 
             <ToggleButton
                 android:id="@+id/tb_tuesday"
@@ -112,16 +115,17 @@
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
                 android:checked="true"
-                android:text="@string/Tuesday"
+                android:text="T"
                 android:textAllCaps="false"
-                android:textOff="@string/Tuesday"
-                android:textOn="@string/Tuesday"
+                android:textOff="T"
+                android:textOn="T"
                 android:textSize="14sp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/tb_monday"
                 app:layout_constraintEnd_toStartOf="@+id/tb_wednesday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_monday"
-                tools:text="@string/Tuesday" />
+                tools:text="T"
+                tools:ignore="HardcodedText" />
 
             <ToggleButton
                 android:id="@+id/tb_wednesday"
@@ -130,16 +134,17 @@
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
                 android:checked="true"
-                android:text="@string/Wednesday"
+                android:text="W"
                 android:textAllCaps="false"
-                android:textOff="@string/Wednesday"
-                android:textOn="@string/Wednesday"
+                android:textOff="W"
+                android:textOn="W"
                 android:textSize="14sp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/tb_tuesday"
                 app:layout_constraintEnd_toStartOf="@+id/tb_thursday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_tuesday"
-                tools:text="@string/Wednesday" />
+                tools:text="W"
+                tools:ignore="HardcodedText" />
 
             <ToggleButton
                 android:id="@+id/tb_thursday"
@@ -148,16 +153,17 @@
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
                 android:checked="true"
-                android:text="@string/Thursday"
+                android:text="T"
                 android:textAllCaps="false"
-                android:textOff="@string/Thursday"
-                android:textOn="@string/Thursday"
+                android:textOff="T"
+                android:textOn="T"
                 android:textSize="14sp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/tb_wednesday"
                 app:layout_constraintEnd_toStartOf="@+id/tb_friday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_wednesday"
-                tools:text="@string/Thursday" />
+                tools:text="T"
+                tools:ignore="HardcodedText" />
 
             <ToggleButton
                 android:id="@+id/tb_friday"
@@ -166,16 +172,17 @@
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
                 android:checked="true"
-                android:text="@string/Friday"
+                android:text="F"
                 android:textAllCaps="false"
-                android:textOff="@string/Friday"
-                android:textOn="@string/Friday"
+                android:textOff="F"
+                android:textOn="F"
                 android:textSize="14sp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/tb_thursday"
                 app:layout_constraintEnd_toStartOf="@+id/tb_saturday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_thursday"
-                tools:text="@string/Friday" />
+                tools:text="F"
+                tools:ignore="HardcodedText" />
 
             <ToggleButton
                 android:id="@+id/tb_saturday"
@@ -186,14 +193,15 @@
                 android:checked="true"
                 android:text="S"
                 android:textAllCaps="false"
-                android:textOff="@string/Saturday"
-                android:textOn="@string/Saturday"
+                android:textOff="S"
+                android:textOn="S"
                 android:textSize="14sp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/tb_friday"
                 app:layout_constraintEnd_toStartOf="@+id/tb_sunday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_friday"
-                tools:text="S" />
+                tools:text="S"
+                tools:ignore="HardcodedText" />
 
             <ToggleButton
                 android:id="@+id/tb_sunday"
@@ -204,13 +212,14 @@
                 android:layout_marginStart="16dp"
                 android:checked="true"
                 android:textAllCaps="false"
-                android:textOff="@string/Sunday"
-                android:textOn="@string/Sunday"
+                android:textOff="S"
+                android:textOn="S"
                 android:textSize="14sp"
                 app:layout_constraintBaseline_toBaselineOf="@+id/tb_saturday"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@+id/tb_saturday" />
+                app:layout_constraintStart_toEndOf="@+id/tb_saturday"
+                tools:ignore="HardcodedText" />
 
             <Button
                 android:id="@+id/bt_save_sched"
@@ -231,17 +240,16 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
-                android:text="Select Configuration"
+                android:text="@string/select_configuration"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/ed_name" />
 
             <ImageButton
-                android:id="@+id/ib_scheduler_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:backgroundTint="@android:color/transparent"
-                android:contentDescription="info button"
+                android:contentDescription="@string/info"
                 android:onClick="scheduler_info"
                 app:layout_constraintStart_toEndOf="@+id/timePicker"
                 app:layout_constraintTop_toBottomOf="@+id/Create_Schedule"

@@ -19,8 +19,6 @@ import static com.linminitools.myrsync.MainActivity.schedulers;
 
 public class rsyncJobScheduler extends JobService {
 
-    private static final String TAG = "rsyncJobScheduler";
-
     @Override
     public boolean onStartJob(JobParameters params) {
 
@@ -103,7 +101,7 @@ public class rsyncJobScheduler extends JobService {
                 .setPersisted(true);
         JobInfo rsyncJob= builder.build();
 
-        JobScheduler jobScheduler = null;
+        JobScheduler jobScheduler;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             jobScheduler = getBaseContext().getSystemService(JobScheduler.class);
         }

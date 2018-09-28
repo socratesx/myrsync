@@ -27,12 +27,9 @@ public class Settings  extends AppCompatPreferenceActivity {
                 // the preference's 'entries' list.
                 ListPreference listPreference = (ListPreference) preference;
                 int index = listPreference.findIndexOfValue(stringValue);
-
+                Log.d("LIST_INDEX",String.valueOf(index));
                 // Set the summary to reflect the new value.
-                preference.setSummary(
-                        index >= 0
-                                ? listPreference.getEntries()[index]
-                                : null);
+                preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
 
             } else if (preference instanceof RingtonePreference) {
                 // For ringtone preferences, look up the correct display value
@@ -59,8 +56,7 @@ public class Settings  extends AppCompatPreferenceActivity {
             }
             else if (preference instanceof SwitchPreference){
 
-                Log.d("LOG_CLEAR VALUE" ,stringValue);
-                ((SwitchPreference) preference).setChecked(false);
+                 preference.setSummary(stringValue);
             }
 
             else {
@@ -91,17 +87,6 @@ public class Settings  extends AppCompatPreferenceActivity {
             setupActionBar();
             getFragmentManager().beginTransaction().replace(android.R.id.content, new MainPreferenceFragment()).commit();
 
-            //addPreferencesFromResource(R.xml.pref_notification);
-            //setHasOptionsMenu(true);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            //bindPreferenceSummaryToValue(findPreference("notifications"));
-            //bindPreferenceSummaryToValue(findPreference("vibrate"));
-            //bindPreferenceSummaryToValue(findPreference("ringtone"));
-            //bindPreferenceSummaryToValue(findPreference("clear_log"));
         }
 
         private static void bindPreferenceSummaryToValue(Preference preference) {
@@ -146,7 +131,7 @@ public class Settings  extends AppCompatPreferenceActivity {
                 bindPreferenceSummaryToValue(findPreference("notifications"));
                 bindPreferenceSummaryToValue(findPreference("vibrate"));
                 bindPreferenceSummaryToValue(findPreference("ringtone"));
-                bindPreferenceSummaryToValue(findPreference("clear_log"));
+
             }
 
 

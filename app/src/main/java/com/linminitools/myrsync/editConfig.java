@@ -33,12 +33,15 @@ public class editConfig extends addConfig {
 
         save.setEnabled(true);
         view.setEnabled(true);
-        bt_add.setText("Change Path");
+        bt_add.setText(R.string.change_path);
         bt_exec.setEnabled(true);
 
         Intent i = getIntent();
         final int p = i.getIntExtra("pos", 0);
         RS_Configuration config = configs.get(p);
+
+        EditText ed_rs_name = findViewById(R.id.et_rsync_alias);
+        ed_rs_name.setText(config.name);
 
         EditText ed_srv_ip = findViewById(R.id.ed_srv_ip);
         ed_srv_ip.setText(config.rs_ip);
@@ -76,20 +79,20 @@ public class editConfig extends addConfig {
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                actionConfig(v,id,p,1);
+                actionConfig(id, 1);
             }
         });
 
         bt_exec.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                actionConfig(v, id, p,2);
+                actionConfig(id, 2);
             }
         });
 
     }
 
-    private void actionConfig(View v, int id, int position, int request){
-        Map<String,String> configMap=processForm(v);
+    private void actionConfig(int id, int request){
+        Map<String,String> configMap=processForm();
 
         if (!configMap.get("rs_ip").isEmpty() &&
                 !configMap.get("rs_module").isEmpty() && !configMap.get("local_path").isEmpty()) {
@@ -103,6 +106,7 @@ public class editConfig extends addConfig {
                     c.rs_options = configMap.get("rs_options");
                     c.rs_module = configMap.get("rs_module");
                     c.local_path = configMap.get("local_path");
+                    c.name = configMap.get("rs_name");
                     if (request==1) {
                         c.saveToDisk();
 

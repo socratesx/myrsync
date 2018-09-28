@@ -3,7 +3,7 @@
 <shape
 xmlns:android="http://schemas.android.com/apk/res/android"
 android:shape="ring"
-android:innerRadius="5dp"
+android:innerRadius="7dp"
 android:thickness="1dp"
 android:useLevel="false">
 <solid android:color="@android:color/darker_gray" />

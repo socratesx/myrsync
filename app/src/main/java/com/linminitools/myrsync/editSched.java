@@ -90,7 +90,7 @@ public class editSched extends addScheduler {
         bt_save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveAction(v,pos);
+                saveAction(pos);
             }
         });
     }
@@ -100,7 +100,7 @@ public class editSched extends addScheduler {
 
 
 
-        private void saveAction(View v, int pos) {
+        private void saveAction(int pos) {
 
             TextView tv = findViewById(R.id.ed_name);
             TimePicker tp = findViewById(R.id.timePicker);

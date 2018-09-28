@@ -1,6 +1,5 @@
 package com.linminitools.myrsync;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -39,9 +38,8 @@ public class tab1 extends Fragment {
         adapter = new customAdapter(this.getContext(),schedulers,1);
 
         status.setAdapter(adapter);
-
-
     }
+
 
     @Override
     public void onResume(){
@@ -52,7 +50,7 @@ public class tab1 extends Fragment {
         catch (Exception e){
             e.printStackTrace();
         }
-        t=refresh(getContext());
+        t=refresh();
         t.start();
     }
 
@@ -65,7 +63,7 @@ public class tab1 extends Fragment {
 
     }
 
-    private Thread refresh(final Context ctx) {
+    private Thread refresh() {
          return new Thread() {
             @Override
             public void run() {
@@ -89,8 +87,8 @@ public class tab1 extends Fragment {
                         sleep(2000);
                     }
                 }
-                catch(Exception e){
-                    e.printStackTrace();
+                catch(InterruptedException e){
+                    e.getMessage();
                 }
             }
         };
