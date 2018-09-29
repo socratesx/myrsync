@@ -483,7 +483,7 @@ public class MainActivity extends AppCompatActivity {
             int pos = (int) v.getTag(R.id.bt_edit);
             Intent intent = new Intent(this,editConfig.class);
             intent.putExtra("pos",pos);
-            startActivity(intent);
+            this.startActivityForResult(intent,1);
         }
         else if (v.getTag(R.id.bt_delete)!=null) {
             final int pos = (int) v.getTag(R.id.bt_delete);
