@@ -115,7 +115,7 @@ class RS_Configuration implements Comparable<RS_Configuration>{
                 @Override
                 public void run() {
                     try {
-                        SharedPreferences pref = context.getSharedPreferences("CMD",MODE_PRIVATE);
+                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
                         SharedPreferences.Editor pref_Edit= pref.edit();
 
                         pref_Edit.putBoolean("is_running",true);
@@ -195,7 +195,7 @@ class RS_Configuration implements Comparable<RS_Configuration>{
         Boolean Vibration_enabled = set_prefs.getBoolean("vibrate", false);
         Uri ring_path = Uri.parse(set_prefs.getString("ringtone", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION).getPath()));
 
-        Log.d("RING_PATH", ring_path.toString());
+        Log.d(" RING_PATH", ring_path.toString());
         Log.d("Notifications_enabled", String.valueOf(Notifications_enabled));
         Log.d("VIBRATE", String.valueOf(Vibration_enabled));
 

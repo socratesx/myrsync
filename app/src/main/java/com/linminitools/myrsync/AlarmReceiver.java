@@ -70,7 +70,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 Log.d("map_", id);
             }
         }
-        Collections.sort(schedulers);
+
 
 
         if ((Objects.requireNonNull(i.getAction())).equals("android.intent.action.BOOT_COMPLETED" )) {
