@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,8 +64,9 @@ public class tab1 extends Fragment {
 
     }
 
+
     private Thread refresh() {
-         return new Thread() {
+        return new Thread() {
             @Override
             public void run() {
                 try {
@@ -72,15 +74,13 @@ public class tab1 extends Fragment {
                         h.post(new Runnable() {
                             @Override
                             public void run() {
-                                //customAdapter adapter = new customAdapter(ctx,schedulers,1);
-                                adapter.notifyDataSetInvalidated();
-                                adapter.notifyDataSetChanged();
-                                //int x= status.getScrollX();
-                                //int y= status.getScrollY();
-                                //status.setAdapter(adapter);
-                                //status.setScrollX(x);
-                                //status.setScrollY(y);
+                                adapter.refreshAdapter(schedulers);
+                                status.refreshDrawableState();
+                                int first=status.getFirstVisiblePosition();
+                                int last=status.getLastVisiblePosition();
 
+                                Log.d("FIRST",String.valueOf(first));
+                                Log.d("LAST",String.valueOf(last));
 
                             }
                         });
@@ -93,6 +93,9 @@ public class tab1 extends Fragment {
             }
         };
     }
+
+
+
 
 
 
