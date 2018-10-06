@@ -13,15 +13,12 @@ import android.util.Log;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -54,7 +51,6 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         this.hour=d.getCurrentHour();
         this.min=d.getCurrentMinute();
         this.Alarm_Times = new ArrayList<>();
-        //this.JobsIds = new ArrayList<>();
 
     }
 
@@ -74,7 +70,9 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
         SharedPreferences prefs = appContext.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
-        this.addedOn= Calendar.getInstance().getTimeInMillis();
+
+        this.addedOn=prefs.getLong("addedon_"+String.valueOf(this.id),0);
+        if (this.addedOn==0) Calendar.getInstance().getTimeInMillis();
 
         prefseditor.putInt("id_"+String.valueOf(this.id),this.id);
         prefseditor.putInt("hour_"+String.valueOf(this.id),this.hour);
@@ -214,6 +212,31 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         }
     }
 
+    public String getNextAlarm(Context ctx){
+        JobScheduler js = (JobScheduler) ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        ArrayList<Long> next_jobs= new ArrayList();
+        for (JobInfo ji : Objects.requireNonNull(js).getAllPendingJobs()) {
+            if (String.valueOf(this.id).equals(String.valueOf(ji.getId()).substring(0, 1)))
+                next_jobs.add(ji.getMinLatencyMillis());
+        }
+
+        Collections.sort(next_jobs);
+        long next_alarm;
+        float Days, Hours, Minutes, Seconds;
+        next_alarm=next_jobs.get(0);
+
+        Days = next_alarm/86400000;
+        Hours = (next_alarm-((int)Days)*next_alarm)/3600000;
+        Minutes = Hours/60000;
+        Seconds = Minutes/1000;
+
+        String remaining_time= String.valueOf((int)Days) +" Days " + String.valueOf((int)Hours)+" Hours "
+                + String.valueOf((int)Minutes)+ " Minutes "+ String.valueOf((int)Seconds)+ "Seconds";
+
+        return String.valueOf(remaining_time);
+
+    }
+    /*
     public String getNextAlarm(){
         Calendar now = Calendar.getInstance();
         long time = now.getTimeInMillis();
@@ -275,6 +298,6 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         }
 
     }
-
+*/
 
 }

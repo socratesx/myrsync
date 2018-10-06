@@ -39,6 +39,15 @@ class customAdapter extends BaseAdapter {
         inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
+    public void refreshAdapter(ArrayList<?> newData){
+        viewHolder.clear();
+        if (!newData.isEmpty()) {
+            for (Object c : newData) viewHolder.put(newData.indexOf(c),c);
+        }
+        this.notifyDataSetInvalidated();
+        this.notifyDataSetChanged();
+    }
+
     @Override
     public int getCount() {
         return viewHolder.size();
@@ -57,7 +66,7 @@ class customAdapter extends BaseAdapter {
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         View vi = convertView;
-        if (vi == null)
+        //if (vi == null)
             if(this.fromTab==1) {
 
                 vi = inflater.inflate(R.layout.status_row, parent,false);
@@ -78,7 +87,7 @@ class customAdapter extends BaseAdapter {
                     tv_conf_name.setText(conf.name);
                     tv_sched_name.setText(sched.name);
                     if (context.getSharedPreferences("CMD",MODE_PRIVATE).getBoolean("is_running",false)) tv_next_run.setText(R.string.running);
-                    else tv_next_run.setText(sched.getNextAlarm());
+                    else tv_next_run.setText(sched.getNextAlarm(context));
 
                     SharedPreferences result_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
 
