@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,16 +74,10 @@ public class tab1 extends Fragment {
                             @Override
                             public void run() {
                                 adapter.refreshAdapter(schedulers);
-                                status.refreshDrawableState();
-                                int first=status.getFirstVisiblePosition();
-                                int last=status.getLastVisiblePosition();
-
-                                Log.d("FIRST",String.valueOf(first));
-                                Log.d("LAST",String.valueOf(last));
 
                             }
                         });
-                        sleep(2000);
+                        sleep(1000);
                     }
                 }
                 catch(InterruptedException e){

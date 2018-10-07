@@ -81,6 +81,9 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         prefseditor.putString("name_"+String.valueOf(this.id),this.name);
         prefseditor.putInt("config_pos_"+String.valueOf(this.id),this.config_pos);
         prefseditor.putLong("addedon_"+String.valueOf(this.id),this.addedOn);
+        prefseditor.putLong("last_run_"+String.valueOf(this.id),-1);
+        prefseditor.putLong("last_save_"+String.valueOf(this.id),Calendar.getInstance().getTimeInMillis());
+
 
         prefseditor.commit();
 
@@ -98,6 +101,9 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         prefseditor.remove("name_"+String.valueOf(this.id));
         prefseditor.remove("config_pos_"+String.valueOf(this.id));
         prefseditor.remove("addedon_"+String.valueOf(this.id));
+        prefseditor.remove("last_run_"+String.valueOf(this.id));
+        prefseditor.remove("last_save_"+String.valueOf(this.id));
+
         prefseditor.commit();
     }
 
@@ -135,7 +141,6 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
                 cal.set(Calendar.MINUTE, this.d.getCurrentMinute());
                 if (delta > 0) {
                     cal.set(Calendar.DAY_OF_MONTH, day_of_month - Math.abs(delta) + 7);
-
                 } else if (delta == 0) {
                     Calendar now = Calendar.getInstance();
                     long time_now = now.getTimeInMillis();
@@ -189,6 +194,7 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         PersistableBundle perbun=new PersistableBundle();
         perbun.putInt("config_pos",config_pos);
         perbun.putInt("jobid",jobid);
+        perbun.putInt("sched_id",this.id);
 
         ComponentName serviceComponent = new ComponentName(ctx, rsyncJobScheduler.class);
 
@@ -219,20 +225,27 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
             if (String.valueOf(this.id).equals(String.valueOf(ji.getId()).substring(0, 1)))
                 next_jobs.add(ji.getMinLatencyMillis());
         }
-
+        this.update();
         Collections.sort(next_jobs);
-        long next_alarm;
-        float Days, Hours, Minutes, Seconds;
-        next_alarm=next_jobs.get(0);
 
-        Days = next_alarm/86400000;
-        Hours = (next_alarm-((int)Days)*next_alarm)/3600000;
-        Minutes = Hours/60000;
-        Seconds = Minutes/1000;
+        long next_alarm=next_jobs.get(0);
+        long last_run=ctx.getSharedPreferences("schedulers", MODE_PRIVATE).getLong("last_run_"+String.valueOf(this.id),-1);
+        long saved_on=ctx.getSharedPreferences("schedulers", MODE_PRIVATE).getLong("last_save_"+String.valueOf(this.id),0);
+        long next_time=0;
+        if(last_run==-1){
+            long first_run_on=saved_on+next_alarm;
+            next_time=first_run_on-Calendar.getInstance().getTimeInMillis();
+        }
+        else{
+            long next_run=last_run+next_alarm;
+            next_time=next_run-Calendar.getInstance().getTimeInMillis();
+        }
 
-        String remaining_time= String.valueOf((int)Days) +" Days " + String.valueOf((int)Hours)+" Hours "
-                + String.valueOf((int)Minutes)+ " Minutes "+ String.valueOf((int)Seconds)+ "Seconds";
-
+        long seconds = next_time / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        String remaining_time = days + "days  " + hours % 24 + "h  " + minutes % 60 + "m  " + seconds % 60 +"s";
         return String.valueOf(remaining_time);
 
     }

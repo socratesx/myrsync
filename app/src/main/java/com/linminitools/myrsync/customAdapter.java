@@ -3,6 +3,7 @@ package com.linminitools.myrsync;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.v4.util.SparseArrayCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +45,6 @@ class customAdapter extends BaseAdapter {
         if (!newData.isEmpty()) {
             for (Object c : newData) viewHolder.put(newData.indexOf(c),c);
         }
-        this.notifyDataSetInvalidated();
         this.notifyDataSetChanged();
     }
 
@@ -86,7 +86,7 @@ class customAdapter extends BaseAdapter {
 
                     tv_conf_name.setText(conf.name);
                     tv_sched_name.setText(sched.name);
-                    if (context.getSharedPreferences("CMD",MODE_PRIVATE).getBoolean("is_running",false)) tv_next_run.setText(R.string.running);
+                    if (context.getSharedPreferences("CMD_"+String.valueOf(conf.id),MODE_PRIVATE).getBoolean("is_running",false)) tv_next_run.setText(R.string.running);
                     else tv_next_run.setText(sched.getNextAlarm(context));
 
                     SharedPreferences result_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
@@ -117,6 +117,7 @@ class customAdapter extends BaseAdapter {
             else if (this.fromTab==3 ) {
                 vi = inflater.inflate(R.layout.row_sched, parent , false);
                 Scheduler sched = (Scheduler)getItem(position);
+                Log.d("SCHED_NAME",sched.name);
                 TextView tv_name = vi.findViewById(R.id.tv_sched_name);
                 tv_name.setText(sched.name);
 

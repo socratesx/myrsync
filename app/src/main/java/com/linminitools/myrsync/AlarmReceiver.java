@@ -31,18 +31,20 @@ public class AlarmReceiver extends BroadcastReceiver {
         schedulers.clear();
         //settings.put("Notifications",settings_prefs.getBoolean("Notifications",true));
 
-        for(int c=1; c<100;c++){
-            if (config_prefs.getString("rs_ip_"+String.valueOf(c),"").isEmpty()){
-                break;
-            }
-            else {
-                RS_Configuration config = new RS_Configuration(c);
-                config.rs_user=config_prefs.getString("rs_user_"+String.valueOf(c),"");
-                config.rs_ip = config_prefs.getString("rs_ip_"+String.valueOf(c), "");
-                config.rs_port = config_prefs.getString("rs_port_"+String.valueOf(c), "");
-                config.rs_options = config_prefs.getString("rs_options_"+String.valueOf(c),"");
-                config.rs_module = config_prefs.getString("rs_module_"+String.valueOf(c), "");
-                config.local_path = config_prefs.getString("local_path_"+String.valueOf(c), "");
+        Map<String,?> config_keys = config_prefs.getAll();
+        for(Map.Entry<String,?> entry : config_keys.entrySet()){
+            if (entry.getKey().contains("rs_id_")) {
+                String id=String.valueOf(entry.getValue());
+
+                RS_Configuration config = new RS_Configuration((Integer)entry.getValue());
+                config.rs_user=config_prefs.getString("rs_user_"+id,"");
+                config.rs_ip = config_prefs.getString("rs_ip_"+id, "");
+                config.rs_port = config_prefs.getString("rs_port_"+id, "");
+                config.rs_options = config_prefs.getString("rs_options_"+id,"");
+                config.rs_module = config_prefs.getString("rs_module_"+id, "");
+                config.local_path = config_prefs.getString("local_path_"+id, "");
+                config.name = config_prefs.getString("rs_name_"+id, "");
+                config.addedOn = config_prefs.getLong("rs_addedon_"+id,0);
                 configs.add(config);
             }
         }
