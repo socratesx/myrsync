@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +36,7 @@ public class tab1 extends Fragment {
         //        // EditText etFoo = (EditText) view.findViewById(R.id.etFoo);
         status = view.findViewById(R.id.status_list);
         status.setEmptyView(view.findViewById(android.R.id.empty));
+        Log.d("SCHEDULERS",schedulers.toArray().toString());
         adapter = new customAdapter(this.getContext(),schedulers,1);
 
         status.setAdapter(adapter);

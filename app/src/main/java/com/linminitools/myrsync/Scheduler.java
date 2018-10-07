@@ -72,7 +72,7 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         SharedPreferences.Editor prefseditor = prefs.edit();
 
         this.addedOn=prefs.getLong("addedon_"+String.valueOf(this.id),0);
-        if (this.addedOn==0) Calendar.getInstance().getTimeInMillis();
+        if (this.addedOn==0) this.addedOn=Calendar.getInstance().getTimeInMillis();
 
         prefseditor.putInt("id_"+String.valueOf(this.id),this.id);
         prefseditor.putInt("hour_"+String.valueOf(this.id),this.hour);
