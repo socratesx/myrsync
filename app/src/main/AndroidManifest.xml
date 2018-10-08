@@ -53,6 +53,8 @@
         </activity>
 
         <activity android:name=".Scheduler" />
+        <activity android:name=".RS_Configuration" />
+
         <activity
             android:name=".editConfig"
             android:label="Edit Configuration"

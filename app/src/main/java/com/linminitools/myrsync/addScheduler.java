@@ -63,7 +63,7 @@ public class addScheduler extends AppCompatActivity {
 
 
         if (config_id>-1) {
-            long interval = 604800000;        // 1 week in milliseconds
+            // 604800000;        1 week in milliseconds
 
             String repeat2 = ".";
 

@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -27,16 +26,14 @@ import static java.util.Calendar.getInstance;
 
 public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
-    //ArrayList<String> days;
+
     TimePicker d;
     String days,name;
     int id;
     int hour;
     int min;
     int config_id;
-    //private List<PendingIntent> Alarm_List;
     private List<Long> Alarm_Times;
-    //private List<Integer> JobsIds;
     Long addedOn;
 
     public Scheduler(){
@@ -160,8 +157,6 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
             int jobcount=id*10;
             for (long t :Alarm_Times){
                 jobcount=jobcount+1;
-                Log.d("AL_TIME",String.valueOf(t));
-                //JobsIds.add(jobcount);
                 setWorker(ctx,t,jobcount);
 
             }
@@ -181,21 +176,12 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
     private void setWorker(Context ctx, long start, int jobid){
 
-        long one_day = 86400000;          // 1 day in milliseconds
-        long one_minute = 60000;          // 1 minute in milliseconds
+        // 86400000;          1 day in milliseconds
+        // 60000;          // 1 minute in milliseconds
         long next_week_in_millis= 604800000;
 
         long delay_till_work_start = start - getInstance().getTimeInMillis();
         long next_time= start+next_week_in_millis;
-        /*
-
-        if (delay_till_work_start < one_minute) {
-
-            if (delay_till_work_start < 0) delay_till_work_start=one_day+delay_till_work_start;
-            else delay_till_work_start = one_minute;
-
-        }
-        */
 
         PersistableBundle perbun=new PersistableBundle();
         perbun.putInt("config_id",config_id);
@@ -237,17 +223,9 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         Collections.sort(next_jobs);
 
         long next_alarm=next_jobs.get(0);
-        long last_run=ctx.getSharedPreferences("schedulers", MODE_PRIVATE).getLong("last_run_"+String.valueOf(this.id),-1);
         long saved_on=ctx.getSharedPreferences("schedulers", MODE_PRIVATE).getLong("last_save_"+String.valueOf(this.id),0);
-        long next_time;
-        if(last_run==-1){
-            long first_run_on=saved_on+next_alarm;
-            next_time=first_run_on-Calendar.getInstance().getTimeInMillis();
-        }
-        else{
-            long next_run=last_run+next_alarm;
-            next_time=next_run-Calendar.getInstance().getTimeInMillis();
-        }
+        long first_run_on=saved_on+next_alarm;
+        long next_time=first_run_on-Calendar.getInstance().getTimeInMillis();
 
         long seconds = next_time / 1000;
         long minutes = seconds / 60;
@@ -259,5 +237,4 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         return String.valueOf(remaining_time);
 
     }
-
 }

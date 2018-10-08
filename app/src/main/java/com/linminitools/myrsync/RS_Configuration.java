@@ -30,11 +30,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
-import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.myrsync.MainActivity.appContext;
 
-
-class RS_Configuration implements Comparable<RS_Configuration>{
+public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
 
     String rs_ip;
     String rs_user;
@@ -73,6 +70,8 @@ class RS_Configuration implements Comparable<RS_Configuration>{
         
     }
     
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     void deleteFromDisk(){
         SharedPreferences prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
@@ -89,6 +88,10 @@ class RS_Configuration implements Comparable<RS_Configuration>{
         prefseditor.remove("last_run_"+String.valueOf(this.id));
         prefseditor.remove("rs_addedon_"+String.valueOf(this.id));
         prefseditor.apply();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
+        else (new File(appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+String.valueOf(id)+".xml")).delete();
+
     }
 
     public int compareTo(@NonNull RS_Configuration c){
