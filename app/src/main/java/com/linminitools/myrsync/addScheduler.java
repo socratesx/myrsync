@@ -57,9 +57,12 @@ public class addScheduler extends AppCompatActivity {
 
         String name = String.valueOf(tv.getText());
         Spinner sp = findViewById(R.id.sp_configs);
-        int config_pos= sp.getSelectedItemPosition();
+        int config_id=-1;
+        String config_name=(String)sp.getSelectedItem();
+        for (RS_Configuration c : configs) if((c.name).equals(config_name)) config_id = c.id;
 
-        if (config_pos>-1) {
+
+        if (config_id>-1) {
             long interval = 604800000;        // 1 week in milliseconds
 
             String repeat2 = ".";
@@ -84,7 +87,7 @@ public class addScheduler extends AppCompatActivity {
 
             Scheduler sched = new Scheduler(repeat2, tp, id);
             sched.name = name;
-            sched.config_pos = config_pos;
+            sched.config_id = config_id;
             sched.saveToDisk();
             sched.setAlarm(appContext);
             schedulers.add(sched);

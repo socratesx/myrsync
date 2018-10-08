@@ -30,10 +30,10 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
     //ArrayList<String> days;
     TimePicker d;
     String days,name;
-    private int id;
+    int id;
     int hour;
     int min;
-    int config_pos;
+    int config_id;
     //private List<PendingIntent> Alarm_List;
     private List<Long> Alarm_Times;
     //private List<Integer> JobsIds;
@@ -79,10 +79,11 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         prefseditor.putInt("min_"+String.valueOf(this.id),this.min);
         prefseditor.putString("days_"+String.valueOf(this.id),this.days);
         prefseditor.putString("name_"+String.valueOf(this.id),this.name);
-        prefseditor.putInt("config_pos_"+String.valueOf(this.id),this.config_pos);
+        prefseditor.putInt("config_id_"+String.valueOf(this.id),this.config_id);
         prefseditor.putLong("addedon_"+String.valueOf(this.id),this.addedOn);
         prefseditor.putLong("last_run_"+String.valueOf(this.id),-1);
         prefseditor.putLong("last_save_"+String.valueOf(this.id),Calendar.getInstance().getTimeInMillis());
+        prefseditor.putBoolean("is_running_"+String.valueOf(this.id),false);
 
 
         prefseditor.commit();
@@ -99,10 +100,11 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         prefseditor.remove("min_"+String.valueOf(this.id));
         prefseditor.remove("days_"+String.valueOf(this.id));
         prefseditor.remove("name_"+String.valueOf(this.id));
-        prefseditor.remove("config_pos_"+String.valueOf(this.id));
+        prefseditor.remove("config_id_"+String.valueOf(this.id));
         prefseditor.remove("addedon_"+String.valueOf(this.id));
         prefseditor.remove("last_run_"+String.valueOf(this.id));
         prefseditor.remove("last_save_"+String.valueOf(this.id));
+        prefseditor.remove("is_running_"+String.valueOf(this.id));
 
         prefseditor.commit();
     }
@@ -181,8 +183,11 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
         long one_day = 86400000;          // 1 day in milliseconds
         long one_minute = 60000;          // 1 minute in milliseconds
+        long next_week_in_millis= 604800000;
 
         long delay_till_work_start = start - getInstance().getTimeInMillis();
+        long next_time= start+next_week_in_millis;
+        /*
 
         if (delay_till_work_start < one_minute) {
 
@@ -190,11 +195,13 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
             else delay_till_work_start = one_minute;
 
         }
+        */
 
         PersistableBundle perbun=new PersistableBundle();
-        perbun.putInt("config_pos",config_pos);
+        perbun.putInt("config_id",config_id);
         perbun.putInt("jobid",jobid);
         perbun.putInt("sched_id",this.id);
+        perbun.putLong("next_time",next_time);
 
         ComponentName serviceComponent = new ComponentName(ctx, rsyncJobScheduler.class);
 
@@ -220,6 +227,7 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
     public String getNextAlarm(Context ctx){
         JobScheduler js = (JobScheduler) ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        //noinspection unchecked
         ArrayList<Long> next_jobs= new ArrayList();
         for (JobInfo ji : Objects.requireNonNull(js).getAllPendingJobs()) {
             if (String.valueOf(this.id).equals(String.valueOf(ji.getId()).substring(0, 1)))
@@ -231,7 +239,7 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         long next_alarm=next_jobs.get(0);
         long last_run=ctx.getSharedPreferences("schedulers", MODE_PRIVATE).getLong("last_run_"+String.valueOf(this.id),-1);
         long saved_on=ctx.getSharedPreferences("schedulers", MODE_PRIVATE).getLong("last_save_"+String.valueOf(this.id),0);
-        long next_time=0;
+        long next_time;
         if(last_run==-1){
             long first_run_on=saved_on+next_alarm;
             next_time=first_run_on-Calendar.getInstance().getTimeInMillis();
@@ -245,72 +253,11 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         long minutes = seconds / 60;
         long hours = minutes / 60;
         long days = hours / 24;
-        String remaining_time = days + "days  " + hours % 24 + "h  " + minutes % 60 + "m  " + seconds % 60 +"s";
+        String remaining_time;
+        if (next_time>0) remaining_time = days + "days  " + hours % 24 + "h  " + minutes % 60 + "m  " + seconds % 60 +"s";
+        else remaining_time="About to start";
         return String.valueOf(remaining_time);
 
     }
-    /*
-    public String getNextAlarm(){
-        Calendar now = Calendar.getInstance();
-        long time = now.getTimeInMillis();
-        long one_day = 86400000;
-        long one_week =604800000;
-
-        int today = now.get(Calendar.DAY_OF_WEEK);
-
-        @SuppressWarnings("unchecked") Map<Integer,String> all_days= new HashMap();
-        all_days.put(2,"MONDAY");
-        all_days.put(3,"TUESDAY");
-        all_days.put(4,"WEDNESDAY");
-        all_days.put(5,"THURSDAY");
-        all_days.put(6,"FRIDAY");
-        all_days.put(7,"SATURDAY");
-        all_days.put(1,"SUNDAY");
-
-        try {
-            String[] days_list = this.days.substring(1, this.days.length() - 1).toUpperCase().split("[.]");
-            List<String> sched_days = new ArrayList<>(Arrays.asList(days_list));
-            long next_time;
-            int count = 0;
-            Calendar scheduler_time = Calendar.getInstance();
-            scheduler_time.set(Calendar.HOUR_OF_DAY,this.hour);
-            scheduler_time.set(Calendar.MINUTE,this.min);
-
-            long delta = scheduler_time.getTimeInMillis() - time;
-
-            if(delta>0) {
-                while (!sched_days.contains(all_days.get(today))) {
-                    count = count + 1;
-                    today = today + 1;
-                    if (today > 7) today = 1;
-                }
-            }
-            else{
-                today = today + 1;
-                count=1;
-                if (today > 7) today = 1;
-                while (!sched_days.contains(all_days.get(today))) {
-                    count = count + 1;
-                    today = today + 1;
-                    if (today > 7) today = 1;
-                }
-
-            }
-                next_time = count * one_day + delta;
-
-
-            time = time + next_time;
-            if(next_time<0) time=time+one_week;
-            Locale current_locale = appContext.getResources().getConfiguration().locale;
-            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
-
-            return formatter.format(time);
-        }
-        catch (StringIndexOutOfBoundsException e){
-            return "Never";
-        }
-
-    }
-*/
 
 }

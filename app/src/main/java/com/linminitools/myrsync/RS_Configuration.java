@@ -95,7 +95,7 @@ class RS_Configuration implements Comparable<RS_Configuration>{
         return Long.compare(this.addedOn,c.addedOn);
     }
 
-    void executeConfig(final Context context){
+    void executeConfig(final Context context, final Integer scheduler_id){
 
         send_notification(context);
         final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
@@ -117,6 +117,10 @@ class RS_Configuration implements Comparable<RS_Configuration>{
                     try {
                         SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
                         SharedPreferences.Editor pref_Edit= pref.edit();
+                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+
+                        if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
+
 
                         pref_Edit.putBoolean("is_running",true);
                         pref_Edit.commit();
@@ -166,7 +170,7 @@ class RS_Configuration implements Comparable<RS_Configuration>{
                         prefseditor.commit();
                         pref_Edit.putBoolean("is_running",false);
                         pref_Edit.commit();
-
+                        if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
 
                     }
 

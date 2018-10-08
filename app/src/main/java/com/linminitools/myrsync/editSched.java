@@ -41,24 +41,25 @@ public class editSched extends addScheduler {
         tp.setCurrentHour(sched.hour);
         tp.setCurrentMinute(sched.min);
 
-        int config_pos = sched.config_pos;
+        int config_id = sched.config_id;
 
         Spinner sp = findViewById(R.id.sp_configs);
 
         List<String> listLoadToSpinner = new ArrayList<>();
 
+        int selected_config=0;
+
         for (RS_Configuration c : configs) {
             listLoadToSpinner.add(c.name);
+            if (c.id==config_id) selected_config=listLoadToSpinner.indexOf(c.name);
         }
 
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
-                appContext,
-                android.R.layout.simple_spinner_dropdown_item,
-                listLoadToSpinner);
-        Log.d("CONFIG_ID","Config POS before SAVE ="+String.valueOf(config_pos));
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(appContext, android.R.layout.simple_spinner_dropdown_item, listLoadToSpinner);
+
 
         sp.setAdapter(spinnerAdapter);
-        sp.setSelection(config_pos);
+        sp.setSelection(selected_config);
+
 
 
 
@@ -129,20 +130,20 @@ public class editSched extends addScheduler {
                 listLoadToSpinner.add(c.name);
             }
 
-            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
-                    appContext,
-                    android.R.layout.simple_spinner_dropdown_item,
-                    listLoadToSpinner);
+            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(appContext, android.R.layout.simple_spinner_dropdown_item, listLoadToSpinner);
 
 
-            int config_pos= sp.getSelectedItemPosition();
+            String selected_config_name= (String)sp.getSelectedItem();
+            int config_id=0;
+            for (RS_Configuration c : configs) if((c.name).equals(selected_config_name)) config_id = c.id;
+
             sp.setAdapter(spinnerAdapter);
 
             Scheduler sched = schedulers.get(pos);
 
             sched.days=repeat2;
             sched.name = name;
-            sched.config_pos = config_pos;
+            sched.config_id = config_id;
             sched.d=tp;
             sched.update();
             sched.saveToDisk();

@@ -63,10 +63,10 @@ public class AlarmReceiver extends BroadcastReceiver {
                 tp.setCurrentMinute(sched_prefs.getInt("min_"+id,0));
                 String days = sched_prefs.getString("days_"+id,"");
                 String name = sched_prefs.getString("name_"+id,"");
-                int config_pos=sched_prefs.getInt("config_pos_"+id,0);
+                int config_id=sched_prefs.getInt("config_id_"+id,0);
                 Scheduler sched = new Scheduler(days,tp,(Integer) entry.getValue());
                 sched.name=name;
-                sched.config_pos=config_pos;
+                sched.config_id=config_id;
                 schedulers.add(sched);
                 Log.d("map_", id);
             }

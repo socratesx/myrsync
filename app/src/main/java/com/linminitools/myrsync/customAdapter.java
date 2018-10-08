@@ -67,9 +67,10 @@ class customAdapter extends BaseAdapter {
     public View getView(final int position, View convertView, ViewGroup parent) {
         View vi = convertView;
         //if (vi == null)
-            if(this.fromTab==1) {
+        switch (this.fromTab) {
+            case 1: {
 
-                vi = inflater.inflate(R.layout.status_row, parent,false);
+                vi = inflater.inflate(R.layout.status_row, parent, false);
                 TextView tv_conf_name = vi.findViewById(R.id.tv_get_config_name);
                 TextView tv_sched_name = vi.findViewById(R.id.tv_get_scheduler_name);
                 TextView tv_next_run = vi.findViewById(R.id.tv_get_nextrun);
@@ -78,15 +79,16 @@ class customAdapter extends BaseAdapter {
                 ImageView error = vi.findViewById(R.id.img_error_status);
                 error.setVisibility(View.INVISIBLE);
 
-                Scheduler sched = (Scheduler)getItem(position);
-                RS_Configuration conf;
+                Scheduler sched = (Scheduler) getItem(position);
 
-                try{
-                    conf= configs.get(sched.config_pos);
-
+                try {
+                    RS_Configuration conf = configs.get(0);
+                    for (RS_Configuration c : configs) if (c.id == sched.config_id) conf = c;
                     tv_conf_name.setText(conf.name);
                     tv_sched_name.setText(sched.name);
-                    if (context.getSharedPreferences("CMD_"+String.valueOf(conf.id),MODE_PRIVATE).getBoolean("is_running",false)) tv_next_run.setText(R.string.running);
+                    if (context.getSharedPreferences("CMD_" + String.valueOf(conf.id), MODE_PRIVATE).getBoolean("is_running", false)
+                            && context.getSharedPreferences("schedulers", MODE_PRIVATE).getBoolean("is_running_" + String.valueOf(sched.id), false))
+                        tv_next_run.setText(R.string.running);
                     else tv_next_run.setText(sched.getNextAlarm(context));
 
                     SharedPreferences result_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
@@ -102,22 +104,23 @@ class customAdapter extends BaseAdapter {
 
                         error.setVisibility(View.VISIBLE);
                     }
-                }catch (IndexOutOfBoundsException e){
+                } catch (IndexOutOfBoundsException e) {
                     schedulers.remove(sched);
+                    sched.deleteFromDisk();
                 }
+                break;
             }
-
-            else if (this.fromTab==2) {
-                vi = inflater.inflate(R.layout.row, parent , false);
+            case 2:
+                vi = inflater.inflate(R.layout.row, parent, false);
                 TextView text = vi.findViewById(R.id.list_item_id);
-                text.setText(((RS_Configuration)getItem(position)).name);
+                text.setText(((RS_Configuration) getItem(position)).name);
                 vi.findViewById(R.id.bt_edit).setTag(R.id.bt_edit, position);
                 vi.findViewById(R.id.bt_delete).setTag(R.id.bt_delete, position);
-            }
-            else if (this.fromTab==3 ) {
-                vi = inflater.inflate(R.layout.row_sched, parent , false);
-                Scheduler sched = (Scheduler)getItem(position);
-                Log.d("SCHED_NAME",sched.name);
+                break;
+            case 3: {
+                vi = inflater.inflate(R.layout.row_sched, parent, false);
+                Scheduler sched = (Scheduler) getItem(position);
+                Log.d("SCHED_NAME", sched.name);
                 TextView tv_name = vi.findViewById(R.id.tv_sched_name);
                 tv_name.setText(sched.name);
 
@@ -126,7 +129,7 @@ class customAdapter extends BaseAdapter {
 
                 TextView tv_time = vi.findViewById(R.id.tv_sched_showtime);
 
-                tv_time.setText(String.format(Locale.getDefault(),"%02d:%02d",sched.hour,  sched.min));
+                tv_time.setText(String.format(Locale.getDefault(), "%02d:%02d", sched.hour, sched.min));
 
 
                 String days = sched.days;
@@ -144,7 +147,9 @@ class customAdapter extends BaseAdapter {
                 }
 
 
+                break;
             }
+        }
 
         return vi;
     }

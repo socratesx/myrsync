@@ -259,6 +259,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void Populate_arrays(Context ctx){
 
         SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
@@ -294,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
 
         Map<String,?> sched_keys = sched_prefs.getAll();
         for(Map.Entry<String,?> entry : sched_keys.entrySet()){
-            if (entry.getKey().contains("id_")) {
+            if (entry.getKey().startsWith("id_")) {
                 String id=String.valueOf(entry.getValue());
 
                 TimePicker tp=new TimePicker(this);
@@ -304,13 +305,14 @@ public class MainActivity extends AppCompatActivity {
                 tp.setCurrentMinute(sched_prefs.getInt("min_"+id,0));
                 String days = sched_prefs.getString("days_"+id,"");
                 String name = sched_prefs.getString("name_"+id,"");
-                int config_pos=sched_prefs.getInt("config_pos_"+id,0);
+                int config_id=sched_prefs.getInt("config_id_"+id,0);
 
                 Scheduler sched = new Scheduler(days,tp,(Integer) entry.getValue());
                 sched.name=name;
                 sched.addedOn = sched_prefs.getLong("addedon",0);
-                sched.config_pos=config_pos;
+                sched.config_id=config_id;
                 schedulers.add(sched);
+                Log.d("SCHEDULER_NAME", sched.name);
             }
         }
         Collections.sort(schedulers);
@@ -496,12 +498,13 @@ public class MainActivity extends AppCompatActivity {
                             .setMessage("This action will delete this configuration and all its schedulers. Are you sure?")
                             .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int which) {
-                                    configs.get(pos).deleteFromDisk();
+                                    RS_Configuration deleted_config=configs.get(pos);
+                                    deleted_config.deleteFromDisk();
                                     configs.remove(pos);
 
                                     ArrayList<Scheduler> connected_schedulers_to_deleted_configuration=new ArrayList<>();
                                     for (Scheduler s : schedulers){
-                                        if (pos==s.config_pos){
+                                        if (deleted_config.id==s.config_id){
                                             connected_schedulers_to_deleted_configuration.add(s);
                                             s.deleteFromDisk();
                                         }
