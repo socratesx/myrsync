@@ -43,6 +43,12 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
     String rs_port="873";
     final int id;
 
+
+    public RS_Configuration(){
+        this.id=0;
+    }
+
+
     RS_Configuration(int id){
         this.id=id;
         this.name="Config "+String.valueOf(id);

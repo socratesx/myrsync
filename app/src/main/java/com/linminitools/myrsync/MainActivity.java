@@ -94,10 +94,14 @@ public class MainActivity extends AppCompatActivity {
 
                 getSharedPreferences("Install",MODE_PRIVATE).edit().putString("rsync_binary",executableFilePath).apply();
 
-                String bin_path ="rsync_binary/armv7/rsync";
+
+                String bin_path ="rsync_binary/x86_64/rsync";
+
 
                 for (String arch : Build.SUPPORTED_ABIS){
+                    Log.d("ARCH", arch);
                     if (arch.contains("arm64")) bin_path="rsync_binary/armv8/rsync";
+                    else if (arch.contains("armeabi-v7a")) bin_path ="rsync_binary/armv7/rsync";
                 }
 
                 InputStream in = AM.open(bin_path, AssetManager.ACCESS_BUFFER);
