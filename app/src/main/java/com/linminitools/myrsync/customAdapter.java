@@ -3,7 +3,6 @@ package com.linminitools.myrsync;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.v4.util.SparseArrayCompat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -120,7 +119,6 @@ class customAdapter extends BaseAdapter {
             case 3: {
                 vi = inflater.inflate(R.layout.row_sched, parent, false);
                 Scheduler sched = (Scheduler) getItem(position);
-                Log.d("SCHED_NAME", sched.name);
                 TextView tv_name = vi.findViewById(R.id.tv_sched_name);
                 tv_name.setText(sched.name);
 

@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -54,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
     public static final ArrayList<Scheduler> schedulers = new ArrayList<>();
     public static Context appContext;
     private File log_file;
+    static File debug_log;
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -69,6 +69,18 @@ public class MainActivity extends AppCompatActivity {
 
         Populate_arrays(appContext);
 
+
+        String Debug_log_path= appContext.getApplicationInfo().dataDir + "/debug.log";
+        debug_log = new File(Debug_log_path);
+        if (!debug_log.exists()) {
+            try {
+                debug_log.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
         ViewPager viewPager = findViewById(R.id.pager);
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.refresh_adapter();
@@ -79,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(viewPager);
 
         Boolean is_first_run = getSharedPreferences("Install",MODE_PRIVATE).getBoolean("first_run",true);
-        Log.d("ARCH", Arrays.toString(Build.SUPPORTED_ABIS));
+        //Log.d("ARCH", Arrays.toString(Build.SUPPORTED_ABIS));
         if (is_first_run) {
             getSharedPreferences("Install",MODE_PRIVATE).edit().putBoolean("first_run",false).apply();
             AssetManager AM = this.getAssets();
@@ -99,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
 
                 for (String arch : Build.SUPPORTED_ABIS){
-                    Log.d("ARCH", arch);
+                    //Log.d("ARCH", arch);
                     if (arch.contains("arm64")) bin_path="rsync_binary/armv8/rsync";
                     else if (arch.contains("armeabi-v7a")) bin_path ="rsync_binary/armv7/rsync";
                 }
@@ -121,11 +133,11 @@ public class MainActivity extends AppCompatActivity {
                 in.close();
 
                 rsync_executable.setExecutable(true);
-                Log.d("RSYNC_EXEC",rsync_executable.getAbsolutePath());
+                //Log.d("RSYNC_EXEC",rsync_executable.getAbsolutePath());
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.d("EXEC_EXception",e.toString());
+                //Log.d("EXEC_EXception",e.toString());
             }
         }
 
@@ -316,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
                 sched.addedOn = sched_prefs.getLong("addedon",0);
                 sched.config_id=config_id;
                 schedulers.add(sched);
-                Log.d("SCHEDULER_NAME", sched.name);
+                //Log.d("SCHEDULER_NAME", sched.name);
             }
         }
         Collections.sort(schedulers);

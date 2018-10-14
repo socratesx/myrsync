@@ -2,7 +2,6 @@ package com.linminitools.myrsync;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -114,7 +113,7 @@ public class editSched extends addScheduler {
             for (String d : day_string){
                 int resID = getResources().getIdentifier("tb_" + d, "id", getPackageName());
                 ToggleButton tb = findViewById(resID);
-                Log.d("BUTTONS ACTIVATED",String.valueOf(resID)+String.valueOf(tb.isChecked()));
+
                 if (tb.isChecked()){
                     repeat2=repeat2.concat(d+".");
 

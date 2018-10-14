@@ -12,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -106,7 +105,7 @@ public class addConfig extends AppCompatActivity {
 
         for(String check_box : availableOptions){
             int resID = getResources().getIdentifier("cb_" + check_box, "id", getPackageName());
-            Log.d("RESID",String.valueOf(resID));
+            //Log.d("RESID",String.valueOf(resID));
             CheckBox cb = findViewById(resID);
             if(cb.isChecked()){
                 options=options.concat(check_box);

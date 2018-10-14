@@ -10,13 +10,17 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.PersistableBundle;
-import android.util.Log;
 import android.widget.Toast;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.linminitools.myrsync.MainActivity.debug_log;
 import static java.util.Calendar.getInstance;
 
 public class rsyncJobScheduler extends JobService {
@@ -25,18 +29,30 @@ public class rsyncJobScheduler extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
 
-        Log.d("JOB_SCHEDULER_START=","TRUE");
-
-
         SharedPreferences sched_prefs = getBaseContext().getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences config_prefs = getBaseContext().getSharedPreferences("configs", MODE_PRIVATE);
-
-
 
         int jobid= params.getExtras().getInt("jobid");
         int id_of_config_to_run =params.getExtras().getInt("config_id");
         int sched_id=params.getExtras().getInt("sched_id");
         long next_time=params.getExtras().getLong("next_time");
+
+
+        try {
+            FileWriter debug_writer = new FileWriter(debug_log, true);
+            Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
+            CharSequence message= "\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"onStartJob { "+"JOBID = "+String.valueOf(jobid) +
+                    " | SCHEDULER ID = "+String.valueOf(sched_id)+
+                    " | NEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
+            debug_writer.append(message);
+            debug_writer.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
 
         RS_Configuration config_to_run = null;
 
@@ -93,14 +109,33 @@ public class rsyncJobScheduler extends JobService {
         long delay_till_work_start = exact_time - getInstance().getTimeInMillis();
         long next_time= exact_time+next_week_in_millis;
 
-        Log.d("NEXT_WEEK_RESCHEDULE",String.valueOf(next_time));
-        Log.d("NEXT_WORK",String.valueOf(exact_time));
-
         PersistableBundle perbun=new PersistableBundle();
         perbun.putInt("config_id",config_id);
         perbun.putLong("next_time",next_time);
         perbun.putInt("jobid",jobid);
         perbun.putInt("sched_id",sched_id);
+
+        long seconds = delay_till_work_start / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        String remaining_time=days + "days  " + hours % 24 + "h  " + minutes % 60 + "m  " + seconds % 60 +"s";
+
+
+        try {
+            FileWriter debug_writer = new FileWriter(debug_log,true);
+            Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
+            CharSequence message= "\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"reschedule { "+"JOBID = "+String.valueOf(jobid) +
+                    " | SCHEDULER ID = "+String.valueOf(sched_id)+
+                    " | NEXT TIME (WEEK) = "+formatter.format(next_time)+
+                    " | DELAY TILL WORK START = "+ remaining_time +" }";
+            debug_writer.append(message);
+            debug_writer.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
         JobInfo.Builder builder= new JobInfo.Builder(jobid, serviceComponent)
@@ -116,6 +151,35 @@ public class rsyncJobScheduler extends JobService {
         JobScheduler jobScheduler = (JobScheduler)getBaseContext().getSystemService(Context.JOB_SCHEDULER_SERVICE);
 
         Objects.requireNonNull(jobScheduler).schedule(rsyncJob);
+
+        for (JobInfo ji : Objects.requireNonNull(jobScheduler).getAllPendingJobs()) {
+            if (String.valueOf(sched_id).equals(String.valueOf(ji.getId()).substring(0, 1))) {
+
+                long seconds2 = ji.getMinLatencyMillis() / 1000;
+                long minutes2 = seconds2 / 60;
+                long hours2 = minutes2 / 60;
+                long days2 = hours2 / 24;
+                String remaining_time2=days2 + "days  " + hours2 % 24 + "h  " + minutes2 % 60 + "m  " + seconds2 % 60 +"s";
+
+
+
+                try {
+                    FileWriter debug_writer = new FileWriter(debug_log,true);
+                    Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
+                    SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
+                    CharSequence message= "\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"[after]reschedule { "+"JOBID = "+String.valueOf(ji.getId()) +
+                            " | SCHEDULER ID = "+String.valueOf(sched_id)+
+                            " | DELAY TILL WORK START = "+ remaining_time2 +" }";
+                    debug_writer.append(message);
+                    debug_writer.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
 
     }
 

@@ -5,7 +5,6 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
@@ -83,7 +82,7 @@ public class addScheduler extends AppCompatActivity {
                 id=id+1;
             }
 
-            Log.d("ID=",String.valueOf(id));
+            //Log.d("ID=",String.valueOf(id));
 
             Scheduler sched = new Scheduler(repeat2, tp, id);
             sched.name = name;

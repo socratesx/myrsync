@@ -17,7 +17,6 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -136,32 +135,24 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
 
                         ProcessBuilder p = new ProcessBuilder(rsync_bin,options,"--log-file",log,local_path,cmd);
-                        //p.redirectErrorStream(true);
 
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
                         p.directory(new File(context.getApplicationInfo().dataDir));
                         Process process=p.start();
 
-                        //BufferedReader std_output = new BufferedReader(new InputStreamReader(process.getInputStream()));
                         BufferedReader std_error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
-                        //StringBuilder builder_1 = new StringBuilder();
-                        StringBuilder builder_2 = new StringBuilder();
-                        //String out_line = null;
+                        StringBuilder builder = new StringBuilder();
+
                         String err_line;
 
                         while ( (err_line = std_error.readLine()) != null) {
-                            builder_2.append(err_line);
-                            builder_2.append(System.getProperty("line.separator"));
+                            builder.append(err_line);
+                            builder.append(System.getProperty("line.separator"));
                         }
-                        /*
-                        while ( (out_line = std_output.readLine()) != null) {
-                            builder_1.append(out_line);
-                            builder_1.append(System.getProperty("line.separator"));
-                        }
-                        */
-                        String result = builder_2.toString();
+
+                        String result = builder.toString();
 
                         if (result.equals("")) result="OK";
                         else result="Warning! Check Log!";
@@ -208,9 +199,6 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         Boolean Vibration_enabled = set_prefs.getBoolean("vibrate", false);
         Uri ring_path = Uri.parse(set_prefs.getString("ringtone", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION).getPath()));
 
-        Log.d(" RING_PATH", ring_path.toString());
-        Log.d("Notifications_enabled", String.valueOf(Notifications_enabled));
-        Log.d("VIBRATE", String.valueOf(Vibration_enabled));
 
         if (Notifications_enabled) {
             String new_id="";
@@ -258,9 +246,6 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                 String new_id = String.valueOf(new Random().nextLong());
 
 
-                Log.d("CHANNELS", nm.getNotificationChannels().toString());
-                Log.d("VIBRATION ENABLED",String.valueOf(Vibration_enabled));
-
                 AudioAttributes aa = new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -280,7 +265,6 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                 }
 
                 nm.createNotificationChannel(channel);
-                Log.d("CHANNEL_DETAILS", nm.getNotificationChannels().toString());
 
                 return new_id;
             }

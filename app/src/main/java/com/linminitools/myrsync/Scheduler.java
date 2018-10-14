@@ -12,12 +12,16 @@ import android.support.annotation.NonNull;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -189,6 +193,30 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         perbun.putInt("sched_id",this.id);
         perbun.putLong("next_time",next_time);
 
+        long seconds = delay_till_work_start / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        String remaining_time=days + "days  " + hours % 24 + "h  " + minutes % 60 + "m  " + seconds % 60 +"s";
+
+
+        try {
+            FileWriter debug_writer = new FileWriter(debug_log,true);
+            Locale current_locale = ctx.getResources().getConfiguration().locale;
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
+            CharSequence message= "\n\n[ "+ formatter.format(Calendar.getInstance().getTime()) +" ] "+"setWorker { "+"JOBID = "+String.valueOf(jobid) +
+                    " | SCHEDULER ID = "+String.valueOf(this.id)+
+                    " | START = " + formatter.format(start)+
+                    " | DELAY TILL WORK START = "+remaining_time+
+                    " | NEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
+            debug_writer.append(message);
+            debug_writer.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
         ComponentName serviceComponent = new ComponentName(ctx, rsyncJobScheduler.class);
 
         JobInfo.Builder builder= new JobInfo.Builder(jobid, serviceComponent)
@@ -219,13 +247,14 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
             if (String.valueOf(this.id).equals(String.valueOf(ji.getId()).substring(0, 1)))
                 next_jobs.add(ji.getMinLatencyMillis());
         }
-        this.update();
+        //this.update();
         Collections.sort(next_jobs);
 
         long next_alarm=next_jobs.get(0);
         long saved_on=ctx.getSharedPreferences("schedulers", MODE_PRIVATE).getLong("last_save_"+String.valueOf(this.id),0);
         long first_run_on=saved_on+next_alarm;
         long next_time=first_run_on-Calendar.getInstance().getTimeInMillis();
+
 
         long seconds = next_time / 1000;
         long minutes = seconds / 60;

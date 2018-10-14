@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.widget.TimePicker;
 
 import java.util.Map;
@@ -23,13 +22,9 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         SharedPreferences sched_prefs = ctx.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
-        //SharedPreferences settings_prefs = ctx.getSharedPreferences("settings",MODE_PRIVATE);
-        Log.d("ALARM_MANAGER_MYSYNC","CALLED");
-        //SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 
         configs.clear();
         schedulers.clear();
-        //settings.put("Notifications",settings_prefs.getBoolean("Notifications",true));
 
         Map<String,?> config_keys = config_prefs.getAll();
         for(Map.Entry<String,?> entry : config_keys.entrySet()){
@@ -68,7 +63,6 @@ public class AlarmReceiver extends BroadcastReceiver {
                 sched.name=name;
                 sched.config_id=config_id;
                 schedulers.add(sched);
-                Log.d("map_", id);
             }
         }
 
