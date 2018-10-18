@@ -6,8 +6,8 @@ android {
         applicationId "com.linminitools.myrsync"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 1
-        versionName "0.1"
+        versionCode 3
+        versionName "0.3"
 
     }
 

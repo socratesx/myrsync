@@ -201,6 +201,12 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
 
         try {
+
+
+            String Debug_log_path= ctx.getApplicationInfo().dataDir + "/debug.log";
+            debug_log = new java.io.File(Debug_log_path);
+
+
             FileWriter debug_writer = new FileWriter(debug_log,true);
             Locale current_locale = ctx.getResources().getConfiguration().locale;
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
