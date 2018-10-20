@@ -6,6 +6,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.widget.TimePicker;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -19,7 +25,23 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context ctx, Intent i) {
+        String Debug_log_path= ctx.getApplicationInfo().dataDir + "/debug.log";
+        File debug_log = new File(Debug_log_path);
+        if ((Objects.requireNonNull(i.getAction())).equals("android.intent.action.BOOT_COMPLETED" )) {
+            try {
+                FileWriter debug_writer = new FileWriter(debug_log,true);
+                Locale current_locale = ctx.getResources().getConfiguration().locale;
+                SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
+                CharSequence message= "\n\n[ "+ formatter.format(Calendar.getInstance().getTime()) +" ] "+"--------DEVICE REBOOTED--------";
+                debug_writer.append(message);
+                debug_writer.close();
 
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            }
+
+        /*
         SharedPreferences sched_prefs = ctx.getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
 
@@ -73,7 +95,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 s.setAlarm(ctx);
                 }
         }
-
+        */
     }
 
 }

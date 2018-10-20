@@ -42,9 +42,9 @@ public class rsyncJobScheduler extends JobService {
             FileWriter debug_writer = new FileWriter(debug_log, true);
             Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
-            CharSequence message= "\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"onStartJob { "+"JOBID = "+String.valueOf(jobid) +
-                    " | SCHEDULER ID = "+String.valueOf(sched_id)+
-                    " | NEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
+            CharSequence message= "\n\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"onStartJob { "+"\nJOBID = "+String.valueOf(jobid) +
+                    "\nSCHEDULER ID = "+String.valueOf(sched_id)+
+                    "\nNEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
             debug_writer.append(message);
             debug_writer.close();
 
@@ -126,10 +126,10 @@ public class rsyncJobScheduler extends JobService {
             FileWriter debug_writer = new FileWriter(debug_log,true);
             Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
-            CharSequence message= "\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"reschedule { "+"JOBID = "+String.valueOf(jobid) +
-                    " | SCHEDULER ID = "+String.valueOf(sched_id)+
-                    " | NEXT TIME (WEEK) = "+formatter.format(next_time)+
-                    " | DELAY TILL WORK START = "+ remaining_time +" }";
+            CharSequence message= "\n\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"reschedule { "+"\nJOBID = "+String.valueOf(jobid) +
+                    "\nSCHEDULER ID = "+String.valueOf(sched_id)+
+                    "\nNEXT TIME (WEEK) = "+formatter.format(next_time)+
+                    "\nDELAY TILL WORK START = "+ remaining_time +" }";
             debug_writer.append(message);
             debug_writer.close();
 

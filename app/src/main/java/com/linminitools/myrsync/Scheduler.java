@@ -204,11 +204,11 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
             FileWriter debug_writer = new FileWriter(debug_log,true);
             Locale current_locale = ctx.getResources().getConfiguration().locale;
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
-            CharSequence message= "\n\n[ "+ formatter.format(Calendar.getInstance().getTime()) +" ] "+"setWorker { "+"JOBID = "+String.valueOf(jobid) +
-                    " | SCHEDULER ID = "+String.valueOf(this.id)+
-                    " | START = " + formatter.format(start)+
-                    " | DELAY TILL WORK START = "+remaining_time+
-                    " | NEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
+            CharSequence message= "\n\n[ "+ formatter.format(Calendar.getInstance().getTime()) +" ] "+"setWorker { "+"\nJOBID = "+String.valueOf(jobid) +
+                    "\nSCHEDULER ID = "+String.valueOf(this.id)+
+                    "\nSTART = " + formatter.format(start)+
+                    "\nDELAY TILL WORK START = "+remaining_time+
+                    "\nNEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
             debug_writer.append(message);
             debug_writer.close();
 
