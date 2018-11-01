@@ -19,3 +19,5 @@ This application consists of four tabs:
 2. Run them on demand, or create Schedulers attached to them.
 3. Check the Overview for details regarding each scheduler/configuration pair.
 4. Check the Log for the rsync log entries.
+
+Google Playstore Beta Download: <a href="https://play.google.com/store/apps/details?id=com.linminitools.myrsync">https://play.google.com/store/apps/details?id=com.linminitools.myrsync</a>

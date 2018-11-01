@@ -3,6 +3,8 @@ package com.linminitools.myrsync;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.widget.TimePicker;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -10,7 +12,12 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+
+import static android.content.Context.MODE_PRIVATE;
+import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.MainActivity.schedulers;
 
 
 public class AlarmReceiver extends BroadcastReceiver {
@@ -18,24 +25,21 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context ctx, Intent i) {
-
+        String Debug_log_path= ctx.getApplicationInfo().dataDir + "/debug.log";
+        File debug_log = new File(Debug_log_path);
         if ((Objects.requireNonNull(i.getAction())).equals("android.intent.action.BOOT_COMPLETED" )) {
             try {
-
-                String Debug_log_path = ctx.getApplicationInfo().dataDir + "/debug.log";
-                File debug_log = new java.io.File(Debug_log_path);
-
-                FileWriter debug_writer = new FileWriter(debug_log, true);
+                FileWriter debug_writer = new FileWriter(debug_log,true);
                 Locale current_locale = ctx.getResources().getConfiguration().locale;
                 SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
-                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "{--------REBOOT-------}";
+                CharSequence message= "\n\n[ "+ formatter.format(Calendar.getInstance().getTime()) +" ] "+"--------DEVICE REBOOTED--------";
                 debug_writer.append(message);
                 debug_writer.close();
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+            }
 
         /*
         SharedPreferences sched_prefs = ctx.getSharedPreferences("schedulers", MODE_PRIVATE);
@@ -88,11 +92,10 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         if ((Objects.requireNonNull(i.getAction())).equals("android.intent.action.BOOT_COMPLETED" )) {
             for (Scheduler s : schedulers){
-                //s.setAlarm(ctx);
+                s.setAlarm(ctx);
                 }
         }
-*/
-
+        */
     }
 
 }

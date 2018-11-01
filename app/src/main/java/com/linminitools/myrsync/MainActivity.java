@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.database.Cursor;
@@ -168,6 +169,17 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.me_about) {
             SpannableString s = new SpannableString(getResources().getString(R.string.about));
+            String version="";
+            try {
+                PackageInfo pInfo = appContext.getPackageManager().getPackageInfo(getPackageName(), 0);
+                version = pInfo.versionName;
+                int verCode = pInfo.versionCode;
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            s = SpannableString.valueOf(s+"\n\n myRsync Version: Beta-"+version);
+
             Linkify.addLinks(s,Linkify.ALL);
             AlertDialog.Builder alertDialogBuilder =
                     new AlertDialog.Builder(this)
@@ -231,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (requestCode == 41) {
+        if (requestCode == 41 || requestCode==42) {
 
             try {
 
@@ -239,12 +251,16 @@ public class MainActivity extends AppCompatActivity {
                 Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
                 DocumentFile pickedDir= DocumentFile.fromTreeUri(appContext,dirUri);
 
-                DocumentFile previous_log = Objects.requireNonNull(pickedDir).findFile("logfile.txt");
-                if (previous_log!=null) previous_log.delete();
+                File selected_logfile = log_file;
+                if (requestCode==42) selected_logfile = debug_log;
 
+                DocumentFile previous_log = Objects.requireNonNull(pickedDir).findFile(selected_logfile.getName());
+                if (previous_log != null) previous_log.delete();
 
-                DocumentFile exported_log = pickedDir.createFile("text/plain","logfile.txt");
-                FileInputStream inputStream = new FileInputStream(log_file);
+                DocumentFile exported_log = pickedDir.createFile("log", selected_logfile.getName());
+                //Log.d("FILENAME_LOG",selected_logfile.getName() +" "+String.valueOf(selected_log));
+                FileInputStream inputStream = new FileInputStream(selected_logfile);
+
                 OutputStream outputStream = getContentResolver().openOutputStream(Objects.requireNonNull(exported_log).getUri());
 
                 byte[] buffer = new byte[inputStream.available()];
