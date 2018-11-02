@@ -6,8 +6,8 @@ android {
         applicationId "com.linminitools.myrsync"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 4
-        versionName "0.4"
+        versionCode 5
+        versionName "0.5"
 
     }
 
@@ -25,7 +25,7 @@ android {
         }
         beta {
             minifyEnabled false
-            debuggable true
+            debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

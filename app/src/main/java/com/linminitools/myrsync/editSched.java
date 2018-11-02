@@ -146,6 +146,7 @@ public class editSched extends addScheduler {
             sched.d=tp;
             sched.update();
             sched.saveToDisk();
+            sched.cancelAlarm(appContext);
             sched.setAlarm(appContext);
 
             this.finish();
