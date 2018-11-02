@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -20,14 +21,19 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.linminitools.myrsync.MainActivity.debug_log;
+
 import static java.util.Calendar.getInstance;
 
 public class rsyncJobScheduler extends JobService {
 
+    String Debug_log_path;
+    File debug_log;
     @SuppressLint("ApplySharedPref")
     @Override
     public boolean onStartJob(JobParameters params) {
+
+        Debug_log_path= getBaseContext().getApplicationInfo().dataDir + "/debug.log";
+        debug_log= new File(Debug_log_path);
 
         SharedPreferences sched_prefs = getBaseContext().getSharedPreferences("schedulers", MODE_PRIVATE);
         SharedPreferences config_prefs = getBaseContext().getSharedPreferences("configs", MODE_PRIVATE);
@@ -43,7 +49,6 @@ public class rsyncJobScheduler extends JobService {
             Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
             CharSequence message= "\n\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"onStartJob { "+"\nJOBID = "+String.valueOf(jobid) +
-                    "\nSCHEDULER ID = "+String.valueOf(sched_id)+
                     "\nNEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
             debug_writer.append(message);
             debug_writer.close();
@@ -127,9 +132,8 @@ public class rsyncJobScheduler extends JobService {
             Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
             CharSequence message= "\n\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"reschedule { "+"\nJOBID = "+String.valueOf(jobid) +
-                    "\nSCHEDULER ID = "+String.valueOf(sched_id)+
                     "\nNEXT TIME (WEEK) = "+formatter.format(next_time)+
-                    "\nDELAY TILL WORK START = "+ remaining_time +" }";
+                    "\nNEXT SCHEDULED START = "+ exact_time +" }";
             debug_writer.append(message);
             debug_writer.close();
 
@@ -168,7 +172,6 @@ public class rsyncJobScheduler extends JobService {
                     Locale current_locale = getBaseContext().getResources().getConfiguration().locale;
                     SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
                     CharSequence message= "\n\n[ "+formatter.format(Calendar.getInstance().getTime())+" ] "+"[after]reschedule { "+"JOBID = "+String.valueOf(ji.getId()) +
-                            " | SCHEDULER ID = "+String.valueOf(sched_id)+
                             " | DELAY TILL WORK START = "+ remaining_time2 +" }";
                     debug_writer.append(message);
                     debug_writer.close();

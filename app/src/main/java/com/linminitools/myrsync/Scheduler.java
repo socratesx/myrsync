@@ -211,7 +211,6 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
             Locale current_locale = ctx.getResources().getConfiguration().locale;
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
             CharSequence message= "\n\n[ "+ formatter.format(Calendar.getInstance().getTime()) +" ] "+"setWorker { "+"\nJOBID = "+String.valueOf(jobid) +
-                    "\nSCHEDULER ID = "+String.valueOf(this.id)+
                     "\nSTART = " + formatter.format(start)+
                     "\nDELAY TILL WORK START = "+remaining_time+
                     "\nNEXT TIME (WEEK) = "+formatter.format(next_time)+ " }";
