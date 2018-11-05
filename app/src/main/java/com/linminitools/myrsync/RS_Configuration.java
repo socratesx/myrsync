@@ -20,6 +20,7 @@ import android.support.v4.app.NotificationCompat;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
@@ -72,6 +73,18 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putLong("rs_addedon_"+String.valueOf(this.id),addedOn);
 
         prefseditor.apply();
+        Locale current_locale = appContext.getResources().getConfiguration().locale;
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
+        try {
+            FileWriter debug_writer = new FileWriter(debug_log, true);
+            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION SAVED: " +this.name;
+            debug_writer.append(message);
+            debug_writer.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+
         
     }
     
@@ -96,6 +109,18 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
         else (new File(appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+String.valueOf(id)+".xml")).delete();
+
+        Locale current_locale = appContext.getResources().getConfiguration().locale;
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
+        try {
+            FileWriter debug_writer = new FileWriter(debug_log, true);
+            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION DELETED: " +this.name;
+            debug_writer.append(message);
+            debug_writer.close();
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -126,12 +151,25 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
                         SharedPreferences.Editor pref_Edit= pref.edit();
                         SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+                        Locale current_locale = context.getResources().getConfiguration().locale;
+                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
                         if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
 
 
                         pref_Edit.putBoolean("is_running",true);
                         pref_Edit.commit();
+
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " STARTED";
+                            debug_writer.append(message);
+                            debug_writer.close();
+                        }
+                        catch (IOException e){
+                            e.printStackTrace();
+                        }
+
                         String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
 
                         ProcessBuilder p = new ProcessBuilder(rsync_bin,options,"--log-file",log,local_path,cmd);
@@ -164,19 +202,38 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                         Calendar cal = Calendar.getInstance();
                         long time = cal.getTimeInMillis();
-                        Locale current_locale = context.getResources().getConfiguration().locale;
-                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+
+                        sched_prefs.edit().putLong("last_run_"+String.valueOf(scheduler_id),time).commit();
+
                         prefseditor.putString("last_run_"+String.valueOf(id),formatter.format(time));
                         prefseditor.commit();
                         pref_Edit.putBoolean("is_running",false);
                         pref_Edit.commit();
                         if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
+                            debug_writer.append(message);
+                            debug_writer.close();
+                        }
+                        catch (IOException e){
+                            e.printStackTrace();
+                        }
 
                     }
 
 
-                    catch (IOException e) {
-                        e.printStackTrace();
+                    catch (Exception e) {
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            String message= "CONFIGURATION RUN EXCEPTION CAUGHT: \n"+e.getMessage();
+                            debug_writer.append(message);
+                            debug_writer.close();
+                        }
+                        catch (IOException ioe){
+                            ioe.printStackTrace();
+                        }
+
                     }
                 }
             };

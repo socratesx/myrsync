@@ -139,14 +139,13 @@ public class editSched extends addScheduler {
             sp.setAdapter(spinnerAdapter);
 
             Scheduler sched = schedulers.get(pos);
-
+            sched.cancelAlarm(appContext);
             sched.days=repeat2;
             sched.name = name;
             sched.config_id = config_id;
             sched.d=tp;
             sched.update();
             sched.saveToDisk();
-            sched.cancelAlarm(appContext);
             sched.setAlarm(appContext);
 
             this.finish();

@@ -37,11 +37,16 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -62,16 +67,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        appContext=getApplicationContext();
+        appContext = getApplicationContext();
         configs.clear();
         schedulers.clear();
 
-        if (Build.VERSION.SDK_INT >= 23) if (!checkPermission()) requestPermission(); // Code for permission
+        if (Build.VERSION.SDK_INT >= 23)
+            if (!checkPermission()) requestPermission(); // Code for permission
 
         Populate_arrays(appContext);
+        Locale current_locale = appContext.getResources().getConfiguration().locale;
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
 
-        String Debug_log_path= appContext.getApplicationInfo().dataDir + "/debug.log";
+        String Debug_log_path = appContext.getApplicationInfo().dataDir + "/debug.log";
         debug_log = new File(Debug_log_path);
         if (!debug_log.exists()) {
             try {
@@ -88,13 +96,13 @@ public class MainActivity extends AppCompatActivity {
 
         viewPager.setAdapter(adapter);
 
-        TabLayout tabLayout =  findViewById(R.id.tabs);
+        TabLayout tabLayout = findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
 
-        Boolean is_first_run = getSharedPreferences("Install",MODE_PRIVATE).getBoolean("first_run",true);
-        //Log.d("ARCH", Arrays.toString(Build.SUPPORTED_ABIS));
+        Boolean is_first_run = getSharedPreferences("Install", MODE_PRIVATE).getBoolean("first_run", true);
+        //Log.d("ARCH", );
         if (is_first_run) {
-            getSharedPreferences("Install",MODE_PRIVATE).edit().putBoolean("first_run",false).apply();
+            getSharedPreferences("Install", MODE_PRIVATE).edit().putBoolean("first_run", false).apply();
             AssetManager AM = this.getAssets();
 
             try {
@@ -105,16 +113,15 @@ public class MainActivity extends AppCompatActivity {
                 File old_file = new File(executableFilePath);
                 old_file.delete();
 
-                getSharedPreferences("Install",MODE_PRIVATE).edit().putString("rsync_binary",executableFilePath).apply();
+                getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
 
 
-                String bin_path ="rsync_binary/x86_64/rsync";
+                String bin_path = "rsync_binary/x86_64/rsync";
 
 
-                for (String arch : Build.SUPPORTED_ABIS){
-                    //Log.d("ARCH", arch);
-                    if (arch.contains("arm64")) bin_path="rsync_binary/armv8/rsync";
-                    else if (arch.contains("armeabi-v7a")) bin_path ="rsync_binary/armv7/rsync";
+                for (String arch : Build.SUPPORTED_ABIS) {
+                    if (arch.contains("arm64")) bin_path = "rsync_binary/armv8/rsync";
+                    else if (arch.contains("armeabi-v7a")) bin_path = "rsync_binary/armv7/rsync";
                 }
 
                 InputStream in = AM.open(bin_path, AssetManager.ACCESS_BUFFER);
@@ -134,17 +141,30 @@ public class MainActivity extends AppCompatActivity {
                 in.close();
 
                 rsync_executable.setExecutable(true);
-                //Log.d("RSYNC_EXEC",rsync_executable.getAbsolutePath());
+
+                try {
+                    FileWriter debug_writer = new FileWriter(debug_log, true);
+                    CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "FIRST RUN INITIALIZATION {\n"+
+                            "SUPPORTED ABIS: "+Arrays.toString(Build.SUPPORTED_ABIS)+"\nSDK_Version: "+ String.valueOf(Build.VERSION.SDK_INT)+"\n}";
+                    debug_writer.append(message);
+                    debug_writer.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
 
             } catch (Exception e) {
-                e.printStackTrace();
-                //Log.d("EXEC_EXception",e.toString());
+
+                try {
+                    FileWriter debug_writer = new FileWriter(debug_log, true);
+                    String exc = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] "+"EXCEPTION CAUGHT: \n" + e.getMessage();
+                    debug_writer.append(exc);
+                    debug_writer.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
             }
+
         }
-
-
-
-
     }
 
     @Override
