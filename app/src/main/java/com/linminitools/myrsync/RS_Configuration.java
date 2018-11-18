@@ -39,6 +39,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
     String rs_options;
     String local_path;
     String name;
+    String rs_mode;
     Long addedOn;
     String rs_port="873";
     final int id;
@@ -67,6 +68,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putString("rs_module_"+String.valueOf(this.id),rs_module);
         prefseditor.putString("rs_ip_"+String.valueOf(this.id),rs_ip);
         prefseditor.putString("rs_port_"+String.valueOf(this.id),rs_port);
+        prefseditor.putString("rs_mode_"+String.valueOf(this.id),rs_mode);
         prefseditor.putString("local_path_"+String.valueOf(this.id),local_path);
         prefseditor.putString("last_result_"+String.valueOf(this.id),"Never Run");
         prefseditor.putString("last_run_"+String.valueOf(this.id),"Never Run");
@@ -101,6 +103,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.remove("rs_module_"+String.valueOf(this.id));
         prefseditor.remove("rs_ip_"+String.valueOf(this.id));
         prefseditor.remove("rs_port_"+String.valueOf(this.id));
+        prefseditor.remove("rs_mode_"+String.valueOf(this.id));
         prefseditor.remove("local_path_"+String.valueOf(this.id));
         prefseditor.remove("last_result_"+String.valueOf(this.id));
         prefseditor.remove("last_run_"+String.valueOf(this.id));
@@ -140,7 +143,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         final String local_path=this.local_path;
 
         final String cmd = "rsync://"+this.rs_user +"@"+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
-
+        String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
+        debug_log = new File(Debug_log_path);
+        final String mode= this.rs_mode;
 
 
             Thread t = new Thread(){
@@ -171,8 +176,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         }
 
                         String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
-
-                        ProcessBuilder p = new ProcessBuilder(rsync_bin,options,"--log-file",log,local_path,cmd);
+                        ProcessBuilder p;
+                        if (mode.equals("Push")) p = new ProcessBuilder(rsync_bin,options,"--log-file",log,local_path,cmd);
+                        else p=new ProcessBuilder(rsync_bin,options,"--log-file",log,cmd,local_path);
 
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");

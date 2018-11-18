@@ -70,17 +70,15 @@
                     android:id="@+id/ed_rsync_mod"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="16dp"
                     android:hint="@string/srv_mod"
+                    android:importantForAutofill="no"
                     android:inputType="text"
                     android:visibility="visible"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="@+id/ed_rsync_user"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/ed_rsync_user"
-                    android:importantForAutofill="no"
                     tools:targetApi="o" />
 
                 <EditText
@@ -131,6 +129,43 @@
                     app:layout_constraintStart_toStartOf="@+id/ed_srv_port"
                     app:layout_constraintTop_toBottomOf="@+id/ed_srv_port"
                     app:srcCompat="@drawable/ic_info_black_24dp" />
+
+                <TextView
+                    android:id="@+id/tv_mode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:text="@string/mode"
+                    android:textSize="18sp"
+                    app:layout_constraintStart_toStartOf="@+id/ed_rsync_mod"
+                    app:layout_constraintTop_toBottomOf="@+id/ed_rsync_mod" />
+
+                <RadioGroup
+                    android:id="@+id/rg_mode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkedButton="@+id/rb_push"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/ed_rsync_mod"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_mode">
+
+                    <RadioButton
+                        android:id="@+id/rb_push"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/push" />
+
+                    <RadioButton
+                        android:id="@+id/rb_pull"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pull" />
+                </RadioGroup>
 
             </android.support.constraint.ConstraintLayout>
 

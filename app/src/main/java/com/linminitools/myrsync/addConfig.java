@@ -12,10 +12,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -96,7 +99,8 @@ public class addConfig extends AppCompatActivity {
         EditText et_rs_user= findViewById(R.id.ed_rsync_user);
         EditText et_rs_mod= findViewById(R.id.ed_rsync_mod);
         EditText et_config_name = findViewById(R.id.et_rsync_alias);
-
+        int checked_rb = ((RadioGroup)findViewById(R.id.rg_mode)).getCheckedRadioButtonId();
+        RadioButton rb = findViewById(checked_rb);
 
         String options="-";
 
@@ -118,6 +122,10 @@ public class addConfig extends AppCompatActivity {
         String rs_port=String.valueOf(et_srv_port.getText());
         String rs_module=String.valueOf(et_rs_mod.getText());
         String rs_name = String.valueOf(et_config_name.getText());
+        String rs_mode = String.valueOf(rb.getText());
+
+        Log.d("RS_MODE",rs_mode);
+
         String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
         if (rs_port.isEmpty()) { rs_port="873";}
 
@@ -128,6 +136,7 @@ public class addConfig extends AppCompatActivity {
         configMap.put("local_path",local_path);
         configMap.put("rs_options",options);
         configMap.put("rs_name",rs_name);
+        configMap.put("rs_mode",rs_mode);
 
         return configMap;
     }
@@ -144,12 +153,14 @@ public class addConfig extends AppCompatActivity {
         String rs_port = configMap.get("rs_port");
         String rs_module = configMap.get("rs_module");
         String local_path = configMap.get("local_path");
+        String rs_mode = configMap.get("rs_mode");
 
 
         TextView tv= findViewById(R.id.tv_rs_cmd_View);
 
-        String Rsync_command = "rsync "+options+" "+ local_path+" "+"rsync://"+rs_user+"@"+rs_ip+":"+rs_port+"/"+rs_module;
-
+        String Rsync_command;
+        if (rs_mode.equals("Push")) Rsync_command= "rsync "+options+" "+ local_path+" "+"rsync://"+rs_user+"@"+rs_ip+":"+rs_port+"/"+rs_module;
+        else Rsync_command= "rsync "+options+ " " + "rsync://"+rs_user+"@"+rs_ip+":"+rs_port+"/"+rs_module + " "+ local_path ;
 
         tv.setText(Rsync_command);
 
@@ -166,6 +177,7 @@ public class addConfig extends AppCompatActivity {
         String rs_module = configMap.get("rs_module");
         String local_path = configMap.get("local_path");
         String rs_name = configMap.get("rs_name");
+        String rs_mode = configMap.get("rs_mode");
 
 
 
@@ -188,6 +200,7 @@ public class addConfig extends AppCompatActivity {
             config.rs_module = rs_module;
             config.local_path = local_path;
             config.name= rs_name;
+            config.rs_mode=rs_mode;
             config.saveToDisk();
             configs.add(config);
             this.finish();

@@ -3,10 +3,8 @@ package com.linminitools.myrsync;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -14,11 +12,9 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -27,13 +23,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.linminitools.myrsync.MainActivity.appContext;
-import static com.linminitools.myrsync.MainActivity.configs;
 
 public class tab4 extends Fragment{
 
@@ -65,7 +59,7 @@ public class tab4 extends Fragment{
 
         String log = prefs.getString("log", appContext.getApplicationInfo().dataDir + "/logfile.log");
 
-        if (((String)sp.getSelectedItem()).equals("debug")){
+        if (sp.getSelectedItem().equals("debug")){
             log = appContext.getApplicationInfo().dataDir + "/debug.log";
         }
 

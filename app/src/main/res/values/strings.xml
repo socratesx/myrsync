@@ -86,14 +86,17 @@
     </string>
     <string name="rsync_daemon_info">
         Use this form to build an rsync configuration. Before creating any configuration, you must ensure that an rsync daemon is up and running.
-        For more details on how to setup and configure the rsync daemon please visit https://download.samba.org/pub/rsync/rsyncd.conf.html \n\n
+        For more details on how to setup and configure the rsync daemon please visit https://download.samba.org/pub/rsync/rsyncd.conf.html \n
 
-        This tool will be using the following format of the rsync command:\n\n
-        <b>rsync [OPTION…] SRC… rsync://[USER@]HOST[:PORT]/DEST</b>\n\n
+        \nThis tool uses the following format of the rsync command:\n
+        \nPush:
+        \nrsync [OPTIONS] SRC rsync://[USER@]HOST[:PORT]/DEST\n
+        \nPull:
+        \nrsync [OPTIONS] rsync://[USER@]HOST[:PORT]/SRC DEST\n
 
-        With this form you actually build the rsync command by defining the OPTION…, SRC…, USER, HOST, PORT, and DEST Variables \n\n
-        OPTION… = This is options string that is formed from the OPTIONS checkboxes. \n
-        SRC… = Local Directory Path to be Synced \n
+        \nWith this form you actually build the rsync command by defining the OPTIONS, SRC, USER, HOST, PORT, and DEST Variables \n\n
+        OPTIONS = This is the options string that is formed from the OPTIONS checkboxes. \n
+        SRC = Local Directory Path to be Synced \n
         USER = Authorized Username to connect to the rsync daemon module. \n
         HOST = The IP Address of the server running the rsync Daemon. \n
         PORT = The default port is 873 but may be overriden here if it is different. \n
@@ -121,5 +124,9 @@
         where you can get quick information of the task.\n\n\
     </string>
     <string name="info">Info button</string>
+    <string name="push">Push</string>
+    <string name="pull">Pull</string>
+    <string name="mode">Mode:</string>
+    <string name="selected_log">Selected Log:</string>
 
 </resources>

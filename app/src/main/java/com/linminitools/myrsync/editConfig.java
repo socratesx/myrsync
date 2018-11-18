@@ -7,6 +7,8 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,6 +57,13 @@ public class editConfig extends addConfig {
         EditText ed_rsync_mod = findViewById(R.id.ed_rsync_mod);
         ed_rsync_mod.setText(config.rs_module);
 
+        RadioGroup rg_mode = findViewById(R.id.rg_mode);
+        RadioButton rb_pull = findViewById(R.id.rb_pull);
+        RadioButton rb_push = findViewById(R.id.rb_push);
+
+        if (rb_pull.getText().equals(config.rs_mode)) rb_pull.setChecked(true);
+        else rb_push.setChecked(true);
+
         TextView tv_path = findViewById(R.id.tv_path);
         tv_path.setVisibility(View.VISIBLE);
         tv_path.setText(config.local_path);
@@ -89,6 +98,13 @@ public class editConfig extends addConfig {
             }
         });
 
+        rg_mode.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                group.check(checkedId);
+            }
+        });
+
     }
 
     private void actionConfig(int id, int request){
@@ -107,6 +123,7 @@ public class editConfig extends addConfig {
                     c.rs_module = configMap.get("rs_module");
                     c.local_path = configMap.get("local_path");
                     c.name = configMap.get("rs_name");
+                    c.rs_mode = configMap.get("rs_mode");
                     if (request==1) {
                         c.saveToDisk();
 
