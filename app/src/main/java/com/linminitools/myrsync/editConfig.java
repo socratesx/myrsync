@@ -124,6 +124,7 @@ public class editConfig extends addConfig {
                     c.local_path = configMap.get("local_path");
                     c.name = configMap.get("rs_name");
                     c.rs_mode = configMap.get("rs_mode");
+                    c.path_uri = configMap.get("path_uri");
                     if (request==1) {
                         c.saveToDisk();
 

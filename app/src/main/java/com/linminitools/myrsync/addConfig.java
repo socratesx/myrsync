@@ -67,7 +67,8 @@ public class addConfig extends AppCompatActivity {
                 SharedPreferences path_prefs = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE);
                 SharedPreferences.Editor path_prefseditor = path_prefs.edit();
                 path_prefseditor.putString("local_path",local_path);
-                path_prefseditor.apply();
+                path_prefseditor.putString("path_uri",dirUri.toString());
+                path_prefseditor.commit();
 
                 TextView tv_path= findViewById(R.id.tv_path);
                 if (!Objects.requireNonNull(local_path).isEmpty()) {
@@ -127,6 +128,7 @@ public class addConfig extends AppCompatActivity {
         Log.d("RS_MODE",rs_mode);
 
         String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
+        String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri","");
         if (rs_port.isEmpty()) { rs_port="873";}
 
         configMap.put("rs_ip",rs_ip);
@@ -137,6 +139,7 @@ public class addConfig extends AppCompatActivity {
         configMap.put("rs_options",options);
         configMap.put("rs_name",rs_name);
         configMap.put("rs_mode",rs_mode);
+        configMap.put ("path_uri",path_uri);
 
         return configMap;
     }
@@ -178,6 +181,7 @@ public class addConfig extends AppCompatActivity {
         String local_path = configMap.get("local_path");
         String rs_name = configMap.get("rs_name");
         String rs_mode = configMap.get("rs_mode");
+        String path_uri = configMap.get("path_uri");
 
 
 
@@ -201,6 +205,7 @@ public class addConfig extends AppCompatActivity {
             config.local_path = local_path;
             config.name= rs_name;
             config.rs_mode=rs_mode;
+            config.path_uri = path_uri;
             config.saveToDisk();
             configs.add(config);
             this.finish();

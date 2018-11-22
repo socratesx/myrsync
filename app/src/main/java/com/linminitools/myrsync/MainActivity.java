@@ -270,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Uri pathUri = data.getData();
                 Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
+
                 DocumentFile pickedDir= DocumentFile.fromTreeUri(appContext,dirUri);
 
                 File selected_logfile = log_file;
@@ -342,6 +343,7 @@ public class MainActivity extends AppCompatActivity {
                 config.local_path = config_prefs.getString("local_path_"+id, "");
                 config.name = config_prefs.getString("rs_name_"+id, "");
                 config.addedOn = config_prefs.getLong("rs_addedon_"+id,0);
+                config.rs_mode = config_prefs.getString("rs_mode_"+id,"Push");
                 configs.add(config);
             }
         }

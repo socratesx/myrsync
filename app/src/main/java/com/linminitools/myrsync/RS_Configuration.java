@@ -14,9 +14,14 @@ import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.provider.DocumentsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.os.EnvironmentCompat;
+import android.support.v4.provider.DocumentFile;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -24,6 +29,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
@@ -33,13 +39,7 @@ import java.util.Random;
 
 public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
 
-    String rs_ip;
-    String rs_user;
-    String rs_module;
-    String rs_options;
-    String local_path;
-    String name;
-    String rs_mode;
+    String rs_ip, rs_user, rs_module, rs_options, local_path, path_uri, name, rs_mode;
     Long addedOn;
     String rs_port="873";
     final int id;
@@ -72,6 +72,8 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putString("local_path_"+String.valueOf(this.id),local_path);
         prefseditor.putString("last_result_"+String.valueOf(this.id),"Never Run");
         prefseditor.putString("last_run_"+String.valueOf(this.id),"Never Run");
+        prefseditor.putString("path_uri_"+String.valueOf(this.id),this.path_uri);
+
         prefseditor.putLong("rs_addedon_"+String.valueOf(this.id),addedOn);
 
         prefseditor.apply();
@@ -108,6 +110,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.remove("last_result_"+String.valueOf(this.id));
         prefseditor.remove("last_run_"+String.valueOf(this.id));
         prefseditor.remove("rs_addedon_"+String.valueOf(this.id));
+        prefseditor.remove("path_uri_"+String.valueOf(this.id));
         prefseditor.apply();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
@@ -135,17 +138,31 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
         send_notification(context);
         final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
-
+        final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
         final int id = this.id;
 
         final String options = this.rs_options;
         final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
         final String local_path=this.local_path;
 
-        final String cmd = "rsync://"+this.rs_user +"@"+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
+        String rsync_user_string=this.rs_user+"@";
+        if(this.rs_user.isEmpty()) rsync_user_string="";
+
+        final String cmd = "rsync://"+rsync_user_string+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
         String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
         debug_log = new File(Debug_log_path);
         final String mode= this.rs_mode;
+
+        //File selected_dir = new File(this.local_path);
+        //selected_dir.setWritable(true);
+
+
+        Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
+
+
+
+        DocumentFile df = DocumentFile.fromTreeUri(context,dirUri);
+
 
 
             Thread t = new Thread(){
@@ -177,26 +194,41 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                         String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
                         ProcessBuilder p;
-                        if (mode.equals("Push")) p = new ProcessBuilder(rsync_bin,options,"--log-file",log,local_path,cmd);
-                        else p=new ProcessBuilder(rsync_bin,options,"--log-file",log,cmd,local_path);
+
+                        Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
+
+                        if (mode.equals("Push")) p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
+                        else p=new ProcessBuilder(rsync_bin,options+"O","--devices","--progress","--no-perms","--omit-dir-times","--inplace","--chmod=ugo=rwX","--numeric-ids","--super","--log-file",log,"--debug","ALL",cmd,context.getExternalCacheDirs()[0].getAbsolutePath());
 
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
                         p.directory(new File(context.getApplicationInfo().dataDir));
+                        p.redirectErrorStream(true);
                         Process process=p.start();
 
-                        BufferedReader std_error = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                        BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
                         StringBuilder builder = new StringBuilder();
 
-                        String err_line;
+                        String line;
 
-                        while ( (err_line = std_error.readLine()) != null) {
-                            builder.append(err_line);
+                        while ( (line = std_out.readLine()) != null) {
+                            builder.append(line);
                             builder.append(System.getProperty("line.separator"));
                         }
 
                         String result = builder.toString();
+
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+result;
+                            debug_writer.append(message);
+                            debug_writer.close();
+                        }
+                        catch (IOException e){
+                            e.printStackTrace();
+                        }
+
 
                         if (result.equals("")) result="OK";
                         else result="Warning! Check Log!";
@@ -232,9 +264,10 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                     catch (Exception e) {
                         try {
                             FileWriter debug_writer = new FileWriter(debug_log, true);
-                            String message= "CONFIGURATION RUN EXCEPTION CAUGHT: \n"+e.getMessage();
+                            String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + e.getMessage();
                             debug_writer.append(message);
                             debug_writer.close();
+                            e.printStackTrace();
                         }
                         catch (IOException ioe){
                             ioe.printStackTrace();
