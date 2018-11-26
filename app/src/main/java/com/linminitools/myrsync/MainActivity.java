@@ -120,10 +120,12 @@ public class MainActivity extends AppCompatActivity {
 
 
                 for (String arch : Build.SUPPORTED_ABIS) {
-                    if (arch.contains("arm64")) bin_path = "rsync_binary/armv8/rsync";
-                    else if (arch.contains("armeabi-v7a")) bin_path = "rsync_binary/armv7/rsync";
-                    else bin_path= "rsync_binary/x86_64/rsync";
+                    Log.d("ARCH",arch);
+                    if (arch.equals("arm64")) bin_path = "rsync_binary/armv8/rsync";
+                    else if (arch.equals("armeabi-v7a")) bin_path = "rsync_binary/armv7/rsync";
                 }
+
+                Log.d ("BINARY", bin_path);
 
                 InputStream in = AM.open(bin_path, AssetManager.ACCESS_BUFFER);
 

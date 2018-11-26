@@ -1,13 +1,18 @@
 package com.linminitools.myrsync;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
+import android.provider.DocumentsProvider;
+import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -22,6 +27,8 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.security.SecurityPermission;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -48,6 +55,11 @@ public class addConfig extends AppCompatActivity {
 
     public void addPath(View v){
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        i.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+        i.setFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        i.setFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+
+
         startActivityForResult(Intent.createChooser(i,"Choose Directory"),1);
     }
 
@@ -61,8 +73,22 @@ public class addConfig extends AppCompatActivity {
 
                 Uri pathUri = data.getData();
                 Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
-                String local_path = getPath(this, dirUri);
+                String local_path = getPath(appContext, dirUri);
 
+                DocumentFile df = DocumentFile.fromTreeUri(appContext,dirUri);
+
+                Log.d("dirUri.path",String.valueOf(df.getUri().getEncodedPath()));
+                Log.d("dirUri.encodedpath",local_path);
+                Log.d("Uri Parameters",dirUri.getQueryParameterNames().toString());
+
+
+
+
+
+
+                File f = new File(local_path);
+                f.setWritable(true, false);
+                Log.d("IS_WRITABLE",String.valueOf(df.canWrite()));
 
                 SharedPreferences path_prefs = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE);
                 SharedPreferences.Editor path_prefseditor = path_prefs.edit();

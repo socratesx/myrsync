@@ -5,9 +5,12 @@ import android.annotation.TargetApi;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.usage.ExternalStorageStats;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.UriPermission;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
@@ -15,8 +18,11 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Parcel;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
+import android.provider.DocumentsProvider;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.os.EnvironmentCompat;
@@ -28,6 +34,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -35,6 +43,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+
+import static android.content.Context.MODE_PRIVATE;
 
 
 public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
@@ -157,9 +167,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         //selected_dir.setWritable(true);
 
 
-        Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
-
-
+        final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
 
         DocumentFile df = DocumentFile.fromTreeUri(context,dirUri);
 
@@ -194,12 +202,29 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                         String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
                         ProcessBuilder p;
-
+                        String Intermediate_path = "";
                         Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
-
+                        String temp_folder=context.getExternalCacheDirs()[0].getAbsolutePath()+"/"+String.valueOf(id);
                         if (mode.equals("Push")) p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
-                        else p=new ProcessBuilder(rsync_bin,options+"O","--devices","--progress","--no-perms","--omit-dir-times","--inplace","--chmod=ugo=rwX","--numeric-ids","--super","--log-file",log,"--debug","ALL",cmd,context.getExternalCacheDirs()[0].getAbsolutePath());
+                        //else p=new ProcessBuilder(rsync_bin,"-vHrltDuO","--devices","--progress","--no-perms","--omit-dir-times","--chmod=Du+rwx,go-rwx,Fu+rw,go-rw","--log-file",log,"--debug","ALL",cmd,context.getExternalCacheDirs()[0].getAbsolutePath());
+                        else {
+                            Log.d("SELECTED DIRECTORY URI", String.valueOf(dirUri));
+                            Log.d("External Dirs", String.valueOf(Arrays.asList(context.getFilesDir().getAbsolutePath()).toString()));
 
+                            if (local_path.contains("emulated")) {
+                                Log.d("SELECTED STORAGE","INTERNAL");
+                                DocumentFile.fromFile(new File(context.getFilesDir().getAbsolutePath())).createDirectory(String.valueOf(id));
+                                Intermediate_path = context.getFilesDir().getAbsolutePath()+"/"+String.valueOf(id);
+                            }
+                            else {
+                                Log.d("SELECTED STORAGE","EXTERNAL");
+                                DocumentFile.fromFile(new File(context.getExternalCacheDirs()[1].getAbsolutePath())).createDirectory(String.valueOf(id));
+                                Intermediate_path = context.getExternalCacheDirs()[1].getAbsolutePath()+"/"+String.valueOf(id);
+                            }
+                            Log.d("Dirs", String.valueOf(Intermediate_path));
+
+                            p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,Intermediate_path);
+                        }
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
                         p.directory(new File(context.getApplicationInfo().dataDir));
@@ -207,9 +232,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         Process process=p.start();
 
                         BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
                         StringBuilder builder = new StringBuilder();
-
                         String line;
 
                         while ( (line = std_out.readLine()) != null) {
@@ -258,7 +281,48 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             e.printStackTrace();
                         }
 
+                        if (mode.equals("Pull")){
+
+                            DocumentFile Destination_dir = DocumentFile.fromTreeUri(context,dirUri);
+                            DocumentFile Intermediate_dir = DocumentFile.fromFile(new File(Intermediate_path));
+
+                            for (DocumentFile df :Intermediate_dir.listFiles()){
+
+                                Log.d("Documents Files",String.valueOf(df.isFile()));
+
+                            }
+
+                            /*p.command("mv", "'*'",local_path);
+                            p.directory(new File(temp_folder));
+                            Process process2 =p.start();
+
+                            BufferedReader std_out2 = new BufferedReader(new InputStreamReader(process2.getInputStream()));
+                            StringBuilder builder2 = new StringBuilder();
+                            String line2;
+
+                            while ( (line2 = std_out2.readLine()) != null) {
+                                builder2.append(line2);
+                                builder2.append(System.getProperty("line.separator"));
+                            }
+
+                            String result2 = builder2.toString();
+
+                            try {
+                                FileWriter debug_writer = new FileWriter(debug_log, true);
+                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "2nd OUT_STREAM = "+result2;
+                                debug_writer.append(message);
+                                debug_writer.close();
+                            }
+                            catch (IOException e){
+                                e.printStackTrace();
+                            }*/
+
+
+                        }
+
+
                     }
+
 
 
                     catch (Exception e) {
