@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
                 for (String arch : Build.SUPPORTED_ABIS) {
                     Log.d("ARCH",arch);
-                    if (arch.equals("arm64")) bin_path = "rsync_binary/armv8/rsync";
+                    if (arch.equals("arm64")) bin_path = "rsync_binary/armv7/rsync";
                     else if (arch.equals("armeabi-v7a")) bin_path = "rsync_binary/armv7/rsync";
                 }
 
@@ -282,9 +282,8 @@ public class MainActivity extends AppCompatActivity {
                 if (previous_log != null) previous_log.delete();
 
                 DocumentFile exported_log = pickedDir.createFile("log", selected_logfile.getName());
-                //Log.d("FILENAME_LOG",selected_logfile.getName() +" "+String.valueOf(selected_log));
-                FileInputStream inputStream = new FileInputStream(selected_logfile);
 
+                FileInputStream inputStream = new FileInputStream(selected_logfile);
                 OutputStream outputStream = getContentResolver().openOutputStream(Objects.requireNonNull(exported_log).getUri());
 
                 byte[] buffer = new byte[inputStream.available()];

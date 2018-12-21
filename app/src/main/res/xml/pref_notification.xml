@@ -24,6 +24,10 @@
         android:dependency="notifications"
         android:key="vibrate"
         android:title="@string/pref_title_vibrate" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="root_access"
+        android:title="Root Access" />
 
 
 </PreferenceScreen>

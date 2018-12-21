@@ -66,7 +66,7 @@ public class editConfig extends addConfig {
 
         TextView tv_path = findViewById(R.id.tv_path);
         tv_path.setVisibility(View.VISIBLE);
-        tv_path.setText(config.local_path);
+        tv_path.setText(getSharedPreferences("configs", MODE_PRIVATE).getString("local_path_"+String.valueOf(config.id),""));
 
         String rs_options = config.rs_options;
 

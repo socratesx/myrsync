@@ -31,9 +31,11 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -45,6 +47,7 @@ import java.util.Objects;
 import java.util.Random;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 
 public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
@@ -168,12 +171,19 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
 
         final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
+        final File f = new File(local_path);
+        final DocumentFile df = DocumentFile.fromFile(f);
 
-        DocumentFile df = DocumentFile.fromTreeUri(context,dirUri);
+
+        File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
+
+        Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
 
 
 
-            Thread t = new Thread(){
+
+
+        Thread t = new Thread(){
                 @SuppressLint("ApplySharedPref")
                 @Override
                 public void run() {
@@ -208,22 +218,13 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         if (mode.equals("Push")) p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
                         //else p=new ProcessBuilder(rsync_bin,"-vHrltDuO","--devices","--progress","--no-perms","--omit-dir-times","--chmod=Du+rwx,go-rwx,Fu+rw,go-rw","--log-file",log,"--debug","ALL",cmd,context.getExternalCacheDirs()[0].getAbsolutePath());
                         else {
-                            Log.d("SELECTED DIRECTORY URI", String.valueOf(dirUri));
-                            Log.d("External Dirs", String.valueOf(Arrays.asList(context.getFilesDir().getAbsolutePath()).toString()));
-
-                            if (local_path.contains("emulated")) {
-                                Log.d("SELECTED STORAGE","INTERNAL");
-                                DocumentFile.fromFile(new File(context.getFilesDir().getAbsolutePath())).createDirectory(String.valueOf(id));
-                                Intermediate_path = context.getFilesDir().getAbsolutePath()+"/"+String.valueOf(id);
+                            if ((PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access",false))){
+                                p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
                             }
                             else {
-                                Log.d("SELECTED STORAGE","EXTERNAL");
-                                DocumentFile.fromFile(new File(context.getExternalCacheDirs()[1].getAbsolutePath())).createDirectory(String.valueOf(id));
-                                Intermediate_path = context.getExternalCacheDirs()[1].getAbsolutePath()+"/"+String.valueOf(id);
+                                p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
                             }
-                            Log.d("Dirs", String.valueOf(Intermediate_path));
 
-                            p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,Intermediate_path);
                         }
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
@@ -283,19 +284,46 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                         if (mode.equals("Pull")){
 
-                            DocumentFile Destination_dir = DocumentFile.fromTreeUri(context,dirUri);
+                            File from = new File(Intermediate_path+"/test1");
+                            File to = new File(local_path+"/test1");
+                            Log.d("RENAME",String.valueOf(from.renameTo(to)));
+                            /*
+                            DocumentFile Destination_dir = DocumentFile.fromFile(f);
                             DocumentFile Intermediate_dir = DocumentFile.fromFile(new File(Intermediate_path));
 
-                            for (DocumentFile df :Intermediate_dir.listFiles()){
+                            ContentResolver c = context.getContentResolver();
 
-                                Log.d("Documents Files",String.valueOf(df.isFile()));
+                            DocumentFile pickedDir= DocumentFile.fromTreeUri(appContext,dirUri);
+
+                            for (DocumentFile df :Intermediate_dir.listFiles()){
+                                if(df.isFile()) {
+                                    try {
+
+                                        FileInputStream inputStream = new FileInputStream(new File(df.getUri().getPath()));
+                                        DocumentFile moved_df = pickedDir.createFile(df.getType(), df.getName());
+                                        OutputStream outputStream = c.openOutputStream(Objects.requireNonNull(moved_df).getUri());
+
+                                        byte[] buffer = new byte[inputStream.available()];
+                                        //noinspection ResultOfMethodCallIgnored
+                                        inputStream.read(buffer);
+                                        inputStream.close();
+
+                                        Objects.requireNonNull(outputStream).write(buffer);
+                                        outputStream.close();
+                                        df.delete();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                }
 
                             }
 
-                            /*p.command("mv", "'*'",local_path);
-                            p.directory(new File(temp_folder));
-                            Process process2 =p.start();
 
+                            ProcessBuilder p2 = new ProcessBuilder("cp", "test1",local_path);
+                            p2.redirectErrorStream(true);
+                            p2.directory(new File(Intermediate_path));
+                            Process process2 =p2.start();
+                            Log.d("PROCESS2",process2.toString());
                             BufferedReader std_out2 = new BufferedReader(new InputStreamReader(process2.getInputStream()));
                             StringBuilder builder2 = new StringBuilder();
                             String line2;
@@ -306,6 +334,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             }
 
                             String result2 = builder2.toString();
+                            Log.d("RESULT2",result2);
 
                             try {
                                 FileWriter debug_writer = new FileWriter(debug_log, true);
@@ -315,9 +344,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             }
                             catch (IOException e){
                                 e.printStackTrace();
-                            }*/
+                            }
 
-
+                                */
                         }
 
 
@@ -349,7 +378,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     private void send_notification(Context ctx) {
 
-        SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences set_prefs = getDefaultSharedPreferences(ctx);
         Locale current_locale = ctx.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
@@ -392,7 +421,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         private String createNotificationChannel(Context ctx){
 
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
-            SharedPreferences set_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+            SharedPreferences set_prefs = getDefaultSharedPreferences(ctx);
 
             Boolean Vibration_enabled = set_prefs.getBoolean("vibrate",false);
             Uri ring_path=Uri.parse(set_prefs.getString("ringtone", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION).getPath()));

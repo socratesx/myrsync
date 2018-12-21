@@ -13,6 +13,7 @@ import android.preference.SwitchPreference;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 
 public class Settings  extends AppCompatPreferenceActivity {
@@ -53,8 +54,21 @@ public class Settings  extends AppCompatPreferenceActivity {
 
             }
             else if (preference instanceof SwitchPreference){
+                Log.d("Preference_value",stringValue);
 
-                 preference.setSummary(stringValue);
+                 if (preference.getKey().equals("root_access") && stringValue.equals("true")){
+                     try{
+                     Process root = Runtime.getRuntime().exec("su -c whoami");
+                     if(root.exitValue()==0) preference.setSummary(stringValue);
+                     }
+                     catch (Exception e){
+                         e.printStackTrace();
+                     }
+                 }
+                 else {
+                     preference.setSummary(stringValue);
+                 }
+
             }
 
             else {
@@ -129,6 +143,7 @@ public class Settings  extends AppCompatPreferenceActivity {
                 bindPreferenceSummaryToValue(findPreference("notifications"));
                 bindPreferenceSummaryToValue(findPreference("vibrate"));
                 bindPreferenceSummaryToValue(findPreference("ringtone"));
+                bindPreferenceSummaryToValue(findPreference("root_access"));
 
             }
 
