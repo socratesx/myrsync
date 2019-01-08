@@ -37,7 +37,7 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
-import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.myRsyncApplication.configs;
 import static com.linminitools.myrsync.MainActivity.getPath;
 
 

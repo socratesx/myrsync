@@ -12,7 +12,7 @@ import android.widget.ListView;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
-import static com.linminitools.myrsync.MainActivity.schedulers;
+import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 
 public class tab1 extends Fragment {
 

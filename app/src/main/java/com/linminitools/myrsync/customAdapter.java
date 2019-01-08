@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.myrsync.MainActivity.configs;
-import static com.linminitools.myrsync.MainActivity.schedulers;
+import static com.linminitools.myrsync.myRsyncApplication.configs;
+import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 
 
 class customAdapter extends BaseAdapter {

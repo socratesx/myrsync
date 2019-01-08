@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
-import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.myRsyncApplication.configs;
 
 public class editConfig extends addConfig {
 

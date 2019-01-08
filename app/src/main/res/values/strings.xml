@@ -128,5 +128,6 @@
     <string name="pull">Pull</string>
     <string name="mode">Mode:</string>
     <string name="selected_log">Selected Log:</string>
+    <string name="edit_configurations">Edit Configurations</string>
 
 </resources>

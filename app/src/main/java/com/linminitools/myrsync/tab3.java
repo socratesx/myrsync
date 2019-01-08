@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import static com.linminitools.myrsync.MainActivity.schedulers;
+import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 
 
 public class tab3 extends android.support.v4.app.Fragment {
