@@ -91,7 +91,7 @@ public final class PluginBundleValues {
     public static Bundle generateBundle(@NonNull final Context context,
                                         @NonNull final Integer configId) {
         assertNotNull(context, "context"); //$NON-NLS-1$
-//        assertNotEmpty(configId, "configId"); //$NON-NLS-1$
+        assertNotNull(configId, "configId"); //$NON-NLS-1$
 
         final Bundle result = new Bundle();
         result.putInt(BUNDLE_EXTRA_INT_VERSION_CODE, AppBuildInfo.getVersionCode(context));
