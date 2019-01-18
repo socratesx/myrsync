@@ -16,8 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
-import static com.linminitools.myrsync.MainActivity.configs;
-import static com.linminitools.myrsync.MainActivity.schedulers;
+import static com.linminitools.myrsync.myRsyncApplication.configs;
+import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 
 
 public class editSched extends addScheduler {

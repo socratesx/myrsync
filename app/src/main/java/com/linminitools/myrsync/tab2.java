@@ -9,7 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import static com.linminitools.myrsync.MainActivity.configs;
+import static com.linminitools.myrsync.myRsyncApplication.configs;
 
 
 
