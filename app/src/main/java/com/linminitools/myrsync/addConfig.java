@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.storage.StorageManager;
 import android.os.storage.StorageVolume;
+import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsProvider;
@@ -31,6 +32,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.security.SecurityPermission;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +53,16 @@ public class addConfig extends AppCompatActivity {
         Button view = findViewById(R.id.bt_view);
         save.setEnabled(false);
         view.setEnabled(false);
+
+        int checked_rb = ((RadioGroup)findViewById(R.id.rg_mode)).getCheckedRadioButtonId();
+        RadioButton rb = findViewById(checked_rb);
+        if (rb.getText().equals("Pull")){
+            Boolean has_root_access = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getBoolean("root_access",false);
+            Log.d("ROOT_ACCESS",String.valueOf(has_root_access));
+            if (! has_root_access){
+                 ArrayList<String> path_list = new ArrayList<String>();
+            }
+        }
     }
 
 
@@ -79,9 +91,9 @@ public class addConfig extends AppCompatActivity {
 
                 DocumentFile df = DocumentFile.fromTreeUri(appContext,dirUri);
 
-                Log.d("dirUri.path",String.valueOf(df.getUri().getEncodedPath()));
-                Log.d("dirUri.encodedpath",local_path);
-                Log.d("Uri Parameters",dirUri.getQueryParameterNames().toString());
+                //Log.d("dirUri.path",String.valueOf(df.getUri().getEncodedPath()));
+                //Log.d("dirUri.encodedpath",local_path);
+                //Log.d("Uri Parameters",dirUri.getQueryParameterNames().toString());
 
 
 
@@ -130,6 +142,7 @@ public class addConfig extends AppCompatActivity {
         EditText et_config_name = findViewById(R.id.et_rsync_alias);
         int checked_rb = ((RadioGroup)findViewById(R.id.rg_mode)).getCheckedRadioButtonId();
         RadioButton rb = findViewById(checked_rb);
+
 
         String options="-";
 

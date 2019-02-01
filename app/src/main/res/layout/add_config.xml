@@ -211,11 +211,11 @@
                     app:layout_constraintVertical_chainStyle="spread_inside"
                     tools:layout_editor_absoluteX="36dp" />
 
-                <android.support.constraint.ConstraintLayout
+                <RadioGroup
+                    android:id="@+id/rb_paths"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content">
+                    android:layout_height="match_parent" />
 
-                </android.support.constraint.ConstraintLayout>
             </LinearLayout>
 
             <TextView
