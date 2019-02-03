@@ -1,20 +1,15 @@
 package com.linminitools.myrsync;
 
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.storage.StorageManager;
-import android.os.storage.StorageVolume;
+import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
-import android.provider.DocumentsProvider;
 import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableString;
@@ -25,26 +20,35 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
-import java.security.SecurityPermission;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import static android.os.Environment.DIRECTORY_ALARMS;
+import static android.os.Environment.DIRECTORY_DCIM;
+import static android.os.Environment.DIRECTORY_DOCUMENTS;
+import static android.os.Environment.DIRECTORY_DOWNLOADS;
+import static android.os.Environment.DIRECTORY_MOVIES;
+import static android.os.Environment.DIRECTORY_MUSIC;
+import static android.os.Environment.DIRECTORY_NOTIFICATIONS;
+import static android.os.Environment.DIRECTORY_PICTURES;
+import static android.os.Environment.DIRECTORY_PODCASTS;
+import static android.os.Environment.DIRECTORY_RINGTONES;
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
 import static com.linminitools.myrsync.MainActivity.getPath;
 
 
 public class addConfig extends AppCompatActivity {
-
+    boolean path_is_not_writable;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,28 +57,15 @@ public class addConfig extends AppCompatActivity {
         Button view = findViewById(R.id.bt_view);
         save.setEnabled(false);
         view.setEnabled(false);
-
-        int checked_rb = ((RadioGroup)findViewById(R.id.rg_mode)).getCheckedRadioButtonId();
-        RadioButton rb = findViewById(checked_rb);
-        if (rb.getText().equals("Pull")){
-            Boolean has_root_access = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getBoolean("root_access",false);
-            Log.d("ROOT_ACCESS",String.valueOf(has_root_access));
-            if (! has_root_access){
-                 ArrayList<String> path_list = new ArrayList<String>();
-            }
-        }
     }
-
-
 
     public void addPath(View v){
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         i.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         i.setFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         i.setFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-
-
-        startActivityForResult(Intent.createChooser(i,"Choose Directory"),1);
+        Intent chooser = Intent.createChooser(i,"Choose Directory");
+        startActivityForResult(chooser,1);
     }
 
     @Override
@@ -88,46 +79,66 @@ public class addConfig extends AppCompatActivity {
                 Uri pathUri = data.getData();
                 Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
                 String local_path = getPath(appContext, dirUri);
+                File dir = new File(local_path);
+                DocumentFile df = DocumentFile.fromTreeUri(appContext, dirUri);
 
-                DocumentFile df = DocumentFile.fromTreeUri(appContext,dirUri);
+                boolean has_root_access = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getBoolean("root_access", false);
+                RadioGroup rg = findViewById(R.id.rg_mode);
+                RadioButton checked = findViewById(rg.getCheckedRadioButtonId());
 
-                //Log.d("dirUri.path",String.valueOf(df.getUri().getEncodedPath()));
-                //Log.d("dirUri.encodedpath",local_path);
-                //Log.d("Uri Parameters",dirUri.getQueryParameterNames().toString());
+                Log.d("WRITABLE",String.valueOf(dir.canWrite()));
 
+                if (checked.getText().equals("Pull") && (!has_root_access) && (!dir.canWrite())) {
 
-
-
-
-
-                File f = new File(local_path);
-                f.setWritable(true, false);
-                Log.d("IS_WRITABLE",String.valueOf(df.canWrite()));
-
-                SharedPreferences path_prefs = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE);
-                SharedPreferences.Editor path_prefseditor = path_prefs.edit();
-                path_prefseditor.putString("local_path",local_path);
-                path_prefseditor.putString("path_uri",dirUri.toString());
-                path_prefseditor.commit();
-
-                TextView tv_path= findViewById(R.id.tv_path);
-                if (!Objects.requireNonNull(local_path).isEmpty()) {
-                    tv_path.setText(path_prefs.getString("local_path", ""));
-                    tv_path.setVisibility(View.VISIBLE);
-
-                    Button tv_addpath = findViewById(R.id.bt_add);
-                    tv_addpath.setText(R.string.change_path);
-
-                    Button save = findViewById(R.id.bt_save);
-                    Button view = findViewById(R.id.bt_view);
-                    save.setEnabled(true);
-                    view.setEnabled(true);
+                    path_is_not_writable = true;
 
                 }
+                else {
+                    path_is_not_writable = false;
+                    File f = new File(local_path);
+                    f.setWritable(true, false);
+                    Log.d("IS_WRITABLE", String.valueOf(df.canWrite()));
 
+                    SharedPreferences path_prefs = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE);
+                    SharedPreferences.Editor path_prefseditor = path_prefs.edit();
+                    path_prefseditor.putString("local_path", local_path);
+                    path_prefseditor.putString("path_uri", dirUri.toString());
+                    path_prefseditor.commit();
+
+                    TextView tv_path = findViewById(R.id.tv_path);
+                    if (!Objects.requireNonNull(local_path).isEmpty()) {
+                        tv_path.setText(path_prefs.getString("local_path", ""));
+                        tv_path.setVisibility(View.VISIBLE);
+
+                        Button tv_addpath = findViewById(R.id.bt_add);
+                        tv_addpath.setText(R.string.change_path);
+
+                        Button save = findViewById(R.id.bt_save);
+                        Button view = findViewById(R.id.bt_view);
+                        save.setEnabled(true);
+                        view.setEnabled(true);
+                    }
+                }
             }
         }
     }
+
+
+    @Override
+    protected void onResume(){
+        super.onResume();
+        if (path_is_not_writable){
+            AlertDialog.Builder alertDialogBuilder =
+                    new AlertDialog.Builder(this)
+                            .setTitle("Selected Folder is not Writable!")
+                            .setMessage(getResources().getString(R.string.select_folder))
+                            .setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            });
+            alertDialogBuilder.show();
+        }
+        }
 
 
 
@@ -270,6 +281,19 @@ public class addConfig extends AppCompatActivity {
                 new AlertDialog.Builder(v.getContext())
                         .setTitle("Rsync Options Help")
                         .setMessage(getResources().getString(R.string.rsync_options))
+                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        })
+                ;
+        alertDialogBuilder.show();
+    }
+
+    public void select_path_help(View v){
+        AlertDialog.Builder alertDialogBuilder =
+                new AlertDialog.Builder(v.getContext())
+                        .setTitle("Pull Configuration Folder Select")
+                        .setMessage(getResources().getString(R.string.select_folder))
                         .setPositiveButton("Close", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                             }

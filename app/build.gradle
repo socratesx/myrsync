@@ -17,6 +17,17 @@ android {
         }
     }
 
+    configurations.all {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            def requested = details.requested
+            if (requested.group == "com.android.support") {
+                if (!requested.name.startsWith("multidex")) {
+                    details.useVersion "26.+"
+                }
+            }
+        }
+    }
+
 
     buildTypes {
         release {
@@ -32,6 +43,8 @@ android {
     sourceSets { main { assets.srcDirs = ['src/main/assets', 'src/main/assets/'] } }
 
 }
+
+
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

@@ -222,7 +222,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
                             }
                             else {
-                                p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath());
+                                p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,"/storage/emulated/0/Signal");
                             }
 
                         }
@@ -281,79 +281,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         catch (IOException e){
                             e.printStackTrace();
                         }
-
-                        if (mode.equals("Pull")){
-
-                            File from = new File(Intermediate_path+"/test1");
-                            File to = new File(local_path+"/test1");
-                            Log.d("RENAME",String.valueOf(from.renameTo(to)));
-                            /*
-                            DocumentFile Destination_dir = DocumentFile.fromFile(f);
-                            DocumentFile Intermediate_dir = DocumentFile.fromFile(new File(Intermediate_path));
-
-                            ContentResolver c = context.getContentResolver();
-
-                            DocumentFile pickedDir= DocumentFile.fromTreeUri(appContext,dirUri);
-
-                            for (DocumentFile df :Intermediate_dir.listFiles()){
-                                if(df.isFile()) {
-                                    try {
-
-                                        FileInputStream inputStream = new FileInputStream(new File(df.getUri().getPath()));
-                                        DocumentFile moved_df = pickedDir.createFile(df.getType(), df.getName());
-                                        OutputStream outputStream = c.openOutputStream(Objects.requireNonNull(moved_df).getUri());
-
-                                        byte[] buffer = new byte[inputStream.available()];
-                                        //noinspection ResultOfMethodCallIgnored
-                                        inputStream.read(buffer);
-                                        inputStream.close();
-
-                                        Objects.requireNonNull(outputStream).write(buffer);
-                                        outputStream.close();
-                                        df.delete();
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-
-                            }
-
-
-                            ProcessBuilder p2 = new ProcessBuilder("cp", "test1",local_path);
-                            p2.redirectErrorStream(true);
-                            p2.directory(new File(Intermediate_path));
-                            Process process2 =p2.start();
-                            Log.d("PROCESS2",process2.toString());
-                            BufferedReader std_out2 = new BufferedReader(new InputStreamReader(process2.getInputStream()));
-                            StringBuilder builder2 = new StringBuilder();
-                            String line2;
-
-                            while ( (line2 = std_out2.readLine()) != null) {
-                                builder2.append(line2);
-                                builder2.append(System.getProperty("line.separator"));
-                            }
-
-                            String result2 = builder2.toString();
-                            Log.d("RESULT2",result2);
-
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "2nd OUT_STREAM = "+result2;
-                                debug_writer.append(message);
-                                debug_writer.close();
-                            }
-                            catch (IOException e){
-                                e.printStackTrace();
-                            }
-
-                                */
-                        }
-
-
                     }
-
-
-
                     catch (Exception e) {
                         try {
                             FileWriter debug_writer = new FileWriter(debug_log, true);

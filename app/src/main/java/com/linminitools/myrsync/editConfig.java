@@ -1,7 +1,10 @@
 package com.linminitools.myrsync;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -12,9 +15,20 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 
+import static android.os.Environment.DIRECTORY_ALARMS;
+import static android.os.Environment.DIRECTORY_DCIM;
+import static android.os.Environment.DIRECTORY_DOCUMENTS;
+import static android.os.Environment.DIRECTORY_DOWNLOADS;
+import static android.os.Environment.DIRECTORY_MOVIES;
+import static android.os.Environment.DIRECTORY_MUSIC;
+import static android.os.Environment.DIRECTORY_NOTIFICATIONS;
+import static android.os.Environment.DIRECTORY_PICTURES;
+import static android.os.Environment.DIRECTORY_PODCASTS;
+import static android.os.Environment.DIRECTORY_RINGTONES;
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
 
@@ -61,12 +75,17 @@ public class editConfig extends addConfig {
         RadioButton rb_pull = findViewById(R.id.rb_pull);
         RadioButton rb_push = findViewById(R.id.rb_push);
 
+
+
         if (rb_pull.getText().equals(config.rs_mode)) rb_pull.setChecked(true);
+
         else rb_push.setChecked(true);
 
         TextView tv_path = findViewById(R.id.tv_path);
         tv_path.setVisibility(View.VISIBLE);
-        tv_path.setText(getSharedPreferences("configs", MODE_PRIVATE).getString("local_path_"+String.valueOf(config.id),""));
+
+        String local_path = getSharedPreferences("configs", MODE_PRIVATE).getString("local_path_"+String.valueOf(config.id),"");
+        tv_path.setText(local_path);
 
         String rs_options = config.rs_options;
 

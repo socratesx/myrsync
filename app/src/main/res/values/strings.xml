@@ -123,11 +123,19 @@
         5. Save the Scheduler. Following this step the Scheduler will be listed on the \'Schedulers\' Tab, where you can click on it to edit it, and in \'Overview\' Tab
         where you can get quick information of the task.\n\n\
     </string>
+    <string name="select_folder">
+        The folder you selected is not writable by this application \n\n
+        This is due to Android\'s security policy and permission enforcement on the External SD Directories. \n\n
+        The Android allows writing to specific folders such as the /storage/emulated/0/. You can create a subfolder there and use it with rsync pull.
+        If you want to save to a folder of your choice, anywhere on internal or external SD then root access is required. \n\n
+        If your device is rooted you can enable the root access feature from the settings and then you can select any existing path.\n\n
+    </string>
     <string name="info">Info button</string>
     <string name="push">Push</string>
     <string name="pull">Pull</string>
     <string name="mode">Mode:</string>
     <string name="selected_log">Selected Log:</string>
     <string name="edit_configurations">Edit Configurations</string>
+    <string name="select_a_path">Select a Path:</string>
 
 </resources>

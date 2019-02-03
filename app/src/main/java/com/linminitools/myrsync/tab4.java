@@ -154,7 +154,8 @@ public class tab4 extends Fragment{
         } catch (IOException e) {
             text.append(e.getMessage());
         }
-        return text.toString();
+        int start = text.length()-16000;
+        return text.substring(start);
     }
 
     private void clear_log(){
