@@ -168,7 +168,14 @@ public class addConfig extends AppCompatActivity {
                 options=options.concat(check_box);
             }
         }
+
         if (Objects.equals(options, "-")){options="";}
+
+        EditText ed_adv_opts = findViewById(R.id.ed_advanced_options);
+        String adv_options=ed_adv_opts.getText().toString();
+        options = options.concat(" "+adv_options);
+
+
 
         String rs_user=String.valueOf(et_rs_user.getText()) ;
         String rs_ip=String.valueOf(et_srv_ip.getText());
@@ -176,9 +183,6 @@ public class addConfig extends AppCompatActivity {
         String rs_module=String.valueOf(et_rs_mod.getText());
         String rs_name = String.valueOf(et_config_name.getText());
         String rs_mode = String.valueOf(rb.getText());
-
-        Log.d("RS_MODE",rs_mode);
-
         String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
         String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri","");
         if (rs_port.isEmpty()) { rs_port="873";}
@@ -191,7 +195,8 @@ public class addConfig extends AppCompatActivity {
         configMap.put("rs_options",options);
         configMap.put("rs_name",rs_name);
         configMap.put("rs_mode",rs_mode);
-        configMap.put ("path_uri",path_uri);
+        configMap.put("path_uri",path_uri);
+        configMap.put("adv_options",adv_options);
 
         return configMap;
     }
@@ -209,7 +214,6 @@ public class addConfig extends AppCompatActivity {
         String rs_module = configMap.get("rs_module");
         String local_path = configMap.get("local_path");
         String rs_mode = configMap.get("rs_mode");
-
 
         TextView tv= findViewById(R.id.tv_rs_cmd_View);
 
@@ -234,8 +238,7 @@ public class addConfig extends AppCompatActivity {
         String rs_name = configMap.get("rs_name");
         String rs_mode = configMap.get("rs_mode");
         String path_uri = configMap.get("path_uri");
-
-
+        String adv_options = configMap.get("adv_options");
 
         if (!rs_ip.isEmpty() && !rs_module.isEmpty() && !local_path.isEmpty()) {
 
@@ -258,6 +261,7 @@ public class addConfig extends AppCompatActivity {
             config.name= rs_name;
             config.rs_mode=rs_mode;
             config.path_uri = path_uri;
+            config.adv_options = adv_options;
             config.saveToDisk();
             configs.add(config);
             this.finish();
@@ -281,6 +285,19 @@ public class addConfig extends AppCompatActivity {
                 new AlertDialog.Builder(v.getContext())
                         .setTitle("Rsync Options Help")
                         .setMessage(getResources().getString(R.string.rsync_options))
+                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                            }
+                        })
+                ;
+        alertDialogBuilder.show();
+    }
+
+    public void rsync_adv_opts_help(View v){
+        AlertDialog.Builder alertDialogBuilder =
+                new AlertDialog.Builder(v.getContext())
+                        .setTitle("Rsync Advanced Options Help")
+                        .setMessage(getResources().getString(R.string.rsync_adv_options))
                         .setPositiveButton("Close", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                             }

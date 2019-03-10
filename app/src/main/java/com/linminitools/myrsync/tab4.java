@@ -28,16 +28,17 @@ import java.util.Objects;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.linminitools.myrsync.MainActivity.appContext;
+import static com.linminitools.myrsync.MainActivity.log_file;
 
 public class tab4 extends Fragment{
 
         private TextView tv_log;
         private final Handler h= new Handler();
-        private File log_file;
         private Thread log_thread;
         private SparseArray<String> selected_logfile = new SparseArray<>();
         private int selected_item=-1;
         private  Spinner sp;
+
 
     @Override
         public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

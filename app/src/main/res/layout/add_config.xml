@@ -229,7 +229,7 @@
 
                 <CheckBox
                     android:id="@+id/cb_n"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
                     android:layout_marginTop="16dp"
                     android:checked="false"
@@ -240,10 +240,10 @@
 
                 <CheckBox
                     android:id="@+id/cb_g"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
-                    android:layout_marginBottom="8dp"
                     android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
                     android:checked="false"
                     android:hint="@string/g"
                     android:textSize="18sp"
@@ -253,24 +253,24 @@
 
                 <CheckBox
                     android:id="@+id/cb_m"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
-                    android:layout_marginBottom="8dp"
                     android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
                     android:checked="false"
                     android:hint="-m"
                     android:textSize="18sp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="@+id/cb_p"
                     app:layout_constraintTop_toBottomOf="@+id/cb_p"
-                    tools:ignore="HardcodedText" />
+                    />
 
                 <CheckBox
                     android:id="@+id/cb_u"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
-                    android:layout_marginBottom="8dp"
                     android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
                     android:checked="false"
                     android:hint="-u"
                     android:textSize="18sp"
@@ -281,11 +281,11 @@
 
                 <CheckBox
                     android:id="@+id/cb_q"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
-                    android:layout_marginBottom="8dp"
                     android:layout_marginStart="3dp"
                     android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
                     android:checked="false"
                     android:hint="-q"
                     android:textSize="18sp"
@@ -296,7 +296,7 @@
 
                 <CheckBox
                     android:id="@+id/cb_p"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
                     android:layout_marginTop="16dp"
                     android:checked="false"
@@ -308,7 +308,7 @@
 
                 <CheckBox
                     android:id="@+id/cb_t"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
                     android:layout_marginTop="16dp"
                     android:checked="false"
@@ -320,7 +320,7 @@
 
                 <CheckBox
                     android:id="@+id/cb_O"
-                    android:layout_width="54dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="35dp"
                     android:layout_marginTop="16dp"
                     android:checked="false"
@@ -379,9 +379,9 @@
                     android:id="@+id/cb_v"
                     android:layout_width="0dp"
                     android:layout_height="35dp"
-                    android:layout_marginEnd="16dp"
                     android:layout_marginStart="24dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
                     android:hint="-v"
                     android:textSize="18sp"
                     app:layout_constraintEnd_toStartOf="@+id/bt_help_rsync"
@@ -393,13 +393,58 @@
                     android:id="@+id/bt_help_rsync"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
                     android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
                     android:backgroundTint="@android:color/transparent"
                     android:contentDescription="@string/options_help"
                     android:onClick="rsync_help"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/baseline_help_black_24" />
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/tv_advanced"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/advanced"
+                    android:textSize="18sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <EditText
+                    android:id="@+id/ed_advanced_options"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:hint="@string/type_rsync_options_manually"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/bt_advanced_help"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/tv_advanced"
+                    android:inputType="text"
+                    android:importantForAutofill="no" tools:targetApi="o"/>
+
+                <ImageButton
+                    android:id="@+id/bt_advanced_help"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="16dp"
+                    android:backgroundTint="@android:color/transparent"
+                    android:contentDescription="@string/options_help"
+                    android:onClick="rsync_adv_opts_help"
+                    app:layout_constraintBottom_toBottomOf="@+id/ed_advanced_options"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:srcCompat="@drawable/baseline_help_black_24" />
 
             </android.support.constraint.ConstraintLayout>
