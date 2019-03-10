@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_CODE = 1;
     public static Context appContext;
-    private File log_file;
+    static File log_file;
     static File debug_log;
 
 
@@ -75,9 +75,12 @@ public class MainActivity extends AppCompatActivity {
         Locale current_locale = appContext.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
+        String log_path = appContext.getApplicationInfo().dataDir + "/logfile.log";
+        log_file = new File(log_path);
 
         String Debug_log_path = appContext.getApplicationInfo().dataDir + "/debug.log";
         debug_log = new File(Debug_log_path);
+
         if (!debug_log.exists()) {
             try {
                 debug_log.createNewFile();
@@ -274,7 +277,6 @@ public class MainActivity extends AppCompatActivity {
 
                 File selected_logfile = log_file;
                 if (requestCode==42) selected_logfile = debug_log;
-
                 DocumentFile previous_log = Objects.requireNonNull(pickedDir).findFile(selected_logfile.getName());
                 if (previous_log != null) previous_log.delete();
 

@@ -231,8 +231,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             }
 
                         }
-                        Log.d("CMD_STRING",cmd_string);
+                        Log.d("CMD_STRING",Arrays.toString(cmd_string.split(" ")));
                         p.command(cmd_string.split(" "));
+                        
 
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
