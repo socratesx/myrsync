@@ -137,5 +137,15 @@
     <string name="selected_log">Selected Log:</string>
     <string name="edit_configurations">Edit Configurations</string>
     <string name="select_a_path">Select a Path:</string>
+    <string name="advanced">Advanced:</string>
+    <string name="type_rsync_options_manually">Type rsync Options manually</string>
+    <string name="m">-m</string>
+    <string name="rsync_adv_options">
+        You can add options manually by using this textbox. \n\n
+        Any options string you add here will be added as it is and after any selected checkbox options.\n\n
+        You are completely responsible for the correct syntax of the options string of the rsync command. \n\n
+        The app cannot validate that the options string is correct. Use the view command button to see the actual command that will run.\n\n
+        This is a potentially dangerous feature that may result in data loss. Take caution when using options that delete files.
+    </string>
 
 </resources>

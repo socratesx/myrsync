@@ -97,10 +97,16 @@ public class editConfig extends addConfig {
             String options = rs_options.substring(1);
             for (char x : options.toCharArray()) {
                 int resID = getResources().getIdentifier("cb_" + String.valueOf(x), "id", getPackageName());
-                CheckBox cb = findViewById(resID);
-                cb.setChecked(true);
+                if (resID!=0 && !config.adv_options.contains(String.valueOf(x))) {
+                    CheckBox cb = findViewById(resID);
+                    cb.setChecked(true);
+                }
             }
         }
+        EditText ed_adv_options = findViewById(R.id.ed_advanced_options);
+        ed_adv_options.setText(config.adv_options);
+
+
 
         final int id = config.id;
 
@@ -144,6 +150,7 @@ public class editConfig extends addConfig {
                     c.name = configMap.get("rs_name");
                     c.rs_mode = configMap.get("rs_mode");
                     c.path_uri = configMap.get("path_uri");
+                    c.adv_options = configMap.get("adv_options");
                     if (request==1) {
                         c.saveToDisk();
 

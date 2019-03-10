@@ -52,7 +52,7 @@ import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
 
-    String rs_ip, rs_user, rs_module, rs_options, local_path, path_uri, name, rs_mode;
+    String rs_ip, rs_user, rs_module, rs_options, local_path, path_uri, name, rs_mode, adv_options;
     Long addedOn;
     String rs_port="873";
     final int id;
@@ -86,7 +86,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putString("last_result_"+String.valueOf(this.id),"Never Run");
         prefseditor.putString("last_run_"+String.valueOf(this.id),"Never Run");
         prefseditor.putString("path_uri_"+String.valueOf(this.id),this.path_uri);
-
+        prefseditor.putString("rs_adv_options_"+String.valueOf(this.id),this.adv_options);
         prefseditor.putLong("rs_addedon_"+String.valueOf(this.id),addedOn);
 
         prefseditor.apply();
@@ -124,6 +124,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.remove("last_run_"+String.valueOf(this.id));
         prefseditor.remove("rs_addedon_"+String.valueOf(this.id));
         prefseditor.remove("path_uri_"+String.valueOf(this.id));
+        prefseditor.remove("rs_adv_options_"+String.valueOf(this.id));
         prefseditor.apply();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
@@ -211,24 +212,31 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         }
 
                         String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
-                        ProcessBuilder p;
-                        String Intermediate_path = "";
+                        ProcessBuilder p = new ProcessBuilder();
                         Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
-                        String temp_folder=context.getExternalCacheDirs()[0].getAbsolutePath()+"/"+String.valueOf(id);
-                        if (mode.equals("Push")) p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
-                        //else p=new ProcessBuilder(rsync_bin,"-vHrltDuO","--devices","--progress","--no-perms","--omit-dir-times","--chmod=Du+rwx,go-rwx,Fu+rw,go-rw","--log-file",log,"--debug","ALL",cmd,context.getExternalCacheDirs()[0].getAbsolutePath());
+                        String cmd_string="";
+                        if (mode.equals("Push")) {
+                            cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
+                            //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
+                        }
                         else {
                             if ((PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access",false))){
-                                p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
+                                //p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
+                                cmd_string = "su -c "+ rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path+" ";
+
                             }
                             else {
-                                p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,"/storage/emulated/0/Signal");
+                                //p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
+                                cmd_string = rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path+" ";
                             }
 
                         }
+                        Log.d("CMD_STRING",cmd_string);
+                        p.command(cmd_string.split(" "));
+
                         Map<String, String> env = p.environment();
                         env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
-                        p.directory(new File(context.getApplicationInfo().dataDir));
+                        //p.directory(new File(context.getApplicationInfo().dataDir));
                         p.redirectErrorStream(true);
                         Process process=p.start();
 

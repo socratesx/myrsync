@@ -66,6 +66,7 @@ public class myRsyncApplication extends Application {
                 config.name = config_prefs.getString("rs_name_"+id, "");
                 config.addedOn = config_prefs.getLong("rs_addedon_"+id,0);
                 config.rs_mode = config_prefs.getString("rs_mode_"+id,"Push");
+                config.adv_options = config_prefs.getString("rs_adv_options_"+id,"");
                 configs.add(config);
             }
         }
