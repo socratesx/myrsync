@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -94,11 +95,14 @@ public class editConfig extends addConfig {
         }
 
         if (!rs_options.isEmpty()) {
-            String options = rs_options.substring(1);
+            String options = (rs_options.substring(1)).split(" ")[0].trim();
+            Log.d("OPTIONS:",options);
             for (char x : options.toCharArray()) {
+                Log.d("OPTIONS:",String.valueOf(x));
                 int resID = getResources().getIdentifier("cb_" + String.valueOf(x), "id", getPackageName());
-                if (resID!=0 && !config.adv_options.contains(String.valueOf(x))) {
+                if (resID!=0) {
                     CheckBox cb = findViewById(resID);
+
                     cb.setChecked(true);
                 }
             }

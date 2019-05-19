@@ -177,12 +177,12 @@ public class addConfig extends AppCompatActivity {
 
 
 
-        String rs_user=String.valueOf(et_rs_user.getText()) ;
-        String rs_ip=String.valueOf(et_srv_ip.getText());
-        String rs_port=String.valueOf(et_srv_port.getText());
-        String rs_module=String.valueOf(et_rs_mod.getText());
-        String rs_name = String.valueOf(et_config_name.getText());
-        String rs_mode = String.valueOf(rb.getText());
+        String rs_user=String.valueOf(et_rs_user.getText()).trim() ;
+        String rs_ip=String.valueOf(et_srv_ip.getText()).trim();
+        String rs_port=String.valueOf(et_srv_port.getText()).trim();
+        String rs_module=String.valueOf(et_rs_mod.getText()).trim();
+        String rs_name = String.valueOf(et_config_name.getText()).trim();
+        String rs_mode = String.valueOf(rb.getText()).trim();
         String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
         String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri","");
         if (rs_port.isEmpty()) { rs_port="873";}

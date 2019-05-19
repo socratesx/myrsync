@@ -222,12 +222,12 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         else {
                             if ((PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access",false))){
                                 //p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                cmd_string = "su -c "+ rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path+" ";
+                                cmd_string = "su -c "+ rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
 
                             }
                             else {
                                 //p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                cmd_string = rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path+" ";
+                                cmd_string = rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
                             }
 
                         }
