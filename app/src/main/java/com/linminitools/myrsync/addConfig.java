@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.support.v4.provider.DocumentFile;
@@ -20,7 +19,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -32,16 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import static android.os.Environment.DIRECTORY_ALARMS;
-import static android.os.Environment.DIRECTORY_DCIM;
-import static android.os.Environment.DIRECTORY_DOCUMENTS;
-import static android.os.Environment.DIRECTORY_DOWNLOADS;
-import static android.os.Environment.DIRECTORY_MOVIES;
-import static android.os.Environment.DIRECTORY_MUSIC;
-import static android.os.Environment.DIRECTORY_NOTIFICATIONS;
-import static android.os.Environment.DIRECTORY_PICTURES;
-import static android.os.Environment.DIRECTORY_PODCASTS;
-import static android.os.Environment.DIRECTORY_RINGTONES;
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
 import static com.linminitools.myrsync.MainActivity.getPath;
@@ -105,7 +93,7 @@ public class addConfig extends AppCompatActivity {
                     path_prefseditor.putString("path_uri", dirUri.toString());
                     path_prefseditor.commit();
 
-                    TextView tv_path = findViewById(R.id.tv_path);
+                    TextView tv_path = findViewById(R.id.ed_path);
                     if (!Objects.requireNonNull(local_path).isEmpty()) {
                         tv_path.setText(path_prefs.getString("local_path", ""));
                         tv_path.setVisibility(View.VISIBLE);
@@ -175,7 +163,7 @@ public class addConfig extends AppCompatActivity {
         String adv_options=ed_adv_opts.getText().toString();
         options = options.concat(" "+adv_options);
 
-
+        EditText ed_path = findViewById(R.id.ed_path);
 
         String rs_user=String.valueOf(et_rs_user.getText()).trim() ;
         String rs_ip=String.valueOf(et_srv_ip.getText()).trim();
@@ -183,7 +171,8 @@ public class addConfig extends AppCompatActivity {
         String rs_module=String.valueOf(et_rs_mod.getText()).trim();
         String rs_name = String.valueOf(et_config_name.getText()).trim();
         String rs_mode = String.valueOf(rb.getText()).trim();
-        String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
+        //String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
+        String local_path=String.valueOf(ed_path.getText());
         String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri","");
         if (rs_port.isEmpty()) { rs_port="873";}
 
@@ -260,7 +249,7 @@ public class addConfig extends AppCompatActivity {
             config.local_path = local_path;
             config.name= rs_name;
             config.rs_mode=rs_mode;
-            config.path_uri = path_uri;
+            //config.path_uri = path_uri;
             config.adv_options = adv_options;
             config.saveToDisk();
             configs.add(config);

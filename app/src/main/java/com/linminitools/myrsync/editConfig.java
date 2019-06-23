@@ -1,10 +1,7 @@
 package com.linminitools.myrsync;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -16,20 +13,9 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 
-import static android.os.Environment.DIRECTORY_ALARMS;
-import static android.os.Environment.DIRECTORY_DCIM;
-import static android.os.Environment.DIRECTORY_DOCUMENTS;
-import static android.os.Environment.DIRECTORY_DOWNLOADS;
-import static android.os.Environment.DIRECTORY_MOVIES;
-import static android.os.Environment.DIRECTORY_MUSIC;
-import static android.os.Environment.DIRECTORY_NOTIFICATIONS;
-import static android.os.Environment.DIRECTORY_PICTURES;
-import static android.os.Environment.DIRECTORY_PODCASTS;
-import static android.os.Environment.DIRECTORY_RINGTONES;
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
 
@@ -82,7 +68,7 @@ public class editConfig extends addConfig {
 
         else rb_push.setChecked(true);
 
-        TextView tv_path = findViewById(R.id.tv_path);
+        TextView tv_path = findViewById(R.id.ed_path);
         tv_path.setVisibility(View.VISIBLE);
 
         String local_path = getSharedPreferences("configs", MODE_PRIVATE).getString("local_path_"+String.valueOf(config.id),"");
@@ -153,7 +139,7 @@ public class editConfig extends addConfig {
                     c.local_path = configMap.get("local_path");
                     c.name = configMap.get("rs_name");
                     c.rs_mode = configMap.get("rs_mode");
-                    c.path_uri = configMap.get("path_uri");
+                    //c.path_uri = configMap.get("path_uri");
                     c.adv_options = configMap.get("adv_options");
                     if (request==1) {
                         c.saveToDisk();

@@ -57,7 +57,7 @@ import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
 
-    String rs_ip, rs_user, rs_module, rs_options, local_path, path_uri, name, rs_mode, adv_options;
+    String rs_ip, rs_user, rs_module, rs_options, local_path, name, rs_mode, adv_options;
     Long addedOn;
     String rs_port="873";
     final int id;
@@ -90,7 +90,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putString("local_path_"+String.valueOf(this.id),local_path);
         prefseditor.putString("last_result_"+String.valueOf(this.id),"Never Run");
         prefseditor.putString("last_run_"+String.valueOf(this.id),"Never Run");
-        prefseditor.putString("path_uri_"+String.valueOf(this.id),this.path_uri);
+        //prefseditor.putString("path_uri_"+String.valueOf(this.id),this.path_uri);
         prefseditor.putString("rs_adv_options_"+String.valueOf(this.id),this.adv_options);
         prefseditor.putLong("rs_addedon_"+String.valueOf(this.id),addedOn);
 
@@ -128,7 +128,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.remove("last_result_"+String.valueOf(this.id));
         prefseditor.remove("last_run_"+String.valueOf(this.id));
         prefseditor.remove("rs_addedon_"+String.valueOf(this.id));
-        prefseditor.remove("path_uri_"+String.valueOf(this.id));
+        //prefseditor.remove("path_uri_"+String.valueOf(this.id));
         prefseditor.remove("rs_adv_options_"+String.valueOf(this.id));
         prefseditor.apply();
 
@@ -379,7 +379,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         Locale current_locale = ctx.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
-        String message = "Rsync configuration" + this.name + " started on " + formatter.format(Calendar.getInstance().getTime());
+        String message = "Rsync configuration " + this.name + " started on " + formatter.format(Calendar.getInstance().getTime());
         if (type==0) message = "Network is not connected. The job is aborted";
         else if (type==1) message = "You are not connected to WiFi. The job is aborted.";
         else if (type==2) message = "You are not connected to the network you specified. The job is aborted.";

@@ -183,35 +183,53 @@
                 android:textStyle="bold"
                 android:visibility="visible" />
 
-            <LinearLayout
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
-                    android:id="@+id/tv_path"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@android:color/background_light"
-                    android:paddingEnd="16dp"
-                    android:paddingStart="16dp"
-                    android:textIsSelectable="true"
-                    android:visibility="gone" />
-
                 <Button
                     android:id="@+id/bt_add"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="8dp"
                     android:hint="@string/add_path"
                     android:onClick="addPath"
                     android:text="@string/add_path"
                     android:visibility="visible"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_loc_settings"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintVertical_chainStyle="spread_inside"
-                    tools:layout_editor_absoluteX="36dp" />
+                    tools:layout_conversion_absoluteHeight="48dp"
+                    tools:layout_conversion_absoluteWidth="411dp"
+                    tools:layout_conversion_wrapHeight="126"
+                    tools:layout_conversion_wrapWidth="243" />
 
-            </LinearLayout>
+                <EditText
+                    android:id="@+id/ed_path"
+                    android:layout_width="296dp"
+                    android:layout_height="29dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@android:color/background_light"
+                    android:hint="Enter SRC Path"
+                    android:inputType="text"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:singleLine="true"
+                    android:textIsSelectable="true"
+                    android:textSize="14sp"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toBottomOf="@+id/bt_add"
+                    app:layout_constraintEnd_toStartOf="@+id/bt_add"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </android.support.constraint.ConstraintLayout>
 
             <TextView
                 android:layout_width="match_parent"
