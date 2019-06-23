@@ -15,7 +15,11 @@ import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.RingtoneManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Parcel;
@@ -27,6 +31,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.os.EnvironmentCompat;
 import android.support.v4.provider.DocumentFile;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -150,179 +155,237 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     void executeConfig(final Context context, final Integer scheduler_id){
 
-        send_notification(context);
-        final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
-        final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
-        final int id = this.id;
+        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+        boolean sw_wifi = sched_prefs.getBoolean("wifi_switch_"+ String.valueOf(scheduler_id),false);
+        String wifi_ssid = sched_prefs.getString("ssid_"+ String.valueOf(scheduler_id),"");
+        int sched;
+        String ssid = get_current_ssid(context);
+        if (scheduler_id == null) sched =-1;
+        else sched = scheduler_id;
+        Log.d("WIFI_SSID",ssid);
+        Log.d("WIFI_SET",wifi_ssid);
+        Log.d("WIFI_SW",String.valueOf(sw_wifi));
 
-        final String options = this.rs_options;
-        final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
-        final String local_path=this.local_path;
+        if (ssid == null) {
+            send_notification(context,0);
+            update_result(context,"Aborted",sched);
+        }
+        else {
+            if (sw_wifi && ssid.equals("none")){
+                send_notification(context,1);
+                update_result(context,"Aborted",sched);
+            }
+            else if (sw_wifi && !ssid.equals(wifi_ssid) && !wifi_ssid.isEmpty()){
+                send_notification(context,2);
+                update_result(context,"Aborted",sched);
+            }
+            else {
+                send_notification(context,3);
+                final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+                final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
+                final int id = this.id;
 
-        String rsync_user_string=this.rs_user+"@";
-        if(this.rs_user.isEmpty()) rsync_user_string="";
+                final String options = this.rs_options;
+                final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
+                final String local_path=this.local_path;
 
-        final String cmd = "rsync://"+rsync_user_string+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
-        String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
-        debug_log = new File(Debug_log_path);
-        final String mode= this.rs_mode;
+                String rsync_user_string=this.rs_user+"@";
+                if(this.rs_user.isEmpty()) rsync_user_string="";
 
-        //File selected_dir = new File(this.local_path);
-        //selected_dir.setWritable(true);
+                final String cmd = "rsync://"+rsync_user_string+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
+                String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
+                debug_log = new File(Debug_log_path);
+                final String mode= this.rs_mode;
 
-
-        final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
-        final File f = new File(local_path);
-        final DocumentFile df = DocumentFile.fromFile(f);
-
-
-        File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
-
-        Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
-
-
-
-
-
-        Thread t = new Thread(){
-                @SuppressLint("ApplySharedPref")
-                @Override
-                public void run() {
-                    try {
-                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
-                        SharedPreferences.Editor pref_Edit= pref.edit();
-                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
-                        Locale current_locale = context.getResources().getConfiguration().locale;
-                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
-
-                        if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
+                //File selected_dir = new File(this.local_path);
+                //selected_dir.setWritable(true);
 
 
-                        pref_Edit.putBoolean("is_running",true);
-                        pref_Edit.commit();
+                final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
+                final File f = new File(local_path);
+                final DocumentFile df = DocumentFile.fromFile(f);
 
+
+                File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
+
+                Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
+
+
+                Thread t = new Thread(){
+                    @SuppressLint("ApplySharedPref")
+                    @Override
+                    public void run() {
                         try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
-                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " STARTED";
-                            debug_writer.append(message);
-                            debug_writer.close();
-                        }
-                        catch (IOException e){
-                            e.printStackTrace();
-                        }
+                            SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
+                            SharedPreferences.Editor pref_Edit= pref.edit();
+                            SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+                            Locale current_locale = context.getResources().getConfiguration().locale;
+                            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
-                        String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
-                        ProcessBuilder p = new ProcessBuilder();
-                        Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
-                        String cmd_string="";
-                        if (mode.equals("Push")) {
-                            cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
-                            //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
-                        }
-                        else {
-                            if ((PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access",false))){
-                                //p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                cmd_string = "su -c "+ rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
+                            if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
 
+
+                            pref_Edit.putBoolean("is_running",true);
+                            pref_Edit.commit();
+
+                            try {
+                                FileWriter debug_writer = new FileWriter(debug_log, true);
+                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " STARTED";
+                                debug_writer.append(message);
+                                debug_writer.close();
+                            }
+                            catch (IOException e){
+                                e.printStackTrace();
+                            }
+
+                            String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
+                            ProcessBuilder p = new ProcessBuilder();
+                            Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
+                            String cmd_string="";
+                            if (mode.equals("Push")) {
+                                cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
+                                //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
                             }
                             else {
-                                //p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                cmd_string = rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
+                                if ((PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access",false))){
+                                    //p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
+                                    cmd_string = "su -c "+ rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
+
+                                }
+                                else {
+                                    //p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
+                                    cmd_string = rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
+                                }
+
+                            }
+                            Log.d("CMD_STRING",Arrays.toString(cmd_string.split(" ")));
+                            p.command(cmd_string.split(" "));
+
+
+                            Map<String, String> env = p.environment();
+                            env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
+                            //p.directory(new File(context.getApplicationInfo().dataDir));
+                            p.redirectErrorStream(true);
+                            Process process=p.start();
+
+                            BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                            StringBuilder builder = new StringBuilder();
+                            String line;
+
+                            while ( (line = std_out.readLine()) != null) {
+                                builder.append(line);
+                                builder.append(System.getProperty("line.separator"));
+                            }
+
+                            String result = builder.toString();
+
+                            try {
+                                FileWriter debug_writer = new FileWriter(debug_log, true);
+                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+result;
+                                debug_writer.append(message);
+                                debug_writer.close();
+                            }
+                            catch (IOException e){
+                                e.printStackTrace();
+                            }
+
+
+                            if (result.equals("")) result="OK";
+                            else result="Warning! Check Log!";
+
+                            update_result(context,result,scheduler_id);
+                            if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
+                            try {
+                                FileWriter debug_writer = new FileWriter(debug_log, true);
+                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
+                                debug_writer.append(message);
+                                debug_writer.close();
+                            }
+                            catch (IOException e){
+                                e.printStackTrace();
+                            }
+                        }
+                        catch (Exception e) {
+                            try {
+                                FileWriter debug_writer = new FileWriter(debug_log, true);
+                                String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + e.getMessage();
+                                debug_writer.append(message);
+                                debug_writer.close();
+                                e.printStackTrace();
+                            }
+                            catch (IOException ioe){
+                                ioe.printStackTrace();
                             }
 
                         }
-                        Log.d("CMD_STRING",Arrays.toString(cmd_string.split(" ")));
-                        p.command(cmd_string.split(" "));
-                        
-
-                        Map<String, String> env = p.environment();
-                        env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
-                        //p.directory(new File(context.getApplicationInfo().dataDir));
-                        p.redirectErrorStream(true);
-                        Process process=p.start();
-
-                        BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                        StringBuilder builder = new StringBuilder();
-                        String line;
-
-                        while ( (line = std_out.readLine()) != null) {
-                            builder.append(line);
-                            builder.append(System.getProperty("line.separator"));
-                        }
-
-                        String result = builder.toString();
-
-                        try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
-                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+result;
-                            debug_writer.append(message);
-                            debug_writer.close();
-                        }
-                        catch (IOException e){
-                            e.printStackTrace();
-                        }
-
-
-                        if (result.equals("")) result="OK";
-                        else result="Warning! Check Log!";
-
-                        SharedPreferences prefs =  context.getSharedPreferences("configs", MODE_PRIVATE);
-                        SharedPreferences.Editor prefseditor = prefs.edit();
-                        prefseditor.putString("last_result_"+String.valueOf(id),result);
-
-
-                        Calendar cal = Calendar.getInstance();
-                        long time = cal.getTimeInMillis();
-
-                        sched_prefs.edit().putLong("last_run_"+String.valueOf(scheduler_id),time).commit();
-
-                        prefseditor.putString("last_run_"+String.valueOf(id),formatter.format(time));
-                        prefseditor.commit();
-                        pref_Edit.putBoolean("is_running",false);
-                        pref_Edit.commit();
-                        if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
-                        try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
-                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
-                            debug_writer.append(message);
-                            debug_writer.close();
-                        }
-                        catch (IOException e){
-                            e.printStackTrace();
-                        }
                     }
-                    catch (Exception e) {
-                        try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
-                            String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + e.getMessage();
-                            debug_writer.append(message);
-                            debug_writer.close();
-                            e.printStackTrace();
-                        }
-                        catch (IOException ioe){
-                            ioe.printStackTrace();
-                        }
+                };
 
-                    }
-                }
-            };
+                t.start();
 
-            t.start();
+            }
+        }
+    }
 
+    private void update_result(Context context, String result, int scheduler_id){
 
+        Calendar cal = Calendar.getInstance();
+        long time = cal.getTimeInMillis();
+
+        SharedPreferences cmdpref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
+        SharedPreferences.Editor cmd_pref_Edit= cmdpref.edit();
+        SharedPreferences config_prefs =  context.getSharedPreferences("configs", MODE_PRIVATE);
+        SharedPreferences.Editor configs_prefseditor = config_prefs.edit();
+        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+
+        Locale current_locale = context.getResources().getConfiguration().locale;
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+
+        cmd_pref_Edit.putBoolean("is_running",false);
+        cmd_pref_Edit.commit();
+
+        configs_prefseditor.putString("last_result_"+String.valueOf(this.id),result);
+        if (scheduler_id >= 0) sched_prefs.edit().putLong("last_run_"+String.valueOf(scheduler_id),time).commit();
+        configs_prefseditor.putString("last_run_"+String.valueOf(id),formatter.format(time));
+        configs_prefseditor.commit();
 
     }
 
-    private void send_notification(Context ctx) {
+    private String get_current_ssid(Context context){
+
+        String ssid = null;
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+        if (networkInfo == null) {
+            return null;
+        }
+
+        if (networkInfo.isConnected()) {
+            final WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+            Log.d("WIFI_INFO",connectionInfo.getSupplicantState().toString());
+            if (connectionInfo.getSupplicantState().toString().equals("COMPLETED") && !TextUtils.isEmpty(connectionInfo.getSSID())) {
+                ssid = connectionInfo.getSSID();
+            }
+            else return "none";
+        }
+
+        return ssid.replaceAll("^\"|\"$", "");
+    }
+
+    private void send_notification(Context ctx, int type) {
 
         SharedPreferences set_prefs = getDefaultSharedPreferences(ctx);
         Locale current_locale = ctx.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
-        String message = "Rsync configuration " + this.name + " started on " + formatter.format(Calendar.getInstance().getTime());
+        String message = "Rsync configuration" + this.name + " started on " + formatter.format(Calendar.getInstance().getTime());
+        if (type==0) message = "Network is not connected. The job is aborted";
+        else if (type==1) message = "You are not connected to WiFi. The job is aborted.";
+        else if (type==2) message = "You are not connected to the network you specified. The job is aborted.";
 
-        Boolean Notifications_enabled = set_prefs.getBoolean("notifications", true);
-        Boolean Vibration_enabled = set_prefs.getBoolean("vibrate", false);
+        boolean Notifications_enabled = set_prefs.getBoolean("notifications", true);
+        boolean Vibration_enabled = set_prefs.getBoolean("vibrate", false);
         Uri ring_path = Uri.parse(set_prefs.getString("ringtone", RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION).getPath()));
 
 
@@ -338,7 +401,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
             NotificationCompat.Builder not = new NotificationCompat.Builder(ctx, new_id);
 
-            not.setContentTitle("myRSync Job Started")
+            not.setContentTitle("myRSync Job Status")
                     .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
                     .setContentText(message)
                     .setContentIntent(pendingIntent)

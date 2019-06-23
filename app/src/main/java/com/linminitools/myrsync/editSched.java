@@ -5,8 +5,11 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.ToggleButton;
@@ -60,9 +63,6 @@ public class editSched extends addScheduler {
         sp.setSelection(selected_config);
 
 
-
-
-
         String days = sched.days;
         String[] active_days = days.split("[.]");
 
@@ -93,12 +93,34 @@ public class editSched extends addScheduler {
                 saveAction(pos);
             }
         });
+
+        final EditText ed_ssid = findViewById(R.id.ed_wifi_ssid);
+        ed_ssid.setText(sched.wifi_ssid);
+
+        Switch sw_wifi = findViewById(R.id.sw_wifi_switch);
+        sw_wifi.setChecked(sched.wifi_sw);
+        ed_ssid.setEnabled(sched.wifi_sw);
+
+        final ImageButton get_ssid = findViewById(R.id.ib_get_ssid);
+        get_ssid.setEnabled(ed_ssid.isEnabled());
+
+        sw_wifi.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                ed_ssid.setEnabled(isChecked);
+                get_ssid.setEnabled(isChecked);
+            }
+        });
+
+        get_ssid.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String ssid=get_current_ssid(appContext);
+                ed_ssid.setText(ssid);
+            }
+        });
+
     }
-
-
-
-
-
 
         private void saveAction(int pos) {
 
@@ -131,6 +153,11 @@ public class editSched extends addScheduler {
 
             ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(appContext, android.R.layout.simple_spinner_dropdown_item, listLoadToSpinner);
 
+            EditText ed_ssid = findViewById(R.id.ed_wifi_ssid);
+            String ssid = String.valueOf(ed_ssid.getText());
+
+            Switch sw_wifi = findViewById(R.id.sw_wifi_switch);
+            boolean wifi_sw = sw_wifi.isChecked();
 
             String selected_config_name= (String)sp.getSelectedItem();
             int config_id=0;
@@ -144,6 +171,8 @@ public class editSched extends addScheduler {
             sched.name = name;
             sched.config_id = config_id;
             sched.d=tp;
+            sched.wifi_ssid = ssid;
+            sched.wifi_sw = wifi_sw;
             sched.update();
             sched.saveToDisk();
             sched.setAlarm(appContext);
