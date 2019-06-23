@@ -34,12 +34,12 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:hint="@string/enter_name"
+                android:importantForAutofill="no"
                 android:inputType="text"
                 android:minWidth="70dp"
                 android:textSize="14sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/Create_Schedule"
-                android:importantForAutofill="no"
                 tools:targetApi="o" />
 
             <TextView
@@ -105,15 +105,15 @@
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tv_repeat"
-                tools:text="M"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                tools:text="M" />
 
             <ToggleButton
                 android:id="@+id/tb_tuesday"
-                android:background="@drawable/toggle_selector"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
+                android:background="@drawable/toggle_selector"
                 android:checked="true"
                 android:text="T"
                 android:textAllCaps="false"
@@ -124,15 +124,15 @@
                 app:layout_constraintEnd_toStartOf="@+id/tb_wednesday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_monday"
-                tools:text="T"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                tools:text="T" />
 
             <ToggleButton
                 android:id="@+id/tb_wednesday"
-                android:background="@drawable/toggle_selector"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
+                android:background="@drawable/toggle_selector"
                 android:checked="true"
                 android:text="W"
                 android:textAllCaps="false"
@@ -143,15 +143,15 @@
                 app:layout_constraintEnd_toStartOf="@+id/tb_thursday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_tuesday"
-                tools:text="W"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                tools:text="W" />
 
             <ToggleButton
                 android:id="@+id/tb_thursday"
-                android:background="@drawable/toggle_selector"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
+                android:background="@drawable/toggle_selector"
                 android:checked="true"
                 android:text="T"
                 android:textAllCaps="false"
@@ -162,15 +162,15 @@
                 app:layout_constraintEnd_toStartOf="@+id/tb_friday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_wednesday"
-                tools:text="T"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                tools:text="T" />
 
             <ToggleButton
                 android:id="@+id/tb_friday"
-                android:background="@drawable/toggle_selector"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
+                android:background="@drawable/toggle_selector"
                 android:checked="true"
                 android:text="F"
                 android:textAllCaps="false"
@@ -181,15 +181,15 @@
                 app:layout_constraintEnd_toStartOf="@+id/tb_saturday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_thursday"
-                tools:text="F"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                tools:text="F" />
 
             <ToggleButton
                 android:id="@+id/tb_saturday"
-                android:background="@drawable/toggle_selector"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
                 android:layout_marginStart="16dp"
+                android:background="@drawable/toggle_selector"
                 android:checked="true"
                 android:text="S"
                 android:textAllCaps="false"
@@ -200,16 +200,16 @@
                 app:layout_constraintEnd_toStartOf="@+id/tb_sunday"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/tb_friday"
-                tools:text="S"
-                tools:ignore="HardcodedText" />
+                tools:ignore="HardcodedText"
+                tools:text="S" />
 
             <ToggleButton
                 android:id="@+id/tb_sunday"
-                android:background="@drawable/toggle_selector"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
-                android:layout_marginEnd="16dp"
                 android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/toggle_selector"
                 android:checked="true"
                 android:textAllCaps="false"
                 android:textOff="S"
@@ -221,18 +221,70 @@
                 app:layout_constraintStart_toEndOf="@+id/tb_saturday"
                 tools:ignore="HardcodedText" />
 
+            <Switch
+                android:id="@+id/sw_wifi_switch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="16dp"
+                android:checked="false"
+                android:text="Run only when Wi-Fi is connected"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tb_monday" />
+
+            <EditText
+                android:id="@+id/ed_wifi_ssid"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="8dp"
+                android:enabled="false"
+                android:hint="Optional: Specify the Network SSID"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:minWidth="70dp"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/ib_get_ssid"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/sw_wifi_switch"
+                tools:targetApi="o" />
+
+            <ImageButton
+                android:id="@+id/ib_get_ssid"
+                android:layout_width="38dp"
+                android:layout_height="43dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/border"
+                android:backgroundTint="#00221414"
+                android:tint="?attr/colorPrimary"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/ed_wifi_ssid"
+                app:layout_constraintTop_toBottomOf="@+id/sw_wifi_switch"
+                app:srcCompat="?attr/actionModeCopyDrawable"
+                tools:visibility="visible" />
+
             <Button
                 android:id="@+id/bt_save_sched"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="24dp"
                 android:onClick="saveScheduler"
                 android:text="@string/save"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/tb_monday" />
+                app:layout_constraintTop_toBottomOf="@+id/ed_wifi_ssid" />
 
             <TextView
                 android:id="@+id/textView2"
