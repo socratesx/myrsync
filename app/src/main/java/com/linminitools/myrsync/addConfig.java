@@ -11,7 +11,9 @@ import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.support.v4.provider.DocumentFile;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.SpannableString;
+import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
@@ -41,10 +43,34 @@ public class addConfig extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_config);
-        Button save = findViewById(R.id.bt_save);
-        Button view = findViewById(R.id.bt_view);
+        final Button save = findViewById(R.id.bt_save);
+        final Button view = findViewById(R.id.bt_view);
         save.setEnabled(false);
         view.setEnabled(false);
+        EditText path_textbox =  findViewById(R.id.ed_path);
+        path_textbox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (count>0) {
+                    save.setEnabled(true);
+                    view.setEnabled(true);
+                }
+                else {
+                    save.setEnabled(false);
+                    view.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
 
     public void addPath(View v){
@@ -74,7 +100,9 @@ public class addConfig extends AppCompatActivity {
                 RadioGroup rg = findViewById(R.id.rg_mode);
                 RadioButton checked = findViewById(rg.getCheckedRadioButtonId());
 
-                Log.d("WRITABLE",String.valueOf(dir.canWrite()));
+                Log.d("WRITABLE_PULL",String.valueOf(checked.getText().equals("Pull")));
+                Log.d("WRITABLE_ROOT",String.valueOf(has_root_access));
+                Log.d("WRITABLE_CANWRITE",String.valueOf(!dir.canWrite()));
 
                 if (checked.getText().equals("Pull") && (!has_root_access) && (!dir.canWrite())) {
 
@@ -101,10 +129,6 @@ public class addConfig extends AppCompatActivity {
                         Button tv_addpath = findViewById(R.id.bt_add);
                         tv_addpath.setText(R.string.change_path);
 
-                        Button save = findViewById(R.id.bt_save);
-                        Button view = findViewById(R.id.bt_view);
-                        save.setEnabled(true);
-                        view.setEnabled(true);
                     }
                 }
             }

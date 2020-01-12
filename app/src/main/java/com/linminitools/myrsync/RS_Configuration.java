@@ -162,9 +162,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         String ssid = get_current_ssid(context);
         if (scheduler_id == null) sched =-1;
         else sched = scheduler_id;
-        Log.d("WIFI_SSID",ssid);
-        Log.d("WIFI_SET",wifi_ssid);
-        Log.d("WIFI_SW",String.valueOf(sw_wifi));
+        //Log.d("WIFI_SSID",ssid);
+        //Log.d("WIFI_SET",wifi_ssid);
+        //Log.d("WIFI_SW",String.valueOf(sw_wifi));
 
         if (ssid == null) {
             send_notification(context,0);
@@ -237,11 +237,12 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             catch (IOException e){
                                 e.printStackTrace();
                             }
-
-                            String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
+                            String app_folder = context.getFilesDir().getPath();
+                            //String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
                             ProcessBuilder p = new ProcessBuilder();
                             Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
                             String cmd_string="";
+                            String rsync_bin = app_folder+"/rsync";
                             if (mode.equals("Push")) {
                                 cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
                                 //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
@@ -258,13 +259,14 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 }
 
                             }
-                            Log.d("CMD_STRING",Arrays.toString(cmd_string.split(" ")));
+                            //Log.d("CMD_STRING",Arrays.toString(cmd_string.split(" ")));
+                            Log.d("CMD_STRING",cmd_string);
+
                             p.command(cmd_string.split(" "));
 
 
-                            Map<String, String> env = p.environment();
-                            env.put("PATH", "/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
-                            //p.directory(new File(context.getApplicationInfo().dataDir));
+                            Log.d("FILES_FOLDER",app_folder);
+                            p.environment().put("PATH", app_folder+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
                             p.redirectErrorStream(true);
                             Process process=p.start();
 
@@ -289,12 +291,14 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 e.printStackTrace();
                             }
 
-
                             if (result.equals("")) result="OK";
                             else result="Warning! Check Log!";
 
-                            update_result(context,result,scheduler_id);
-                            if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
+
+                            if (scheduler_id!=null) {
+                                sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
+                                update_result(context,result,scheduler_id);
+                            }
                             try {
                                 FileWriter debug_writer = new FileWriter(debug_log, true);
                                 CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
@@ -353,7 +357,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     private String get_current_ssid(Context context){
 
-        String ssid = null;
+        String ssid = "";
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
         if (networkInfo == null) {
@@ -371,6 +375,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         }
 
         return ssid.replaceAll("^\"|\"$", "");
+
     }
 
     private void send_notification(Context ctx, int type) {

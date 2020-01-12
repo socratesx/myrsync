@@ -16,6 +16,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
+import java.io.IOException;
+
 public class Settings  extends AppCompatPreferenceActivity {
 
     private static final Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
@@ -57,13 +59,26 @@ public class Settings  extends AppCompatPreferenceActivity {
                 Log.d("Preference_value",stringValue);
 
                  if (preference.getKey().equals("root_access") && stringValue.equals("true")){
-                     try{
-                     Process root = Runtime.getRuntime().exec("su -c whoami");
-                     if(root.exitValue()==0) preference.setSummary(stringValue);
+
+                     Runtime root = Runtime.getRuntime();
+                     try {
+                         root.addShutdownHook(Thread.currentThread());
+                     }
+                     catch(IllegalArgumentException e) {
+                         e.printStackTrace();
+                     }
+
+                     try {
+                     Process p = root.exec("su -c whoami");
+                     p.waitFor();
+                     int exit_value= p.exitValue() ;
+                     if(exit_value==0) preference.setSummary(stringValue);
                      }
                      catch (Exception e){
                          e.printStackTrace();
                      }
+                     root.runFinalization();
+                     root.removeShutdownHook(Thread.currentThread());
                  }
                  else {
                      preference.setSummary(stringValue);
