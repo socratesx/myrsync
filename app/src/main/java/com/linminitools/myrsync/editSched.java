@@ -12,6 +12,7 @@ import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
@@ -164,20 +165,27 @@ public class editSched extends addScheduler {
             for (RS_Configuration c : configs) if((c.name).equals(selected_config_name)) config_id = c.id;
 
             sp.setAdapter(spinnerAdapter);
+            if (repeat2.equals(".")) {
+                String Message = "This scheduler has no repeat days and will not be saved. Please select at least one day otherwise there is no need for a scheduler. ";
+                int duration = Toast.LENGTH_LONG;
+                Toast toast = Toast.makeText(appContext, Message, duration);
+                toast.show();
+            }
+            else {
+                Scheduler sched = schedulers.get(pos);
+                sched.cancelAlarm(appContext);
+                sched.days=repeat2;
+                sched.name = name;
+                sched.config_id = config_id;
+                sched.d=tp;
+                sched.wifi_ssid = ssid;
+                sched.wifi_sw = wifi_sw;
+                sched.update();
+                sched.saveToDisk();
+                sched.setAlarm(appContext);
 
-            Scheduler sched = schedulers.get(pos);
-            sched.cancelAlarm(appContext);
-            sched.days=repeat2;
-            sched.name = name;
-            sched.config_id = config_id;
-            sched.d=tp;
-            sched.wifi_ssid = ssid;
-            sched.wifi_sw = wifi_sw;
-            sched.update();
-            sched.saveToDisk();
-            sched.setAlarm(appContext);
-
-            this.finish();
+                this.finish();
+            }
 
         }
 

@@ -150,18 +150,24 @@ public class addScheduler extends AppCompatActivity {
                 id=id+1;
             }
 
-            Log.d("WIFI-SWITCH=",String.valueOf(wifi_sw.isChecked()));
+            if (repeat2.equals(".")) {
+                String Message = "This scheduler has no repeat days and will not be saved. Please select at least one day otherwise there is no need for a scheduler. ";
+                int duration = Toast.LENGTH_LONG;
+                Toast toast = Toast.makeText(appContext, Message, duration);
+                toast.show();
+            }
+            else {
+                Scheduler sched = new Scheduler(repeat2, tp, id);
+                sched.name = name;
+                sched.config_id = config_id;
+                sched.wifi_sw = wifi_sw.isChecked();
+                sched.wifi_ssid = String.valueOf(wifi_ssid.getText());
+                sched.saveToDisk();
+                sched.setAlarm(appContext);
+                schedulers.add(sched);
 
-            Scheduler sched = new Scheduler(repeat2, tp, id);
-            sched.name = name;
-            sched.config_id = config_id;
-            sched.wifi_sw = wifi_sw.isChecked();
-            sched.wifi_ssid = String.valueOf(wifi_ssid.getText());
-            sched.saveToDisk();
-            sched.setAlarm(appContext);
-            schedulers.add(sched);
-
-            this.finish();
+                this.finish();
+            }
         }
         else{
             String Message = "This scheduler has no configuration to attach to and it will not be saved. Create at least one configuration before creating a scheduler. ";

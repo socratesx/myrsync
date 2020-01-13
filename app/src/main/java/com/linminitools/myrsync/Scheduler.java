@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -194,7 +195,9 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
             int duration = Toast.LENGTH_SHORT;
             Toast toast = Toast.makeText(appContext, text, duration);
             toast.show();
-            return null;
+            this.deleteFromDisk();
+
+            return this.Alarm_Times = new ArrayList<>();
         }
     }
 
@@ -260,23 +263,35 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
     public String getNextAlarm(Context ctx){
 
-        if (Alarm_Times.isEmpty()) Alarm_Times=this.calculate_alarm_times(ctx);
+        if (Alarm_Times == null) this.Alarm_Times = new ArrayList<>();
+        else if (Alarm_Times.isEmpty()) Alarm_Times = this.calculate_alarm_times(ctx);
 
         SharedPreferences prefs = ctx.getSharedPreferences("schedulers", MODE_PRIVATE);
-        if(Alarm_Times.get(0)-prefs.getLong("last_run_"+String.valueOf(this.id),-1)<0) {
-            Alarm_Times.clear();
-            Alarm_Times=this.calculate_alarm_times(ctx);
+
+        if (Alarm_Times != null) {
+            if (Alarm_Times.get(0) - prefs.getLong("last_run_" + String.valueOf(this.id), -1) < 0) {
+                Alarm_Times.clear();
+                Alarm_Times = this.calculate_alarm_times(ctx);
+            }
+
+            long next_time = 0;
+
+            next_time = Alarm_Times.get(0) - Calendar.getInstance().getTimeInMillis();
+
+            long seconds = next_time / 1000;
+            long minutes = seconds / 60;
+            long hours = minutes / 60;
+            long days = hours / 24;
+            String remaining_time;
+            if (next_time > 0)
+                remaining_time = days + "days  " + hours % 24 + "h  " + minutes % 60 + "m  " + seconds % 60 + "s";
+            else remaining_time = "About to start";
+            return remaining_time;
         }
-
-        long next_time=Alarm_Times.get(0)-Calendar.getInstance().getTimeInMillis();
-        long seconds = next_time / 1000;
-        long minutes = seconds / 60;
-        long hours = minutes / 60;
-        long days = hours / 24;
-        String remaining_time;
-        if (next_time>0) remaining_time = days + "days  " + hours % 24 + "h  " + minutes % 60 + "m  " + seconds % 60 +"s";
-        else remaining_time="About to start";
-        return String.valueOf(remaining_time);
-
+        else
+            return "Never";
     }
+
+
+
 }
