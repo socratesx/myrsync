@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void ensureLogFileExists(@NonNull File file, @NonNull String tag, @NonNull String errorMessage) {
+    private static void ensureLogFileExists(@NonNull File file, @NonNull String tag, @NonNull String errorMessage) {
         if (file.exists()) {
             return;
         }
@@ -206,7 +206,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    protected void appendDebugLog(SimpleDateFormat formatter, String message) {
+    protected static void appendDebugLog(SimpleDateFormat formatter, String message) {
         try {
             FileWriter debug_writer = new FileWriter(debug_log, true);
             CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
@@ -217,7 +217,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected void appendRsyncLog(SimpleDateFormat formatter, String message) {
+    protected static void appendRsyncLog(SimpleDateFormat formatter, String message) {
         try {
             FileWriter logWriter = new FileWriter(log_file, true);
             CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
