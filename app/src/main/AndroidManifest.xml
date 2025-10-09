@@ -50,7 +50,7 @@
             android:process=":background"
             tools:ignore="ExportedReceiver">
             <intent-filter>
-                <action android:name="com.twofortyfouram.locale.intent.action.FIRE_SETTING"/>
+                <action android:name="com.joaomgcd.tasker.intent.action.FIRE_SETTING"/>
             </intent-filter>
         </receiver>
 
@@ -116,7 +116,7 @@
             android:label="@string/app_name"
             tools:ignore="ExportedActivity">
             <intent-filter>
-                <action android:name="com.twofortyfouram.locale.intent.action.EDIT_SETTING"/>
+                <action android:name="com.joaomgcd.tasker.intent.action.EDIT_SETTING"/>
             </intent-filter>
         </activity>
 

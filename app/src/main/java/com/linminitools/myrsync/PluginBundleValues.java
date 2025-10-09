@@ -14,8 +14,8 @@ import static com.linminitools.myrsync.myRsyncApplication.configs;
 import static com.linminitools.myrsync.util.Assertions.assertNotNull;
 
 /**
- * Manages the {@link com.twofortyfouram.locale.api.Intent#EXTRA_BUNDLE EXTRA_BUNDLE} for this
- * plug-in.
+ * Manages the {@link com.linminitools.myrsync.tasker.TaskerPluginContract#EXTRA_BUNDLE Tasker}
+ * bundle payload for this plug-in.
  */
 @ThreadSafe
 public final class PluginBundleValues {
