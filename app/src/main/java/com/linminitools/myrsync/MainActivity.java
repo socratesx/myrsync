@@ -121,9 +121,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean prepareRsyncExecutable(boolean forceCopy, SimpleDateFormat formatter) {
-        String appFileDirectory = getFilesDir().getPath();
-        String executableFilePath = appFileDirectory + "/rsync";
-        File rsyncExecutable = new File(executableFilePath);
+        return ensureRsyncExecutable(this, forceCopy, formatter);
+    }
+
+    static boolean ensureRsyncExecutable(@NonNull Context context, boolean forceCopy, SimpleDateFormat formatter) {
+        Context appContext = context.getApplicationContext();
+
+        if (log_file == null) {
+            log_file = new File(appContext.getApplicationInfo().dataDir + "/logfile.log");
+        }
+        if (debug_log == null) {
+            debug_log = new File(appContext.getApplicationInfo().dataDir + "/debug.log");
+        }
+
+        ensureLogFileExists(log_file, "MainActivity", "Unable to create rsync log file");
+        ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
+
+        String appFileDirectory = appContext.getFilesDir().getPath();
+        File rsyncExecutable = new File(appFileDirectory, "rsync");
 
         boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
         if (!shouldCopy && !rsyncExecutable.canExecute()) {
@@ -145,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
             Log.d("BINARY", binPath);
 
-            try (InputStream in = getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
+            try (InputStream in = appContext.getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
                  FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
                 byte[] buffer = new byte[8192];
                 int read;
@@ -165,11 +180,11 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
+        appContext.getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", rsyncExecutable.getAbsolutePath()).apply();
         return true;
     }
 
-    private boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
+    private static boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
         executable.setReadable(true, false);
         executable.setExecutable(true, false);
         executable.setWritable(true, true);

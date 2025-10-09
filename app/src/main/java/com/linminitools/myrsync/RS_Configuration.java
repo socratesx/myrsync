@@ -231,6 +231,21 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                             appendDebugLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
                             appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
+                            if (!MainActivity.ensureRsyncExecutable(context, false, formatter)) {
+                                String message = "CONFIGURATION RUN " + name + " FAILED: unable to prepare rsync executable";
+                                appendDebugLog(formatter, message);
+                                appendRsyncLog(formatter, message);
+                                if (pref_Edit != null) {
+                                    pref_Edit.putBoolean("is_running", false);
+                                    pref_Edit.commit();
+                                }
+                                if (scheduler_id != null) {
+                                    sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                }
+                                int schedulerKey = scheduler_id == null ? -1 : scheduler_id;
+                                update_result(context, "Failed to prepare rsync executable", schedulerKey);
+                                return;
+                            }
                             String app_folder = context.getFilesDir().getPath();
                             //String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
                             ProcessBuilder p = new ProcessBuilder();
@@ -296,6 +311,16 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             appendDebugLog(formatter, message);
                             appendRsyncLog(formatter, message);
                             Log.e("RS_Configuration", "Unable to execute rsync", e);
+                            if (pref_Edit != null) {
+                                pref_Edit.putBoolean("is_running", false);
+                                pref_Edit.commit();
+                            }
+                            if (scheduler_id != null) {
+                                sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                update_result(context, "Failed", scheduler_id);
+                            } else {
+                                update_result(context, "Failed", -1);
+                            }
                         }
                     }
                 };
