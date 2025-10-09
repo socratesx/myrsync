@@ -101,6 +101,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void ensureLogFileExists(@NonNull File file, @NonNull String tag, @NonNull String errorMessage) {
+        if (file.exists()) {
+            return;
+        }
+
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            Log.w(tag, errorMessage + ": unable to create parent directories for " + parent.getAbsolutePath());
+        }
+
+        try {
+            if (!file.exists() && !file.createNewFile()) {
+                Log.w(tag, errorMessage);
+            }
+        } catch (IOException e) {
+            Log.e(tag, errorMessage, e);
+        }
+    }
+
     private boolean prepareRsyncExecutable(boolean forceCopy, SimpleDateFormat formatter) {
         String appFileDirectory = getFilesDir().getPath();
         String executableFilePath = appFileDirectory + "/rsync";
@@ -277,13 +296,18 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 41 || requestCode==42) {
+        if ((requestCode == 41 || requestCode==42) && data != null) {
 
             try {
 
                 Uri pathUri = data.getData();
+                if (pathUri == null) {
+                    return;
+                }
                 Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
 
                 DocumentFile pickedDir= DocumentFile.fromTreeUri(appContext,dirUri);
@@ -476,6 +500,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case PERMISSION_REQUEST_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
