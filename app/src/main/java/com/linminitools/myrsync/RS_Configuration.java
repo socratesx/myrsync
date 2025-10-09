@@ -50,6 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.StringTokenizer;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
@@ -268,14 +269,17 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 }
 
                             }
-                            //Log.d("CMD_STRING",Arrays.toString(cmd_string.split(" ")));
                             Log.d("CMD_STRING",cmd_string);
 
-                            p.command(cmd_string.split(" "));
+                            p.command(tokenizeCommand(cmd_string));
 
 
                             Log.d("FILES_FOLDER",app_folder);
                             p.environment().put("PATH", app_folder+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
+                            String nativeLibraryDir = context.getApplicationInfo().nativeLibraryDir;
+                            if (nativeLibraryDir != null) {
+                                p.environment().put("LD_LIBRARY_PATH", nativeLibraryDir);
+                            }
                             p.redirectErrorStream(true);
                             Process process=p.start();
 
@@ -329,6 +333,17 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
             }
         }
+    }
+
+    @NonNull
+    private static String[] tokenizeCommand(@NonNull String command) {
+        StringTokenizer tokenizer = new StringTokenizer(command);
+        String[] tokens = new String[tokenizer.countTokens()];
+        int index = 0;
+        while (tokenizer.hasMoreTokens()) {
+            tokens[index++] = tokenizer.nextToken();
+        }
+        return tokens;
     }
 
     private void update_result(Context context, String result, int scheduler_id){

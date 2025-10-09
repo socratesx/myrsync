@@ -19,6 +19,7 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -43,7 +44,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -60,15 +62,16 @@ public class MainActivity extends AppCompatActivity {
     static File debug_log;
 
     private static final String DEFAULT_RSYNC_ASSET = "rsync_binary/x86_64/rsync";
-    private static final Map<String, String> RSYNC_ASSET_PATHS;
+    private static final Map<String, List<String>> RSYNC_ASSET_PATHS;
 
     static {
-        Map<String, String> assetPaths = new HashMap<>();
-        assetPaths.put("armeabi-v7a", "rsync_binary/armv7/rsync");
-        assetPaths.put("armeabi", "rsync_binary/armv7/rsync");
-        assetPaths.put("armv7", "rsync_binary/armv7/rsync");
-        assetPaths.put("x86", DEFAULT_RSYNC_ASSET);
-        assetPaths.put("x86_64", DEFAULT_RSYNC_ASSET);
+        Map<String, List<String>> assetPaths = new LinkedHashMap<>();
+        assetPaths.put("arm64-v8a", Collections.singletonList("rsync_binary/arm64-v8a/rsync"));
+        assetPaths.put("armeabi-v7a", Collections.singletonList("rsync_binary/armv7/rsync"));
+        assetPaths.put("armeabi", Collections.singletonList("rsync_binary/armv7/rsync"));
+        assetPaths.put("armv7", Collections.singletonList("rsync_binary/armv7/rsync"));
+        assetPaths.put("x86", Collections.singletonList(DEFAULT_RSYNC_ASSET));
+        assetPaths.put("x86_64", Collections.singletonList(DEFAULT_RSYNC_ASSET));
         RSYNC_ASSET_PATHS = Collections.unmodifiableMap(assetPaths);
     }
 
@@ -178,7 +181,12 @@ public class MainActivity extends AppCompatActivity {
                 Log.w("MainActivity", "Unable to delete existing rsync binary before refresh.");
             }
 
-            String binPath = resolveRsyncBinaryAsset();
+            String binPath = resolveRsyncBinaryAsset(appContext, formatter);
+            if (binPath == null) {
+                appendDebugLog(formatter, "FAILED TO LOCATE A COMPATIBLE RSYNC BINARY FOR ABIS "
+                        + Arrays.toString(Build.SUPPORTED_ABIS));
+                return false;
+            }
 
             Log.d("BINARY", binPath);
             appendDebugLog(formatter, "SELECTED RSYNC BINARY " + binPath + " FOR ABIS " + Arrays.toString(Build.SUPPORTED_ABIS));
@@ -208,11 +216,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
-        boolean readable = executable.setReadable(true, false);
-        boolean executableSet = executable.setExecutable(true, false);
-        boolean writable = executable.setWritable(true, true);
+        boolean ownerReadable = executable.setReadable(true, true);
+        boolean ownerWritable = executable.setWritable(true, true);
+        boolean ownerExecutable = executable.setExecutable(true, true);
 
-        if (!readable || !executableSet || !writable) {
+        if (!ownerReadable || !ownerWritable || !ownerExecutable) {
             appendDebugLog(formatter, "EXECUTABLE PERMISSION PRIMING FAILED FOR rsync");
         }
 
@@ -247,20 +255,57 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @NonNull
-    private static String resolveRsyncBinaryAsset() {
+    private static List<String> getCandidatePathsForAbi(@NonNull String abi) {
+        List<String> paths = RSYNC_ASSET_PATHS.get(abi);
+        if (paths != null) {
+            return paths;
+        }
+        return Collections.emptyList();
+    }
+
+    @Nullable
+    private static String resolveRsyncBinaryAsset(@NonNull Context context, SimpleDateFormat formatter) {
+        AssetManager assets = context.getAssets();
+
         for (String abi : Build.SUPPORTED_ABIS) {
-            String normalizedAbi = abi;
-            if ("arm64-v8a".equals(abi)) {
-                normalizedAbi = "armeabi-v7a";
+            List<String> candidatePaths = getCandidatePathsForAbi(abi);
+            if (candidatePaths.isEmpty()) {
+                continue;
             }
 
-            String path = RSYNC_ASSET_PATHS.get(normalizedAbi);
-            if (path != null) {
-                return path;
+            for (String candidate : candidatePaths) {
+                if (assetExists(assets, candidate)) {
+                    boolean isPrimaryAbi = Build.SUPPORTED_ABIS.length > 0 && Objects.equals(abi, Build.SUPPORTED_ABIS[0]);
+                    if (!isPrimaryAbi) {
+                        appendDebugLog(formatter, "FALLBACK TO RSYNC BINARY " + candidate + " FOR ABI " + abi);
+                    }
+                    return candidate;
+                }
+            }
+
+            appendDebugLog(formatter, "NO RSYNC BINARY PACKAGED FOR ABI " + abi + " (checked " + candidatePaths + ")");
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            String[] supported64BitAbis = Build.SUPPORTED_64_BIT_ABIS;
+            String[] supported32BitAbis = Build.SUPPORTED_32_BIT_ABIS;
+            if (supported64BitAbis != null && supported64BitAbis.length > 0
+                    && (supported32BitAbis == null || supported32BitAbis.length == 0)) {
+                appendDebugLog(formatter,
+                        "DEVICE REPORTS ONLY 64-BIT ABIS " + Arrays.toString(supported64BitAbis)
+                                + " BUT NO 64-BIT RSYNC BINARY IS PACKAGED. PLEASE BUNDLE AN arm64-v8a BINARY.");
             }
         }
 
-        return DEFAULT_RSYNC_ASSET;
+        return null;
+    }
+
+    private static boolean assetExists(@NonNull AssetManager assets, @NonNull String assetPath) {
+        try (InputStream ignored = assets.open(assetPath)) {
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     protected static void appendDebugLog(SimpleDateFormat formatter, String message) {
