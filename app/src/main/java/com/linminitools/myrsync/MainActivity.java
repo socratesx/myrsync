@@ -185,15 +185,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
-        executable.setReadable(true, false);
-        executable.setExecutable(true, false);
-        executable.setWritable(true, true);
+        boolean readable = executable.setReadable(true, false);
+        boolean executableSet = executable.setExecutable(true, false);
+        boolean writable = executable.setWritable(true, true);
+
+        if (!readable || !executableSet || !writable) {
+            appendDebugLog(formatter, "EXECUTABLE PERMISSION PRIMING FAILED FOR rsync");
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             try {
                 Os.chmod(executable.getAbsolutePath(), 0755);
             } catch (ErrnoException e) {
                 Log.w("MainActivity", "Unable to chmod rsync binary", e);
+                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
+            }
+        }
+
+        if (!executable.canExecute()) {
+            try {
+                Process process = new ProcessBuilder("/system/bin/chmod", "755", executable.getAbsolutePath()).start();
+                int exitCode = process.waitFor();
+                if (exitCode != 0) {
+                    appendDebugLog(formatter, "EXECUTABLE PERMISSION CHMOD FALLBACK FAILED WITH CODE " + exitCode);
+                }
+            } catch (Exception e) {
+                Log.w("MainActivity", "chmod fallback failed", e);
                 appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
             }
         }
