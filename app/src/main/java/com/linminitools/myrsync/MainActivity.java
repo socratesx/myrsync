@@ -105,20 +105,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void ensureLogFileExists(File target, String tag, String warningMessage) {
-        if (target.exists()) {
-            return;
-        }
-
-        try {
-            if (!target.createNewFile()) {
-                Log.w(tag, warningMessage + ": file already exists but createNewFile returned false");
-            }
-        } catch (IOException e) {
-            Log.w(tag, warningMessage, e);
-        }
-    }
-
     private boolean prepareRsyncExecutable(boolean forceCopy, SimpleDateFormat formatter) {
         String appFileDirectory = getFilesDir().getPath();
         String executableFilePath = appFileDirectory + "/rsync";
@@ -190,35 +176,14 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    protected static void appendDebugLog(SimpleDateFormat formatter, String message) {
-        appendToFile(debug_log, formatter, message);
-    }
-
-    protected static void appendRsyncLog(SimpleDateFormat formatter, String message) {
-        appendToFile(log_file, formatter, message);
-    }
-
-    private static synchronized void appendToFile(File target, SimpleDateFormat formatter, String message) {
-        if (target == null || formatter == null) {
-            return;
-        }
-
-        if (!target.exists()) {
-            try {
-                if (!target.createNewFile()) {
-                    Log.w("MainActivity", "Unable to create log file " + target.getName());
-                }
-            } catch (IOException e) {
-                Log.w("MainActivity", "Unable to create log file " + target.getName(), e);
-                return;
-            }
-        }
-
-        try (FileWriter writer = new FileWriter(target, true)) {
+    private void appendDebugLog(SimpleDateFormat formatter, String message) {
+        try {
+            FileWriter debug_writer = new FileWriter(debug_log, true);
             CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
-            writer.append(logMessage);
+            debug_writer.append(logMessage);
+            debug_writer.close();
         } catch (IOException e) {
-            Log.w("MainActivity", "Unable to append to log file " + target.getName(), e);
+            e.printStackTrace();
         }
     }
 
