@@ -82,13 +82,8 @@ public class MainActivity extends AppCompatActivity {
         String Debug_log_path = appContext.getApplicationInfo().dataDir + "/debug.log";
         debug_log = new File(Debug_log_path);
 
-        if (!debug_log.exists()) {
-            try {
-                debug_log.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        ensureLogFileExists(log_file, "MainActivity", "Unable to create rsync log file");
+        ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
 
 
         ViewPager viewPager = findViewById(R.id.pager);
