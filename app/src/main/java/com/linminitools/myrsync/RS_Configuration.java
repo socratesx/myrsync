@@ -215,12 +215,14 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                     @SuppressLint("ApplySharedPref")
                     @Override
                     public void run() {
+                        Locale current_locale = context.getResources().getConfiguration().locale;
+                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+
+                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+                        SharedPreferences.Editor pref_Edit = null;
                         try {
                             SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
-                            SharedPreferences.Editor pref_Edit= pref.edit();
-                            SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
-                            Locale current_locale = context.getResources().getConfiguration().locale;
-                            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+                            pref_Edit = pref.edit();
 
                             if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
 
@@ -228,8 +230,23 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             pref_Edit.putBoolean("is_running",true);
                             pref_Edit.commit();
 
-                            appendDebugLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
-                            appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
+                            MainActivity.appendDebugLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
+                            MainActivity.appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
+                            if (!MainActivity.ensureRsyncExecutable(context, false, formatter)) {
+                                String message = "CONFIGURATION RUN " + name + " FAILED: unable to prepare rsync executable";
+                                MainActivity.appendDebugLog(formatter, message);
+                                MainActivity.appendRsyncLog(formatter, message);
+                                if (pref_Edit != null) {
+                                    pref_Edit.putBoolean("is_running", false);
+                                    pref_Edit.commit();
+                                }
+                                if (scheduler_id != null) {
+                                    sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                }
+                                int schedulerKey = scheduler_id == null ? -1 : scheduler_id;
+                                update_result(context, "Failed to prepare rsync executable", schedulerKey);
+                                return;
+                            }
                             String app_folder = context.getFilesDir().getPath();
                             //String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
                             ProcessBuilder p = new ProcessBuilder();
@@ -274,9 +291,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                             String result = builder.toString();
 
-                            appendDebugLog(formatter, "OUT_STREAM = " + result);
+                            MainActivity.appendDebugLog(formatter, "OUT_STREAM = " + result);
                             if (!result.isEmpty()) {
-                                appendRsyncLog(formatter, "RSYNC OUTPUT\n" + result);
+                                MainActivity.appendRsyncLog(formatter, "RSYNC OUTPUT\n" + result);
                             }
 
                             if (result.equals("")) result="OK";
@@ -287,14 +304,24 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
                                 update_result(context,result,scheduler_id);
                             }
-                            appendDebugLog(formatter, "CONFIGURATION RUN " + name + " FINISHED");
-                            appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " FINISHED WITH RESULT: " + result);
+                            MainActivity.appendDebugLog(formatter, "CONFIGURATION RUN " + name + " FINISHED");
+                            MainActivity.appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " FINISHED WITH RESULT: " + result);
                         }
                         catch (Exception e) {
                             String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage());
-                            appendDebugLog(formatter, message);
-                            appendRsyncLog(formatter, message);
+                            MainActivity.appendDebugLog(formatter, message);
+                            MainActivity.appendRsyncLog(formatter, message);
                             Log.e("RS_Configuration", "Unable to execute rsync", e);
+                            if (pref_Edit != null) {
+                                pref_Edit.putBoolean("is_running", false);
+                                pref_Edit.commit();
+                            }
+                            if (scheduler_id != null) {
+                                sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                update_result(context, "Failed", scheduler_id);
+                            } else {
+                                update_result(context, "Failed", -1);
+                            }
                         }
                     }
                 };

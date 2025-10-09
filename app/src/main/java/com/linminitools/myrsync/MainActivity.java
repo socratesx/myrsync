@@ -101,10 +101,44 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private static void ensureLogFileExists(@NonNull File file, @NonNull String tag, @NonNull String errorMessage) {
+        if (file.exists()) {
+            return;
+        }
+
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            Log.w(tag, errorMessage + ": unable to create parent directories for " + parent.getAbsolutePath());
+        }
+
+        try {
+            if (!file.exists() && !file.createNewFile()) {
+                Log.w(tag, errorMessage);
+            }
+        } catch (IOException e) {
+            Log.e(tag, errorMessage, e);
+        }
+    }
+
     private boolean prepareRsyncExecutable(boolean forceCopy, SimpleDateFormat formatter) {
-        String appFileDirectory = getFilesDir().getPath();
-        String executableFilePath = appFileDirectory + "/rsync";
-        File rsyncExecutable = new File(executableFilePath);
+        return ensureRsyncExecutable(this, forceCopy, formatter);
+    }
+
+    static boolean ensureRsyncExecutable(@NonNull Context context, boolean forceCopy, SimpleDateFormat formatter) {
+        Context appContext = context.getApplicationContext();
+
+        if (log_file == null) {
+            log_file = new File(appContext.getApplicationInfo().dataDir + "/logfile.log");
+        }
+        if (debug_log == null) {
+            debug_log = new File(appContext.getApplicationInfo().dataDir + "/debug.log");
+        }
+
+        ensureLogFileExists(log_file, "MainActivity", "Unable to create rsync log file");
+        ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
+
+        String appFileDirectory = appContext.getFilesDir().getPath();
+        File rsyncExecutable = new File(appFileDirectory, "rsync");
 
         boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
         if (!shouldCopy && !rsyncExecutable.canExecute()) {
@@ -126,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
             Log.d("BINARY", binPath);
 
-            try (InputStream in = getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
+            try (InputStream in = appContext.getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
                  FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
                 byte[] buffer = new byte[8192];
                 int read;
@@ -146,11 +180,11 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
+        appContext.getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", rsyncExecutable.getAbsolutePath()).apply();
         return true;
     }
 
-    private boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
+    private static boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
         executable.setReadable(true, false);
         executable.setExecutable(true, false);
         executable.setWritable(true, true);
@@ -172,12 +206,37 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void appendDebugLog(SimpleDateFormat formatter, String message) {
+    protected static synchronized void appendDebugLog(SimpleDateFormat formatter, String message) {
+        if (debug_log == null && appContext != null) {
+            debug_log = new File(appContext.getApplicationInfo().dataDir + "/debug.log");
+        }
+        if (debug_log == null) {
+            Log.w("MainActivity", "Debug log file not available; skipping log write.");
+            return;
+        }
         try {
             FileWriter debug_writer = new FileWriter(debug_log, true);
             CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
             debug_writer.append(logMessage);
             debug_writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected static synchronized void appendRsyncLog(SimpleDateFormat formatter, String message) {
+        if (log_file == null && appContext != null) {
+            log_file = new File(appContext.getApplicationInfo().dataDir + "/logfile.log");
+        }
+        if (log_file == null) {
+            Log.w("MainActivity", "Rsync log file not available; skipping log write.");
+            return;
+        }
+        try {
+            FileWriter logWriter = new FileWriter(log_file, true);
+            CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
+            logWriter.append(logMessage);
+            logWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -277,13 +336,18 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 41 || requestCode==42) {
+        if ((requestCode == 41 || requestCode==42) && data != null) {
 
             try {
 
                 Uri pathUri = data.getData();
+                if (pathUri == null) {
+                    return;
+                }
                 Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
 
                 DocumentFile pickedDir= DocumentFile.fromTreeUri(appContext,dirUri);
@@ -476,6 +540,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case PERMISSION_REQUEST_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
