@@ -1,11 +1,9 @@
 package com.linminitools.myrsync;
 
-import com.twofortyfouram.assertion.Assertions;
-import com.twofortyfouram.assertion.BundleAssertions;
-import com.twofortyfouram.log.Lumberjack;
-import com.twofortyfouram.spackle.AppBuildInfo;
-
-import net.jcip.annotations.ThreadSafe;
+import com.linminitools.myrsync.util.AppBuildInfo;
+import com.linminitools.myrsync.util.BundleAssertions;
+import com.linminitools.myrsync.util.Lumberjack;
+import com.linminitools.myrsync.util.ThreadSafe;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -13,8 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import static com.linminitools.myrsync.myRsyncApplication.configs;
-import static com.twofortyfouram.assertion.Assertions.assertNotEmpty;
-import static com.twofortyfouram.assertion.Assertions.assertNotNull;
+import static com.linminitools.myrsync.util.Assertions.assertNotNull;
 
 /**
  * Manages the {@link com.twofortyfouram.locale.api.Intent#EXTRA_BUNDLE EXTRA_BUNDLE} for this
