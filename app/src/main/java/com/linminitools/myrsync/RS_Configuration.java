@@ -215,12 +215,13 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                     @SuppressLint("ApplySharedPref")
                     @Override
                     public void run() {
+                        Locale current_locale = context.getResources().getConfiguration().locale;
+                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+
                         try {
                             SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
                             SharedPreferences.Editor pref_Edit= pref.edit();
                             SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
-                            Locale current_locale = context.getResources().getConfiguration().locale;
-                            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
                             if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
 
