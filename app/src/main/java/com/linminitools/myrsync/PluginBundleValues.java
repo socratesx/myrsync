@@ -9,8 +9,8 @@ import net.jcip.annotations.ThreadSafe;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import static com.linminitools.myrsync.myRsyncApplication.configs;
 import static com.twofortyfouram.assertion.Assertions.assertNotEmpty;

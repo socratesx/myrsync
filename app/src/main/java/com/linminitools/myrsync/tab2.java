@@ -3,7 +3,8 @@ package com.linminitools.myrsync;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,7 +14,7 @@ import static com.linminitools.myrsync.myRsyncApplication.configs;
 
 
 
-public class tab2 extends android.support.v4.app.Fragment {
+public class tab2 extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
