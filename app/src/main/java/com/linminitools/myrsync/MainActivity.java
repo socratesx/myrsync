@@ -191,12 +191,23 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void appendDebugLog(SimpleDateFormat formatter, String message) {
+    protected void appendDebugLog(SimpleDateFormat formatter, String message) {
         try {
             FileWriter debug_writer = new FileWriter(debug_log, true);
             CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
             debug_writer.append(logMessage);
             debug_writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void appendRsyncLog(SimpleDateFormat formatter, String message) {
+        try {
+            FileWriter logWriter = new FileWriter(log_file, true);
+            CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
+            logWriter.append(logMessage);
+            logWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
