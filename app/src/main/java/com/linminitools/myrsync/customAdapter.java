@@ -21,7 +21,7 @@ import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 class customAdapter extends BaseAdapter {
 
     private final Context context;
-    private static LayoutInflater inflater = null;
+    private final LayoutInflater inflater;
     private final int fromTab;
 
     private final SparseArrayCompat<Object> viewHolder = new SparseArrayCompat<>();
@@ -31,20 +31,21 @@ class customAdapter extends BaseAdapter {
     customAdapter(Context context, ArrayList<?> data, int request_code) {
         this.context = context;
         this.fromTab=request_code;
+        this.inflater = LayoutInflater.from(context);
 
-        if (!data.isEmpty()) {
-            for (Object c : data) viewHolder.put(data.indexOf(c),c);
-        }
-
-        inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        populateViewHolder(data);
     }
 
     public void refreshAdapter(ArrayList<?> newData){
-        viewHolder.clear();
-        if (!newData.isEmpty()) {
-            for (Object c : newData) viewHolder.put(newData.indexOf(c),c);
-        }
+        populateViewHolder(newData);
         this.notifyDataSetChanged();
+    }
+
+    private void populateViewHolder(ArrayList<?> data) {
+        viewHolder.clear();
+        for (int i = 0; i < data.size(); i++) {
+            viewHolder.put(i, data.get(i));
+        }
     }
 
     @Override
