@@ -1,62 +1,61 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    namespace 'com.linminitools.myrsync'
+    compileSdk 34
+
     defaultConfig {
         applicationId "com.linminitools.myrsync"
-        minSdkVersion 21
-        targetSdkVersion 28
+        minSdk 21
+        targetSdk 34
         versionCode 14
         versionName "0.13.1"
-
     }
 
-    android.applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "myRSync-${variant.name}-${variant.versionName}.apk"
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFileName = "myRSync-${variant.name}-${variant.versionName}.apk"
         }
     }
-
-    configurations.all {
-        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-            def requested = details.requested
-            if (requested.group == "com.android.support") {
-                if (!requested.name.startsWith("multidex")) {
-                    details.useVersion "26.+"
-                }
-            }
-        }
-    }
-
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         beta {
             minifyEnabled false
             debuggable false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets { main { assets.srcDirs = ['src/main/assets', 'src/main/assets/'] } }
 
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets', 'src/main/assets/']
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
-
-
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    implementation 'com.android.support:support-v4:28.0.0'
-    implementation 'android.arch.lifecycle:extensions:1.1.1'
-    implementation 'com.android.support:design:28.0.0'
-    implementation 'org.jetbrains:annotations-java5:15.0'
-    //implementation 'com.google.firebase:firebase-appindexing:16.0.2'
+    implementation 'androidx.annotation:annotation:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.collection:collection:1.3.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.core:core:1.12.0'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
+    implementation 'androidx.fragment:fragment:1.6.2'
+    implementation 'androidx.viewpager:viewpager:1.0.0'
+    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'org.jetbrains:annotations:24.0.1'
 
-    //tasker plugin dependencies
+    // tasker plugin dependencies
     implementation 'com.twofortyfouram:android-annotation:[2.0.1,3.0['
     implementation 'com.twofortyfouram:android-assertion:[1.1.1,2.0['
     implementation 'com.twofortyfouram:android-plugin-api-for-locale:[1.0.1,2.0.0['

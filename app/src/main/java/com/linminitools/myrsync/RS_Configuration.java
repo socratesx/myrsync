@@ -27,10 +27,10 @@ import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsProvider;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.os.EnvironmentCompat;
-import android.support.v4.provider.DocumentFile;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.os.EnvironmentCompat;
+import androidx.documentfile.provider.DocumentFile;
 import android.text.TextUtils;
 import android.util.Log;
 

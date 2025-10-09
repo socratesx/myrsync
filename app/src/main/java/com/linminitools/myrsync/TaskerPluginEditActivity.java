@@ -3,8 +3,6 @@ package com.linminitools.myrsync;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,13 +10,10 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.EditText;
 
-import com.linminitools.myrsync.PluginBundleValues;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.twofortyfouram.locale.sdk.client.ui.activity.AbstractAppCompatPluginActivity;
 import com.twofortyfouram.log.Lumberjack;
 
