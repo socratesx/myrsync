@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private static void ensureLogFileExists(@NonNull File file, @NonNull String tag, @NonNull String errorMessage) {
+    private void ensureLogFileExists(@NonNull File file, @NonNull String tag, @NonNull String errorMessage) {
         if (file.exists()) {
             return;
         }
@@ -206,14 +206,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    protected static synchronized void appendDebugLog(SimpleDateFormat formatter, String message) {
-        if (debug_log == null && appContext != null) {
-            debug_log = new File(appContext.getApplicationInfo().dataDir + "/debug.log");
-        }
-        if (debug_log == null) {
-            Log.w("MainActivity", "Debug log file not available; skipping log write.");
-            return;
-        }
+    protected void appendDebugLog(SimpleDateFormat formatter, String message) {
         try {
             FileWriter debug_writer = new FileWriter(debug_log, true);
             CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
@@ -224,14 +217,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    protected static synchronized void appendRsyncLog(SimpleDateFormat formatter, String message) {
-        if (log_file == null && appContext != null) {
-            log_file = new File(appContext.getApplicationInfo().dataDir + "/logfile.log");
-        }
-        if (log_file == null) {
-            Log.w("MainActivity", "Rsync log file not available; skipping log write.");
-            return;
-        }
+    protected void appendRsyncLog(SimpleDateFormat formatter, String message) {
         try {
             FileWriter logWriter = new FileWriter(log_file, true);
             CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
