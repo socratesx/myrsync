@@ -13,6 +13,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.system.ErrnoException;
+import android.system.Os;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -36,12 +38,10 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,69 +105,90 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Boolean is_first_run = getSharedPreferences("Install", MODE_PRIVATE).getBoolean("first_run", true);
-        //Log.d("ARCH", );
-        if (is_first_run) {
+        if (prepareRsyncExecutable(is_first_run, formatter)) {
             getSharedPreferences("Install", MODE_PRIVATE).edit().putBoolean("first_run", false).apply();
-            AssetManager AM = this.getAssets();
+        }
+    }
 
-            try {
+    private boolean prepareRsyncExecutable(boolean forceCopy, SimpleDateFormat formatter) {
+        String appFileDirectory = getFilesDir().getPath();
+        String executableFilePath = appFileDirectory + "/rsync";
+        File rsyncExecutable = new File(executableFilePath);
 
-                String appFileDirectory = getFilesDir().getPath();
-                String executableFilePath = appFileDirectory + "/rsync";
+        boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
+        if (!shouldCopy && !rsyncExecutable.canExecute()) {
+            shouldCopy = true;
+        }
 
-                File old_file = new File(executableFilePath);
-                old_file.delete();
+        if (shouldCopy) {
+            if (rsyncExecutable.exists() && !rsyncExecutable.delete()) {
+                Log.w("MainActivity", "Unable to delete existing rsync binary before refresh.");
+            }
 
-                getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
-
-
-                String bin_path="rsync_binary/x86_64/rsync";
-
-
-                for (String arch : Build.SUPPORTED_ABIS) if (arch.equals("armeabi-v7a")) bin_path = "rsync_binary/armv7/rsync";
-
-                Log.d ("BINARY", bin_path);
-
-                InputStream in = AM.open(bin_path, AssetManager.ACCESS_BUFFER);
-
-                File rsync_executable = new File(executableFilePath);
-
-
-                FileOutputStream fos = new FileOutputStream(rsync_executable);
-                byte[] buffer = new byte[in.available()];
-
-                in.read(buffer);
-                in.close();
-
-                fos.write(buffer);
-
-                fos.close();
-                in.close();
-
-                rsync_executable.setExecutable(true);
-
-                try {
-                    FileWriter debug_writer = new FileWriter(debug_log, true);
-                    CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "FIRST RUN INITIALIZATION {\n"+
-                            "SUPPORTED ABIS: "+Arrays.toString(Build.SUPPORTED_ABIS)+"\nSDK_Version: "+ String.valueOf(Build.VERSION.SDK_INT)+"\n}";
-                    debug_writer.append(message);
-                    debug_writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-
-            } catch (Exception e) {
-
-                try {
-                    FileWriter debug_writer = new FileWriter(debug_log, true);
-                    String exc = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] "+"EXCEPTION CAUGHT: \n" + e.getMessage();
-                    debug_writer.append(exc);
-                    debug_writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+            String binPath = "rsync_binary/x86_64/rsync";
+            for (String arch : Build.SUPPORTED_ABIS) {
+                if ("armeabi-v7a".equals(arch)) {
+                    binPath = "rsync_binary/armv7/rsync";
+                    break;
                 }
             }
 
+            Log.d("BINARY", binPath);
+
+            try (InputStream in = getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
+                 FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    fos.write(buffer, 0, read);
+                }
+
+                appendDebugLog(formatter, "RSYNC EXECUTABLE COPIED {\nSUPPORTED ABIS: " + Arrays.toString(Build.SUPPORTED_ABIS)
+                        + "\nSDK_Version: " + Build.VERSION.SDK_INT + "\n}");
+            } catch (IOException e) {
+                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
+                return false;
+            }
+        }
+
+        if (!ensureExecutablePermissions(rsyncExecutable, formatter)) {
+            return false;
+        }
+
+        getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
+        return true;
+    }
+
+    private boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
+        executable.setReadable(true, false);
+        executable.setExecutable(true, false);
+        executable.setWritable(true, true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                Os.chmod(executable.getAbsolutePath(), 0755);
+            } catch (ErrnoException e) {
+                Log.w("MainActivity", "Unable to chmod rsync binary", e);
+                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
+            }
+        }
+
+        if (!executable.canExecute()) {
+            appendDebugLog(formatter, "EXECUTABLE PERMISSION CHECK FAILED FOR rsync");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void appendDebugLog(SimpleDateFormat formatter, String message) {
+        try {
+            FileWriter debug_writer = new FileWriter(debug_log, true);
+            CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
+            debug_writer.append(logMessage);
+            debug_writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
