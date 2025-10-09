@@ -14,10 +14,10 @@ import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.twofortyfouram.locale.sdk.client.ui.activity.AbstractAppCompatPluginActivity;
-import com.twofortyfouram.log.Lumberjack;
+import com.linminitools.myrsync.util.Lumberjack;
+import com.linminitools.myrsync.util.NotThreadSafe;
 
-import net.jcip.annotations.NotThreadSafe;
+import com.twofortyfouram.locale.sdk.client.ui.activity.AbstractAppCompatPluginActivity;
 
 import java.util.ArrayList;
 import java.util.List;
