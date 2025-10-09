@@ -228,15 +228,8 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             pref_Edit.putBoolean("is_running",true);
                             pref_Edit.commit();
 
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " STARTED";
-                                debug_writer.append(message);
-                                debug_writer.close();
-                            }
-                            catch (IOException e){
-                                e.printStackTrace();
-                            }
+                            appendDebugLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
+                            appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
                             String app_folder = context.getFilesDir().getPath();
                             //String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
                             ProcessBuilder p = new ProcessBuilder();
@@ -281,14 +274,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                             String result = builder.toString();
 
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+result;
-                                debug_writer.append(message);
-                                debug_writer.close();
-                            }
-                            catch (IOException e){
-                                e.printStackTrace();
+                            appendDebugLog(formatter, "OUT_STREAM = " + result);
+                            if (!result.isEmpty()) {
+                                appendRsyncLog(formatter, "RSYNC OUTPUT\n" + result);
                             }
 
                             if (result.equals("")) result="OK";
@@ -299,28 +287,14 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
                                 update_result(context,result,scheduler_id);
                             }
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
-                                debug_writer.append(message);
-                                debug_writer.close();
-                            }
-                            catch (IOException e){
-                                e.printStackTrace();
-                            }
+                            appendDebugLog(formatter, "CONFIGURATION RUN " + name + " FINISHED");
+                            appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " FINISHED WITH RESULT: " + result);
                         }
                         catch (Exception e) {
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + e.getMessage();
-                                debug_writer.append(message);
-                                debug_writer.close();
-                                e.printStackTrace();
-                            }
-                            catch (IOException ioe){
-                                ioe.printStackTrace();
-                            }
-
+                            String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage());
+                            appendDebugLog(formatter, message);
+                            appendRsyncLog(formatter, message);
+                            Log.e("RS_Configuration", "Unable to execute rsync", e);
                         }
                     }
                 };
@@ -400,7 +374,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
             Intent intent = new Intent(ctx, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent, 0);
+            int pendingIntentFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                pendingIntentFlags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+            PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent, pendingIntentFlags);
 
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
 

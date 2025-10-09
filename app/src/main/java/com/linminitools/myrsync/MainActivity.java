@@ -13,6 +13,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.system.ErrnoException;
+import android.system.Os;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -36,12 +38,10 @@ import android.widget.TimePicker;
 import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,13 +82,8 @@ public class MainActivity extends AppCompatActivity {
         String Debug_log_path = appContext.getApplicationInfo().dataDir + "/debug.log";
         debug_log = new File(Debug_log_path);
 
-        if (!debug_log.exists()) {
-            try {
-                debug_log.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        ensureLogFileExists(log_file, "MainActivity", "Unable to create rsync log file");
+        ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
 
 
         ViewPager viewPager = findViewById(R.id.pager);
@@ -105,69 +100,125 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Boolean is_first_run = getSharedPreferences("Install", MODE_PRIVATE).getBoolean("first_run", true);
-        //Log.d("ARCH", );
-        if (is_first_run) {
+        if (prepareRsyncExecutable(is_first_run, formatter)) {
             getSharedPreferences("Install", MODE_PRIVATE).edit().putBoolean("first_run", false).apply();
-            AssetManager AM = this.getAssets();
+        }
+    }
 
-            try {
+    private void ensureLogFileExists(File target, String tag, String warningMessage) {
+        if (target.exists()) {
+            return;
+        }
 
-                String appFileDirectory = getFilesDir().getPath();
-                String executableFilePath = appFileDirectory + "/rsync";
+        try {
+            if (!target.createNewFile()) {
+                Log.w(tag, warningMessage + ": file already exists but createNewFile returned false");
+            }
+        } catch (IOException e) {
+            Log.w(tag, warningMessage, e);
+        }
+    }
 
-                File old_file = new File(executableFilePath);
-                old_file.delete();
+    private boolean prepareRsyncExecutable(boolean forceCopy, SimpleDateFormat formatter) {
+        String appFileDirectory = getFilesDir().getPath();
+        String executableFilePath = appFileDirectory + "/rsync";
+        File rsyncExecutable = new File(executableFilePath);
 
-                getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
+        boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
+        if (!shouldCopy && !rsyncExecutable.canExecute()) {
+            shouldCopy = true;
+        }
 
+        if (shouldCopy) {
+            if (rsyncExecutable.exists() && !rsyncExecutable.delete()) {
+                Log.w("MainActivity", "Unable to delete existing rsync binary before refresh.");
+            }
 
-                String bin_path="rsync_binary/x86_64/rsync";
-
-
-                for (String arch : Build.SUPPORTED_ABIS) if (arch.equals("armeabi-v7a")) bin_path = "rsync_binary/armv7/rsync";
-
-                Log.d ("BINARY", bin_path);
-
-                InputStream in = AM.open(bin_path, AssetManager.ACCESS_BUFFER);
-
-                File rsync_executable = new File(executableFilePath);
-
-
-                FileOutputStream fos = new FileOutputStream(rsync_executable);
-                byte[] buffer = new byte[in.available()];
-
-                in.read(buffer);
-                in.close();
-
-                fos.write(buffer);
-
-                fos.close();
-                in.close();
-
-                rsync_executable.setExecutable(true);
-
-                try {
-                    FileWriter debug_writer = new FileWriter(debug_log, true);
-                    CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "FIRST RUN INITIALIZATION {\n"+
-                            "SUPPORTED ABIS: "+Arrays.toString(Build.SUPPORTED_ABIS)+"\nSDK_Version: "+ String.valueOf(Build.VERSION.SDK_INT)+"\n}";
-                    debug_writer.append(message);
-                    debug_writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-
-            } catch (Exception e) {
-
-                try {
-                    FileWriter debug_writer = new FileWriter(debug_log, true);
-                    String exc = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] "+"EXCEPTION CAUGHT: \n" + e.getMessage();
-                    debug_writer.append(exc);
-                    debug_writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+            String binPath = "rsync_binary/x86_64/rsync";
+            for (String arch : Build.SUPPORTED_ABIS) {
+                if ("armeabi-v7a".equals(arch)) {
+                    binPath = "rsync_binary/armv7/rsync";
+                    break;
                 }
             }
 
+            Log.d("BINARY", binPath);
+
+            try (InputStream in = getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
+                 FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    fos.write(buffer, 0, read);
+                }
+
+                appendDebugLog(formatter, "RSYNC EXECUTABLE COPIED {\nSUPPORTED ABIS: " + Arrays.toString(Build.SUPPORTED_ABIS)
+                        + "\nSDK_Version: " + Build.VERSION.SDK_INT + "\n}");
+            } catch (IOException e) {
+                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
+                return false;
+            }
+        }
+
+        if (!ensureExecutablePermissions(rsyncExecutable, formatter)) {
+            return false;
+        }
+
+        getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
+        return true;
+    }
+
+    private boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
+        executable.setReadable(true, false);
+        executable.setExecutable(true, false);
+        executable.setWritable(true, true);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            try {
+                Os.chmod(executable.getAbsolutePath(), 0755);
+            } catch (ErrnoException e) {
+                Log.w("MainActivity", "Unable to chmod rsync binary", e);
+                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
+            }
+        }
+
+        if (!executable.canExecute()) {
+            appendDebugLog(formatter, "EXECUTABLE PERMISSION CHECK FAILED FOR rsync");
+            return false;
+        }
+
+        return true;
+    }
+
+    protected static void appendDebugLog(SimpleDateFormat formatter, String message) {
+        appendToFile(debug_log, formatter, message);
+    }
+
+    protected static void appendRsyncLog(SimpleDateFormat formatter, String message) {
+        appendToFile(log_file, formatter, message);
+    }
+
+    private static synchronized void appendToFile(File target, SimpleDateFormat formatter, String message) {
+        if (target == null || formatter == null) {
+            return;
+        }
+
+        if (!target.exists()) {
+            try {
+                if (!target.createNewFile()) {
+                    Log.w("MainActivity", "Unable to create log file " + target.getName());
+                }
+            } catch (IOException e) {
+                Log.w("MainActivity", "Unable to create log file " + target.getName(), e);
+                return;
+            }
+        }
+
+        try (FileWriter writer = new FileWriter(target, true)) {
+            CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
+            writer.append(logMessage);
+        } catch (IOException e) {
+            Log.w("MainActivity", "Unable to append to log file " + target.getName(), e);
         }
     }
 
