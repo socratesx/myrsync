@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -57,6 +58,19 @@ public class MainActivity extends AppCompatActivity {
     public static Context appContext;
     static File log_file;
     static File debug_log;
+
+    private static final String DEFAULT_RSYNC_ASSET = "rsync_binary/x86_64/rsync";
+    private static final Map<String, String> RSYNC_ASSET_PATHS;
+
+    static {
+        Map<String, String> assetPaths = new HashMap<>();
+        assetPaths.put("armeabi-v7a", "rsync_binary/armv7/rsync");
+        assetPaths.put("armeabi", "rsync_binary/armv7/rsync");
+        assetPaths.put("armv7", "rsync_binary/armv7/rsync");
+        assetPaths.put("x86", DEFAULT_RSYNC_ASSET);
+        assetPaths.put("x86_64", DEFAULT_RSYNC_ASSET);
+        RSYNC_ASSET_PATHS = Collections.unmodifiableMap(assetPaths);
+    }
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -140,6 +154,20 @@ public class MainActivity extends AppCompatActivity {
         String appFileDirectory = appContext.getFilesDir().getPath();
         File rsyncExecutable = new File(appFileDirectory, "rsync");
 
+        File parentDirectory = rsyncExecutable.getParentFile();
+        if (parentDirectory == null) {
+            appendDebugLog(formatter, "UNABLE TO RESOLVE DIRECTORY FOR rsync EXECUTABLE");
+            return false;
+        }
+        if (!parentDirectory.exists() && !parentDirectory.mkdirs()) {
+            appendDebugLog(formatter, "FAILED TO CREATE DIRECTORY " + parentDirectory.getAbsolutePath());
+            return false;
+        }
+        if (!parentDirectory.canWrite()) {
+            appendDebugLog(formatter, "DIRECTORY " + parentDirectory.getAbsolutePath() + " IS NOT WRITABLE");
+            return false;
+        }
+
         boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
         if (!shouldCopy && !rsyncExecutable.canExecute()) {
             shouldCopy = true;
@@ -150,15 +178,10 @@ public class MainActivity extends AppCompatActivity {
                 Log.w("MainActivity", "Unable to delete existing rsync binary before refresh.");
             }
 
-            String binPath = "rsync_binary/x86_64/rsync";
-            for (String arch : Build.SUPPORTED_ABIS) {
-                if ("armeabi-v7a".equals(arch)) {
-                    binPath = "rsync_binary/armv7/rsync";
-                    break;
-                }
-            }
+            String binPath = resolveRsyncBinaryAsset();
 
             Log.d("BINARY", binPath);
+            appendDebugLog(formatter, "SELECTED RSYNC BINARY " + binPath + " FOR ABIS " + Arrays.toString(Build.SUPPORTED_ABIS));
 
             try (InputStream in = appContext.getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
                  FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
@@ -221,6 +244,23 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    @NonNull
+    private static String resolveRsyncBinaryAsset() {
+        for (String abi : Build.SUPPORTED_ABIS) {
+            String normalizedAbi = abi;
+            if ("arm64-v8a".equals(abi)) {
+                normalizedAbi = "armeabi-v7a";
+            }
+
+            String path = RSYNC_ASSET_PATHS.get(normalizedAbi);
+            if (path != null) {
+                return path;
+            }
+        }
+
+        return DEFAULT_RSYNC_ASSET;
     }
 
     protected static void appendDebugLog(SimpleDateFormat formatter, String message) {
