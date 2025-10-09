@@ -1,13 +1,18 @@
 package com.linminitools.myrsync;
 
-import com.twofortyfouram.locale.sdk.client.receiver.AbstractPluginSettingReceiver;
-
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
-import com.linminitools.myrsync.PluginBundleValues;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.linminitools.myrsync.tasker.TaskerPluginContract;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -16,60 +21,71 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static android.content.Context.MODE_PRIVATE;
 
-public final class TaskerPluginReceiver extends AbstractPluginSettingReceiver {
+public final class TaskerPluginReceiver extends BroadcastReceiver {
+
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
 
     @Override
-    protected boolean isBundleValid(@NonNull final Bundle bundle) {
-        return PluginBundleValues.isBundleValid(bundle);
+    public void onReceive(@NonNull final Context context, @Nullable final Intent intent) {
+        final Bundle bundle = TaskerPluginContract.extractBundle(intent);
+        if (bundle == null || !PluginBundleValues.isBundleValid(bundle)) {
+            return;
+        }
+
+        final PendingResult pendingResult = goAsync();
+        EXECUTOR.execute(() -> {
+            try {
+                firePluginSetting(context.getApplicationContext(), bundle);
+            } finally {
+                pendingResult.finish();
+            }
+        });
     }
 
-    @Override
-    protected boolean isAsync() {
-        return true;
-    }
+    private void firePluginSetting(@NonNull final Context context, @NonNull final Bundle bundle) {
+        final int configId = PluginBundleValues.getConfigId(bundle);
 
-    @Override
-    protected void firePluginSetting(@NonNull final Context context, @NonNull final Bundle bundle) {
-        int configId = PluginBundleValues.getConfigId(bundle);
-
-        String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
-        File debug_log = new File(Debug_log_path);
-        Locale current_locale = context.getResources().getConfiguration().locale;
-        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
-        FileWriter debug_writer = null;
+        final String debugLogPath = context.getApplicationInfo().dataDir + "/debug.log";
+        final File debugLog = new File(debugLogPath);
+        final Locale currentLocale = context.getResources().getConfiguration().locale;
+        final SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", currentLocale);
+        FileWriter debugWriter = null;
 
         try {
             boolean configFound = false;
-            SharedPreferences config_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
-            Map<String, ?> config_keys = config_prefs.getAll();
+            final SharedPreferences configPrefs = context.getSharedPreferences("configs", MODE_PRIVATE);
+            final Map<String, ?> configKeys = configPrefs.getAll();
 
-            for (Map.Entry<String, ?> entry : config_keys.entrySet()) {
+            for (final Map.Entry<String, ?> entry : configKeys.entrySet()) {
                 if (entry.getKey().contains("rs_id_")) {
-                    String id = String.valueOf(entry.getValue());
+                    final String id = String.valueOf(entry.getValue());
 
                     if (Integer.parseInt(id) == configId) {
                         configFound = true;
 
-                        RS_Configuration config = new RS_Configuration((Integer) entry.getValue());
-                        config.rs_user = config_prefs.getString("rs_user_" + id, "");
-                        config.rs_ip = config_prefs.getString("rs_ip_" + id, "");
-                        config.rs_port = config_prefs.getString("rs_port_" + id, "");
-                        config.rs_options = config_prefs.getString("rs_options_" + id, "");
-                        config.rs_module = config_prefs.getString("rs_module_" + id, "");
-                        config.local_path = config_prefs.getString("local_path_" + id, "");
-                        config.name = config_prefs.getString("rs_name_" + id, "");
-                        config.rs_mode = config_prefs.getString("rs_mode_" + id, "push");
-                        config.addedOn = config_prefs.getLong("rs_addedon_" + id, 0);
+                        final RS_Configuration config = new RS_Configuration((Integer) entry.getValue());
+                        config.rs_user = configPrefs.getString("rs_user_" + id, "");
+                        config.rs_ip = configPrefs.getString("rs_ip_" + id, "");
+                        config.rs_port = configPrefs.getString("rs_port_" + id, "");
+                        config.rs_options = configPrefs.getString("rs_options_" + id, "");
+                        config.rs_module = configPrefs.getString("rs_module_" + id, "");
+                        config.local_path = configPrefs.getString("local_path_" + id, "");
+                        config.name = configPrefs.getString("rs_name_" + id, "");
+                        config.rs_mode = configPrefs.getString("rs_mode_" + id, "push");
+                        config.addedOn = configPrefs.getLong("rs_addedon_" + id, 0);
 
-                        debug_writer = new FileWriter(debug_log, true);
+                        debugWriter = new FileWriter(debugLog, true);
 
-                        CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] CONFIGURATION RUN " + config.name + " TRIGGERED FROM TASKER PLUGIN";
-                        debug_writer.append(message);
-                        debug_writer.close();
+                        final CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime())
+                                + " ] CONFIGURATION RUN " + config.name + " TRIGGERED FROM TASKER PLUGIN";
+                        debugWriter.append(message);
+                        debugWriter.close();
 
                         config.executeConfig(context, null);
                         break;
@@ -78,15 +94,18 @@ public final class TaskerPluginReceiver extends AbstractPluginSettingReceiver {
             }
 
             if (!configFound) {
-                debug_writer = new FileWriter(debug_log, true);
+                debugWriter = new FileWriter(debugLog, true);
 
-                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] CONFIGURATION RUN TRIGGERED FROM TASKER PLUGIN BUT NO CONFIG FOUND WITH ID " + configId;
-                debug_writer.append(message);
-                debug_writer.close();
+                final CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime())
+                        + " ] CONFIGURATION RUN TRIGGERED FROM TASKER PLUGIN BUT NO CONFIG FOUND WITH ID " + configId;
+                debugWriter.append(message);
+                debugWriter.close();
+
+                MAIN_HANDLER.post(() -> Toast.makeText(context,
+                        "No configuration found for Tasker request.", Toast.LENGTH_SHORT).show());
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }

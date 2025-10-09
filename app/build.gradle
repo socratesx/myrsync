@@ -57,8 +57,5 @@ dependencies {
     implementation 'com.google.android.material:material:1.10.0'
     implementation 'org.jetbrains:annotations:24.0.1'
 
-    // tasker plugin dependencies
-    implementation 'com.twofortyfouram:android-plugin-api-for-locale:[1.0.1,2.0.0['
-    implementation 'com.twofortyfouram:android-plugin-client-sdk-for-locale:[4.0.2,5.0['
-    implementation 'com.twofortyfouram:android-spackle:[2.0.0,3.0['
+    // tasker plugin dependencies removed in favour of the in-app implementation
 }
