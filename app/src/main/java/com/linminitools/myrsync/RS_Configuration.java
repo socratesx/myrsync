@@ -290,9 +290,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                             String result = builder.toString();
 
-                            appendDebugLog(formatter, "OUT_STREAM = " + result);
+                            MainActivity.appendDebugLog(formatter, "OUT_STREAM = " + result);
                             if (!result.isEmpty()) {
-                                appendRsyncLog(formatter, "RSYNC OUTPUT\n" + result);
+                                MainActivity.appendRsyncLog(formatter, "RSYNC OUTPUT\n" + result);
                             }
 
                             if (result.equals("")) result="OK";
@@ -303,13 +303,13 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
                                 update_result(context,result,scheduler_id);
                             }
-                            appendDebugLog(formatter, "CONFIGURATION RUN " + name + " FINISHED");
-                            appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " FINISHED WITH RESULT: " + result);
+                            MainActivity.appendDebugLog(formatter, "CONFIGURATION RUN " + name + " FINISHED");
+                            MainActivity.appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " FINISHED WITH RESULT: " + result);
                         }
                         catch (Exception e) {
                             String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage());
-                            appendDebugLog(formatter, message);
-                            appendRsyncLog(formatter, message);
+                            MainActivity.appendDebugLog(formatter, message);
+                            MainActivity.appendRsyncLog(formatter, message);
                             Log.e("RS_Configuration", "Unable to execute rsync", e);
                             if (pref_Edit != null) {
                                 pref_Edit.putBoolean("is_running", false);
