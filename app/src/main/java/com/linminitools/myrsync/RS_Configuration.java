@@ -218,10 +218,10 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         Locale current_locale = context.getResources().getConfiguration().locale;
                         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
+                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
+                        SharedPreferences.Editor pref_Edit= pref.edit();
+                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
                         try {
-                            SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
-                            SharedPreferences.Editor pref_Edit= pref.edit();
-                            SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
 
                             if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
 
@@ -315,7 +315,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 pref_Edit.putBoolean("is_running", false);
                                 pref_Edit.commit();
                             }
-                            if (scheduler_id != null) {
+                            if (scheduler_id != null && sched_prefs != null) {
                                 sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
                                 update_result(context, "Failed", scheduler_id);
                             } else {
