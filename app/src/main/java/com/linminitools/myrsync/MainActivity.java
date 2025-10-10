@@ -293,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
                     && (supported32BitAbis == null || supported32BitAbis.length == 0)) {
                 appendDebugLog(formatter,
                         "DEVICE REPORTS ONLY 64-BIT ABIS " + Arrays.toString(supported64BitAbis)
-                                + " BUT NO 64-BIT RSYNC BINARY IS PACKAGED. RUN scripts/build_rsync_android.sh TO GENERATE app/src/main/assets/rsync_binary/arm64-v8a/rsync.");
+                                + " BUT NO 64-BIT RSYNC BINARY IS PACKAGED. PLEASE BUNDLE AN arm64-v8a BINARY.");
             }
         }
 
