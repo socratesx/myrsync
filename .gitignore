@@ -5,5 +5,7 @@
 !.idea/gradle.xml
 .DS_Store
 /build
+/build/rsync-android
+/build/rsync-src
 /captures
 .externalNativeBuild

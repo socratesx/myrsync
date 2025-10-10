@@ -44,6 +44,22 @@ android {
     }
 }
 
+def rsyncBinary = file("$projectDir/src/main/assets/rsync_binary/arm64-v8a/rsync")
+
+tasks.register("verifyRsyncBinary") {
+    inputs.property("rsyncPath", rsyncBinary.absolutePath)
+    doLast {
+        if (!rsyncBinary.exists()) {
+            throw new GradleException("Missing arm64-v8a rsync binary. Run scripts/build_rsync_android.sh before building.")
+        }
+        if (!rsyncBinary.canExecute()) {
+            throw new GradleException("arm64-v8a rsync binary exists but is not executable. Re-run scripts/build_rsync_android.sh or chmod +x.")
+        }
+    }
+}
+
+preBuild.dependsOn tasks.named("verifyRsyncBinary")
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.annotation:annotation:1.7.0'
