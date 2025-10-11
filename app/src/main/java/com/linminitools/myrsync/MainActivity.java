@@ -25,6 +25,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 import com.linminitools.myrsync.rsync.RsyncBridge;
+import com.linminitools.myrsync.util.UiSafety;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -62,8 +63,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         appContext = getApplicationContext();
 
-        if (Build.VERSION.SDK_INT >= 23)
-            if (!checkPermission()) requestPermission(); // Code for permission
+        final View decorView = getWindow() != null ? getWindow().getDecorView() : null;
+        UiSafety.runOnUiThreadIfAlive(this, () -> UiSafety.stripDecorViewDrawables(decorView));
 
         Locale current_locale = appContext.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
@@ -77,19 +78,24 @@ public class MainActivity extends AppCompatActivity {
         ensureLogFileExists(log_file, "MainActivity", "Unable to create rsync log file");
         ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
 
+        UiSafety.runOnUiThreadIfAlive(this, () -> {
+            if (Build.VERSION.SDK_INT >= 23 && !checkPermission()) {
+                requestPermission();
+            }
 
-        ViewPager viewPager = findViewById(R.id.pager);
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.refresh_adapter();
+            ViewPager viewPager = findViewById(R.id.pager);
+            ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+            adapter.refresh_adapter();
 
-        viewPager.setAdapter(adapter);
+            viewPager.setAdapter(adapter);
 
-        TabLayout tabLayout = findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(viewPager);
-        TabLayout.Tab tab = tabLayout.getTabAt(getIntent().getIntExtra(SELECTED_TAB, 0));
-        if (tab != null) {
-            tab.select();
-        }
+            TabLayout tabLayout = findViewById(R.id.tabs);
+            tabLayout.setupWithViewPager(viewPager);
+            TabLayout.Tab tab = tabLayout.getTabAt(getIntent().getIntExtra(SELECTED_TAB, 0));
+            if (tab != null) {
+                tab.select();
+            }
+        });
 
         Boolean is_first_run = getSharedPreferences("Install", MODE_PRIVATE).getBoolean("first_run", true);
         if (prepareRsyncExecutable(is_first_run, formatter)) {
@@ -165,6 +171,18 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onStop() {
+        UiSafety.safelyTearDownViewTree(getWindow() != null ? getWindow().getDecorView() : null);
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        UiSafety.safelyTearDownViewTree(getWindow() != null ? getWindow().getDecorView() : null);
+        super.onDestroy();
     }
 
     @Override
