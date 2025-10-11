@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -30,6 +31,7 @@ public final class TaskerPluginReceiver extends BroadcastReceiver {
 
     private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
+    private static final String TAG = "TaskerPluginReceiver";
 
     @Override
     public void onReceive(@NonNull final Context context, @Nullable final Intent intent) {
@@ -55,7 +57,8 @@ public final class TaskerPluginReceiver extends BroadcastReceiver {
         final File debugLog = new File(debugLogPath);
         final Locale currentLocale = context.getResources().getConfiguration().locale;
         final SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", currentLocale);
-        FileWriter debugWriter = null;
+
+        Log.i(TAG, "Received Tasker request for configId=" + configId);
 
         try {
             boolean configFound = false;
@@ -80,32 +83,49 @@ public final class TaskerPluginReceiver extends BroadcastReceiver {
                         config.rs_mode = configPrefs.getString("rs_mode_" + id, "push");
                         config.addedOn = configPrefs.getLong("rs_addedon_" + id, 0);
 
-                        debugWriter = new FileWriter(debugLog, true);
-
-                        final CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime())
-                                + " ] CONFIGURATION RUN " + config.name + " TRIGGERED FROM TASKER PLUGIN";
-                        debugWriter.append(message);
-                        debugWriter.close();
-
-                        config.executeConfig(context, null);
+                        appendDebugLog(debugLog, formatter,
+                                "CONFIGURATION RUN " + config.name + " TRIGGERED FROM TASKER PLUGIN");
+                        try {
+                            Log.i(TAG, "Executing configuration '" + config.name + "' (id=" + config.id + ") from Tasker plugin");
+                            config.executeConfig(context, null);
+                        } catch (Exception executionError) {
+                            final String errorMessage = executionError.getMessage() == null
+                                    ? executionError.toString()
+                                    : executionError.getMessage();
+                            Log.e(TAG, "Failed to execute configuration '" + config.name + "' from Tasker plugin", executionError);
+                            appendDebugLog(debugLog, formatter,
+                                    "CONFIGURATION RUN " + config.name + " FAILED TO START FROM TASKER PLUGIN: " + errorMessage);
+                            MAIN_HANDLER.post(() -> Toast.makeText(context,
+                                    "Failed to start requested configuration.", Toast.LENGTH_SHORT).show());
+                        }
                         break;
                     }
                 }
             }
 
             if (!configFound) {
-                debugWriter = new FileWriter(debugLog, true);
-
-                final CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime())
-                        + " ] CONFIGURATION RUN TRIGGERED FROM TASKER PLUGIN BUT NO CONFIG FOUND WITH ID " + configId;
-                debugWriter.append(message);
-                debugWriter.close();
-
+                appendDebugLog(debugLog, formatter,
+                        "CONFIGURATION RUN TRIGGERED FROM TASKER PLUGIN BUT NO CONFIG FOUND WITH ID " + configId);
                 MAIN_HANDLER.post(() -> Toast.makeText(context,
                         "No configuration found for Tasker request.", Toast.LENGTH_SHORT).show());
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            final String errorMessage = e.getMessage() == null ? e.toString() : e.getMessage();
+            Log.e(TAG, "Unable to process Tasker plugin request", e);
+            appendDebugLog(debugLog, formatter,
+                    "CONFIGURATION RUN FAILED TO START FROM TASKER PLUGIN: " + errorMessage);
+            MAIN_HANDLER.post(() -> Toast.makeText(context,
+                    "Failed to process Tasker request.", Toast.LENGTH_SHORT).show());
         }
     }
+
+    private static void appendDebugLog(@NonNull File debugLog, @NonNull SimpleDateFormat formatter, @NonNull String message) {
+        try (FileWriter debugWriter = new FileWriter(debugLog, true)) {
+            CharSequence logMessage = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + message;
+            debugWriter.append(logMessage);
+        } catch (IOException e) {
+            Log.e(TAG, "Unable to write to debug log", e);
+        }
+    }
+
 }
