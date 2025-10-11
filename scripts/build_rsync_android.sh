@@ -20,12 +20,62 @@ if ! command -v autoconf >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ -z "${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}" ]]; then
-  echo "[rsync-android] ANDROID_NDK_ROOT or ANDROID_NDK_HOME must point to a valid Android NDK installation." >&2
+detect_ndk_root() {
+  local candidate=""
+
+  if [[ -n "${ANDROID_NDK_ROOT:-}" ]]; then
+    candidate="$ANDROID_NDK_ROOT"
+  elif [[ -n "${ANDROID_NDK_HOME:-}" ]]; then
+    candidate="$ANDROID_NDK_HOME"
+  else
+    local sdk_root=""
+    for sdk_var in ANDROID_SDK_ROOT ANDROID_HOME; do
+      sdk_root=${!sdk_var:-}
+      if [[ -z "$sdk_root" ]]; then
+        continue
+      fi
+
+      if [[ -d "$sdk_root/ndk-bundle" ]]; then
+        candidate="$sdk_root/ndk-bundle"
+      fi
+
+      if [[ -d "$sdk_root/ndk" ]]; then
+        local ndk_dir
+        local -a ndk_entries=()
+        while IFS= read -r -d '' ndk_dir; do
+          local ndk_version
+          ndk_version=$(basename "$ndk_dir")
+          if [[ -z "$ndk_version" ]]; then
+            continue
+          fi
+          ndk_entries+=("$ndk_version:$ndk_dir")
+        done < <(find "$sdk_root/ndk" -mindepth 1 -maxdepth 1 -type d -print0)
+
+        if [[ ${#ndk_entries[@]} -gt 0 ]]; then
+          local latest_entry
+          latest_entry=$(printf '%s\n' "${ndk_entries[@]}" | sort -t ':' -k1,1V | tail -n 1)
+          candidate="${latest_entry#*:}"
+        fi
+      fi
+
+      if [[ -n "$candidate" ]]; then
+        break
+      fi
+    done
+  fi
+
+  printf '%s' "$candidate"
+}
+
+NDK_ROOT=$(detect_ndk_root)
+
+if [[ -z "$NDK_ROOT" ]]; then
+  echo "[rsync-android] Unable to locate the Android NDK." >&2
+  echo "[rsync-android] Set ANDROID_NDK_ROOT (or ANDROID_NDK_HOME) to your NDK installation or install it via the Android SDK Manager." >&2
   exit 1
 fi
 
-NDK_ROOT=${ANDROID_NDK_ROOT:-${ANDROID_NDK_HOME:-}}
+echo "[rsync-android] Using Android NDK at: $NDK_ROOT"
 if [[ ! -d "$NDK_ROOT/toolchains/llvm" ]]; then
   echo "[rsync-android] Unable to locate LLVM toolchain inside NDK root: $NDK_ROOT" >&2
   exit 1
