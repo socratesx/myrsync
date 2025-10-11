@@ -78,7 +78,8 @@ else
   exit 1
 fi
 
-autoconf
+autoconf -o configure.sh
+chmod +x configure.sh
 
 mkdir -p "$BUILD_DIR"
 rm -rf "$BUILD_DIR"/*
@@ -88,7 +89,7 @@ export CFLAGS="--target=${HOST_TAG}${ANDROID_API_LEVEL} -fPIE -fPIC"
 export LDFLAGS="-fPIE -pie"
 export CPPFLAGS="-D__ANDROID_API__=${ANDROID_API_LEVEL}"
 
-./configure \
+./configure.sh \
   --host=${HOST_TAG} \
   --build=$(./config.guess) \
   --with-included-zlib=yes \
