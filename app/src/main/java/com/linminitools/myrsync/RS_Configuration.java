@@ -247,12 +247,24 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 update_result(context, "Failed to prepare rsync executable", schedulerKey);
                                 return;
                             }
-                            String app_folder = context.getFilesDir().getPath();
-                            //String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
+                            File defaultRsyncLocation = new File(context.getFilesDir(), "rsync");
+                            SharedPreferences installPrefs = context.getSharedPreferences("Install", MODE_PRIVATE);
+                            String storedExecutable = installPrefs.getString("rsync_binary", defaultRsyncLocation.getAbsolutePath());
+                            File rsyncExecutable = new File(storedExecutable);
+                            if (!rsyncExecutable.exists()) {
+                                rsyncExecutable = defaultRsyncLocation;
+                                storedExecutable = rsyncExecutable.getAbsolutePath();
+                            }
+
+                            String executableDirectory = rsyncExecutable.getParent();
+                            if (executableDirectory == null) {
+                                executableDirectory = context.getFilesDir().getPath();
+                            }
+
                             ProcessBuilder p = new ProcessBuilder();
                             Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
                             String cmd_string="";
-                            String rsync_bin = app_folder+"/rsync";
+                            String rsync_bin = rsyncExecutable.getAbsolutePath();
                             if (mode.equals("Push")) {
                                 cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
                                 //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
@@ -273,9 +285,8 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                             p.command(tokenizeCommand(cmd_string));
 
-
-                            Log.d("FILES_FOLDER",app_folder);
-                            p.environment().put("PATH", app_folder+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
+                            Log.d("FILES_FOLDER", executableDirectory);
+                            p.environment().put("PATH", executableDirectory+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
                             String nativeLibraryDir = context.getApplicationInfo().nativeLibraryDir;
                             if (nativeLibraryDir != null) {
                                 p.environment().put("LD_LIBRARY_PATH", nativeLibraryDir);
