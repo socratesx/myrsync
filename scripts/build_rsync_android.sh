@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 RSYNC_REPO_URL=${RSYNC_REPO_URL:-"https://github.com/RsyncProject/rsync.git"}
-RSYNC_VERSION=${RSYNC_VERSION:-"v3.3.0"}
+RSYNC_VERSION=${RSYNC_VERSION:-"v3.4.1"}
 ANDROID_API_LEVEL=${ANDROID_API_LEVEL:-"24"}
 ANDROID_ABI=${ANDROID_ABI:-"arm64-v8a"}
 OUTPUT_DIR=${OUTPUT_DIR:-"$ROOT_DIR/app/src/main/assets/rsync_binary/$ANDROID_ABI"}
@@ -83,6 +83,11 @@ export CPPFLAGS="-D__ANDROID_API__=${ANDROID_API_LEVEL}"
   --build=$(./config.guess) \
   --with-included-zlib=yes \
   --with-included-popt=yes \
+  --disable-md2man \
+  --disable-openssl \
+  --disable-xxhash \
+  --disable-zstd \
+  --disable-lz4 \
   --disable-iconv \
   --disable-debug \
   --disable-locale \
