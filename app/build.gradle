@@ -12,6 +12,16 @@ android {
         targetSdk 34
         versionCode 14
         versionName "0.13.1"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17"
+            }
+        }
+
+        ndk {
+            abiFilters "arm64-v8a"
+        }
     }
 
     applicationVariants.all { variant ->
@@ -32,33 +42,39 @@ android {
         }
     }
 
-    sourceSets {
-        main {
-            assets.srcDirs = ['src/main/assets', 'src/main/assets/']
-        }
-    }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-}
 
-def rsyncBinary = file("$projectDir/src/main/assets/rsync_binary/arm64-v8a/rsync")
-
-tasks.register("verifyRsyncBinary") {
-    inputs.property("rsyncPath", rsyncBinary.absolutePath)
-    doLast {
-        if (!rsyncBinary.exists()) {
-            throw new GradleException("Missing arm64-v8a rsync binary. Run scripts/build_rsync_android.sh before building.")
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
         }
-        if (!rsyncBinary.canExecute()) {
-            throw new GradleException("arm64-v8a rsync binary exists but is not executable. Re-run scripts/build_rsync_android.sh or chmod +x.")
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDir 'src/main/jniLibs'
         }
     }
 }
 
-preBuild.dependsOn tasks.named("verifyRsyncBinary")
+def rsyncSharedLibrary = file("$projectDir/src/main/jniLibs/arm64-v8a/librsync-android.so")
+
+tasks.register("verifyRsyncSharedLibrary") {
+    inputs.property("rsyncLibraryPath", rsyncSharedLibrary.absolutePath)
+    doLast {
+        if (!rsyncSharedLibrary.exists()) {
+            throw new GradleException("Missing arm64-v8a librsync shared library. Run scripts/build_rsync_android.sh before building.")
+        }
+        if (rsyncSharedLibrary.length() == 0L) {
+            throw new GradleException("arm64-v8a librsync shared library exists but appears to be empty. Re-run scripts/build_rsync_android.sh.")
+        }
+    }
+}
+
+preBuild.dependsOn tasks.named("verifyRsyncSharedLibrary")
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

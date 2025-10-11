@@ -1,6 +1,6 @@
 # rsync Android build helper
 
-This directory contains tooling used to produce the bundled `rsync` binary for Android/arm64-v8a devices such as the Poco F5 Pro and Xiaomi 14 5G.
+This directory contains tooling used to produce the bundled `librsync-android.so` shared library for Android/arm64-v8a devices such as the Poco F5 Pro and Xiaomi 14 5G.
 
 ## Prerequisites
 
@@ -13,10 +13,10 @@ This directory contains tooling used to produce the bundled `rsync` binary for A
 scripts/build_rsync_android.sh
 ```
 
-The script checks out the official [`RsyncProject/rsync`](https://github.com/RsyncProject/rsync) sources, cross-compiles them for `arm64-v8a`, and exports the resulting PIE executable to:
+The script checks out the official [`RsyncProject/rsync`](https://github.com/RsyncProject/rsync) sources, cross-compiles them for `arm64-v8a`, and exports the resulting shared library to:
 
 ```
-app/src/main/assets/rsync_binary/arm64-v8a/rsync
+app/src/main/jniLibs/arm64-v8a/librsync-android.so
 ```
 
-The Gradle `preBuild` task validates that this executable exists and is marked as executable before packaging the APK. Re-run the script whenever you need to update the bundled `rsync` version or rebuild after cleaning the assets directory.
+The Gradle `preBuild` task validates that this library exists and is non-empty before packaging the APK. Re-run the script whenever you need to update the bundled `rsync` version or rebuild after cleaning the `jniLibs` directory.
