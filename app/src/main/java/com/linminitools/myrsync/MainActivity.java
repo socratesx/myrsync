@@ -63,9 +63,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         appContext = getApplicationContext();
 
-        final View decorView = getWindow() != null ? getWindow().getDecorView() : null;
-        UiSafety.runOnUiThreadIfAlive(this, () -> UiSafety.stripDecorViewDrawables(decorView));
-
         Locale current_locale = appContext.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
@@ -171,18 +168,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    protected void onStop() {
-        UiSafety.safelyTearDownViewTree(getWindow() != null ? getWindow().getDecorView() : null);
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        UiSafety.safelyTearDownViewTree(getWindow() != null ? getWindow().getDecorView() : null);
-        super.onDestroy();
     }
 
     @Override

@@ -29,9 +29,6 @@ public class editConfig extends addConfig {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_config);
 
-        final View decorView = getWindow() != null ? getWindow().getDecorView() : null;
-        UiSafety.runOnUiThreadIfAlive(this, () -> UiSafety.stripDecorViewDrawables(decorView));
-
         Intent i = getIntent();
         final int p = i.getIntExtra("pos", 0);
         final RS_Configuration config = configs.get(p);
@@ -197,16 +194,4 @@ public class editConfig extends addConfig {
 
 
 
-
-    @Override
-    protected void onStop() {
-        UiSafety.safelyTearDownViewTree(getWindow() != null ? getWindow().getDecorView() : null);
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        UiSafety.safelyTearDownViewTree(getWindow() != null ? getWindow().getDecorView() : null);
-        super.onDestroy();
-    }
 }
