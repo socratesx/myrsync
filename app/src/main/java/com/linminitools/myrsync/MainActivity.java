@@ -45,9 +45,11 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.Objects;
 
 import static com.linminitools.myrsync.myRsyncApplication.schedulers;
@@ -154,65 +156,84 @@ public class MainActivity extends AppCompatActivity {
         ensureLogFileExists(log_file, "MainActivity", "Unable to create rsync log file");
         ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
 
-        String appFileDirectory = appContext.getFilesDir().getPath();
-        File rsyncExecutable = new File(appFileDirectory, "rsync");
-
-        File parentDirectory = rsyncExecutable.getParentFile();
-        if (parentDirectory == null) {
-            appendDebugLog(formatter, "UNABLE TO RESOLVE DIRECTORY FOR rsync EXECUTABLE");
-            return false;
-        }
-        if (!parentDirectory.exists() && !parentDirectory.mkdirs()) {
-            appendDebugLog(formatter, "FAILED TO CREATE DIRECTORY " + parentDirectory.getAbsolutePath());
-            return false;
-        }
-        if (!parentDirectory.canWrite()) {
-            appendDebugLog(formatter, "DIRECTORY " + parentDirectory.getAbsolutePath() + " IS NOT WRITABLE");
+        List<File> candidateDirectories = getCandidateExecutableDirectories(appContext);
+        if (candidateDirectories.isEmpty()) {
+            appendDebugLog(formatter, "FAILED TO RESOLVE ANY CANDIDATE DIRECTORIES FOR rsync EXECUTABLE");
             return false;
         }
 
-        boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
-        if (!shouldCopy && !rsyncExecutable.canExecute()) {
-            shouldCopy = true;
-        }
-
-        if (shouldCopy) {
-            if (rsyncExecutable.exists() && !rsyncExecutable.delete()) {
-                Log.w("MainActivity", "Unable to delete existing rsync binary before refresh.");
+        String binPath = null;
+        for (File directory : candidateDirectories) {
+            if (directory == null) {
+                continue;
             }
 
-            String binPath = resolveRsyncBinaryAsset(appContext, formatter);
-            if (binPath == null) {
-                appendDebugLog(formatter, "FAILED TO LOCATE A COMPATIBLE RSYNC BINARY FOR ABIS "
-                        + Arrays.toString(Build.SUPPORTED_ABIS));
-                return false;
+            if (!directory.exists() && !directory.mkdirs()) {
+                appendDebugLog(formatter, "FAILED TO CREATE DIRECTORY " + directory.getAbsolutePath());
+                continue;
             }
 
-            Log.d("BINARY", binPath);
-            appendDebugLog(formatter, "SELECTED RSYNC BINARY " + binPath + " FOR ABIS " + Arrays.toString(Build.SUPPORTED_ABIS));
+            if (!directory.canWrite()) {
+                appendDebugLog(formatter, "DIRECTORY " + directory.getAbsolutePath() + " IS NOT WRITABLE");
+                continue;
+            }
 
-            try (InputStream in = appContext.getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
-                 FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = in.read(buffer)) != -1) {
-                    fos.write(buffer, 0, read);
+            File rsyncExecutable = new File(directory, "rsync");
+            boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
+            if (!shouldCopy && !rsyncExecutable.canExecute()) {
+                shouldCopy = true;
+            }
+
+            if (shouldCopy) {
+                if (rsyncExecutable.exists() && !rsyncExecutable.delete()) {
+                    Log.w("MainActivity", "Unable to delete existing rsync binary before refresh.");
                 }
 
-                appendDebugLog(formatter, "RSYNC EXECUTABLE COPIED {\nSUPPORTED ABIS: " + Arrays.toString(Build.SUPPORTED_ABIS)
-                        + "\nSDK_Version: " + Build.VERSION.SDK_INT + "\n}");
-            } catch (IOException e) {
-                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
-                return false;
+                if (binPath == null) {
+                    binPath = resolveRsyncBinaryAsset(appContext, formatter);
+                    if (binPath == null) {
+                        appendDebugLog(formatter, "FAILED TO LOCATE A COMPATIBLE RSYNC BINARY FOR ABIS "
+                                + Arrays.toString(Build.SUPPORTED_ABIS));
+                        return false;
+                    }
+
+                    Log.d("BINARY", binPath);
+                    appendDebugLog(formatter, "SELECTED RSYNC BINARY " + binPath + " FOR ABIS " + Arrays.toString(Build.SUPPORTED_ABIS));
+                }
+
+                try (InputStream in = appContext.getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
+                     FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = in.read(buffer)) != -1) {
+                        fos.write(buffer, 0, read);
+                    }
+
+                    appendDebugLog(formatter, "RSYNC EXECUTABLE COPIED {\nSUPPORTED ABIS: " + Arrays.toString(Build.SUPPORTED_ABIS)
+                            + "\nSDK_Version: " + Build.VERSION.SDK_INT + "\n}");
+                } catch (IOException e) {
+                    appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
+                    continue;
+                }
             }
+
+            if (!ensureExecutablePermissions(rsyncExecutable, formatter)) {
+                continue;
+            }
+
+            if (verifyExecutable(appContext, rsyncExecutable, formatter)) {
+                appContext.getSharedPreferences("Install", MODE_PRIVATE)
+                        .edit()
+                        .putString("rsync_binary", rsyncExecutable.getAbsolutePath())
+                        .apply();
+                return true;
+            }
+
+            appendDebugLog(formatter, "EXECUTABLE VERIFICATION FAILED FOR " + rsyncExecutable.getAbsolutePath());
         }
 
-        if (!ensureExecutablePermissions(rsyncExecutable, formatter)) {
-            return false;
-        }
-
-        appContext.getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", rsyncExecutable.getAbsolutePath()).apply();
-        return true;
+        appendDebugLog(formatter, "FAILED TO PREPARE rsync EXECUTABLE IN ANY SUPPORTED DIRECTORY");
+        return false;
     }
 
     private static boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
@@ -252,6 +273,87 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return true;
+    }
+
+    @NonNull
+    private static List<File> getCandidateExecutableDirectories(@NonNull Context context) {
+        Set<File> directories = new LinkedHashSet<>();
+        File filesDir = context.getFilesDir();
+        if (filesDir != null) {
+            directories.add(filesDir);
+        }
+
+        File noBackupDir = context.getNoBackupFilesDir();
+        if (noBackupDir != null) {
+            directories.add(noBackupDir);
+        }
+
+        File codeCacheDir = context.getCodeCacheDir();
+        if (codeCacheDir != null) {
+            directories.add(codeCacheDir);
+        }
+
+        try {
+            File execDir = context.getDir("exec", Context.MODE_PRIVATE);
+            if (execDir != null) {
+                directories.add(execDir);
+            }
+        } catch (Exception e) {
+            Log.w("MainActivity", "Unable to create exec directory", e);
+        }
+
+        return new ArrayList<>(directories);
+    }
+
+    private static boolean verifyExecutable(@NonNull Context context, @NonNull File executable, SimpleDateFormat formatter) {
+        Process process = null;
+        try {
+            ProcessBuilder builder = new ProcessBuilder(executable.getAbsolutePath(), "--version");
+            builder.redirectErrorStream(true);
+            Map<String, String> environment = builder.environment();
+            String existingPath = environment.get("PATH");
+            String parentPath = executable.getParent();
+            if (parentPath != null) {
+                environment.put("PATH", parentPath + (existingPath == null ? "" : ":" + existingPath));
+            }
+            String nativeLibraryDir = context.getApplicationInfo().nativeLibraryDir;
+            if (nativeLibraryDir != null) {
+                environment.put("LD_LIBRARY_PATH", nativeLibraryDir);
+            }
+
+            process = builder.start();
+
+            StringBuilder builderOutput = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    builderOutput.append(line).append('\n');
+                }
+            }
+
+            int exitCode = process.waitFor();
+            if (exitCode == 0) {
+                return true;
+            }
+
+            appendDebugLog(formatter, "EXECUTABLE SELF-TEST FAILED WITH CODE " + exitCode + " FOR "
+                    + executable.getAbsolutePath() + " OUTPUT: \n" + builderOutput);
+        } catch (IOException e) {
+            String message = e.getMessage() == null ? e.toString() : e.getMessage();
+            appendDebugLog(formatter, "EXECUTABLE SELF-TEST IO EXCEPTION: \n" + message);
+            if (message.contains("Permission denied") || message.contains("error=13")) {
+                appendDebugLog(formatter, "EXECUTABLE SELF-TEST FAILED DUE TO EXECUTION PERMISSION RESTRICTIONS");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            appendDebugLog(formatter, "EXECUTABLE SELF-TEST INTERRUPTED: \n" + e);
+        } finally {
+            if (process != null) {
+                process.destroy();
+            }
+        }
+
+        return false;
     }
 
     @NonNull
