@@ -3,7 +3,6 @@ package com.linminitools.myrsync;
 import android.app.AlertDialog;
 import android.content.ContentUris;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
@@ -61,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        UiSafety.stripDecorViewDrawables(getWindow().getDecorView());
         appContext = getApplicationContext();
 
         Locale current_locale = appContext.getResources().getConfiguration().locale;
@@ -172,6 +172,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        if (UiSafety.isUiDead(this)) {
+            return false;
+        }
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.app_settings, menu);
         return true;
@@ -179,66 +182,73 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        if (UiSafety.isUiDead(this)) {
+            return false;
+        }
+
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.me_exit) {
-            this.finishAffinity();
+            UiSafety.runOnUiThreadIfAlive(this, this::finishAffinity);
             return true;
         }
 
         if (id == R.id.me_about) {
-            SpannableString s = new SpannableString(getResources().getString(R.string.about));
-            String version="";
+            String versionName = "";
             try {
                 PackageInfo pInfo = appContext.getPackageManager().getPackageInfo(getPackageName(), 0);
-                version = pInfo.versionName;
-                int verCode = pInfo.versionCode;
+                versionName = pInfo.versionName;
             } catch (PackageManager.NameNotFoundException e) {
                 e.printStackTrace();
             }
 
-            s = SpannableString.valueOf(s+"\n\n myRsync Version: Beta-"+version);
+            final SpannableString aboutMessage = new SpannableString(getResources().getString(R.string.about) + "\n\n myRsync Version: Beta-" + versionName);
+            Linkify.addLinks(aboutMessage, Linkify.ALL);
 
-            Linkify.addLinks(s,Linkify.ALL);
-            AlertDialog.Builder alertDialogBuilder =
-                    new AlertDialog.Builder(this)
-                            .setTitle("About")
-                            .setMessage(s)
-                            .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                }
-                            })
-                            ;
-            AlertDialog alertDialog = alertDialogBuilder.show();
-            TextView textView = alertDialog.findViewById(android.R.id.message);
-
-            textView.setTextSize(12);
-            textView.setMovementMethod(LinkMovementMethod.getInstance());
+            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                if (UiSafety.isUiDead(this)) {
+                    return;
+                }
+                AlertDialog alertDialog = new AlertDialog.Builder(this)
+                        .setTitle("About")
+                        .setMessage(aboutMessage)
+                        .setPositiveButton("Close", (dialog, which) -> {
+                        })
+                        .show();
+                TextView textView = alertDialog.findViewById(android.R.id.message);
+                if (textView != null) {
+                    textView.setTextSize(12);
+                    textView.setMovementMethod(LinkMovementMethod.getInstance());
+                }
+            });
+            return true;
         }
 
         if (id == R.id.me_help) {
-            AlertDialog.Builder alertDialogBuilder =
-                    new AlertDialog.Builder(this)
-                            .setTitle("Help")
-                            .setMessage(getResources().getString(R.string.help))
-                            .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                }
-                            })
-                    ;
-            alertDialogBuilder.show();
+            final CharSequence helpMessage = getResources().getString(R.string.help);
+            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                if (UiSafety.isUiDead(this)) {
+                    return;
+                }
+                new AlertDialog.Builder(this)
+                        .setTitle("Help")
+                        .setMessage(helpMessage)
+                        .setPositiveButton("Close", (dialog, which) -> {
+                        })
+                        .show();
+            });
+            return true;
         }
 
         if (id == R.id.me_settings) {
-
-            Intent i = new Intent(this,Settings.class);
-
-            startActivity(i);
-
+            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                if (UiSafety.isUiDead(this)) {
+                    return;
+                }
+                Intent i = new Intent(this, Settings.class);
+                startActivity(i);
+            });
+            return true;
         }
 
 
@@ -248,16 +258,29 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void createConfig(View v){
-
-        Intent i = new Intent(this,addConfig.class);
-        startActivityForResult(i,1);
-
+        if (UiSafety.isUiDead(this)) {
+            return;
         }
+        UiSafety.runOnUiThreadIfAlive(this, () -> {
+            if (UiSafety.isUiDead(this)) {
+                return;
+            }
+            Intent i = new Intent(this,addConfig.class);
+            startActivityForResult(i,1);
+        });
+    }
 
     public void createScheduler(View v){
-
-        Intent i = new Intent(this,addScheduler.class);
-        startActivityForResult(i,2);
+        if (UiSafety.isUiDead(this)) {
+            return;
+        }
+        UiSafety.runOnUiThreadIfAlive(this, () -> {
+            if (UiSafety.isUiDead(this)) {
+                return;
+            }
+            Intent i = new Intent(this,addScheduler.class);
+            startActivityForResult(i,2);
+        });
 
     }
 
@@ -267,55 +290,68 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        final Intent resultData = data;
 
-        if ((requestCode == 41 || requestCode==42) && data != null) {
-
-            try {
-
-                Uri pathUri = data.getData();
-                if (pathUri == null) {
-                    return;
-                }
-                Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
-
-                DocumentFile pickedDir= DocumentFile.fromTreeUri(appContext,dirUri);
-
-                File selected_logfile = log_file;
-                if (requestCode==42) selected_logfile = debug_log;
-                DocumentFile previous_log = Objects.requireNonNull(pickedDir).findFile(selected_logfile.getName());
-                if (previous_log != null) previous_log.delete();
-
-                DocumentFile exported_log = pickedDir.createFile("log", selected_logfile.getName());
-
-                FileInputStream inputStream = new FileInputStream(selected_logfile);
-                OutputStream outputStream = getContentResolver().openOutputStream(Objects.requireNonNull(exported_log).getUri());
-
-                byte[] buffer = new byte[inputStream.available()];
-                //noinspection ResultOfMethodCallIgnored
-                inputStream.read(buffer);
-                inputStream.close();
-
-                Objects.requireNonNull(outputStream).write(buffer);
-                outputStream.close();
-
-            } catch (Exception e) {
-                e.printStackTrace();
+        UiSafety.runOnUiThreadIfAlive(this, () -> {
+            if (UiSafety.isUiDead(this)) {
+                return;
             }
 
-        } else {
+            if ((requestCode == 41 || requestCode == 42) && resultData != null) {
+                try {
+                    Uri pathUri = resultData.getData();
+                    if (pathUri == null) {
+                        return;
+                    }
+                    Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
+
+                    DocumentFile pickedDir = DocumentFile.fromTreeUri(appContext, dirUri);
+
+                    File selectedLogFile = log_file;
+                    if (requestCode == 42) {
+                        selectedLogFile = debug_log;
+                    }
+                    DocumentFile previousLog = pickedDir != null ? pickedDir.findFile(selectedLogFile.getName()) : null;
+                    if (previousLog != null) {
+                        previousLog.delete();
+                    }
+
+                    DocumentFile exportedLog = pickedDir != null ? pickedDir.createFile("log", selectedLogFile.getName()) : null;
+
+                    try (FileInputStream inputStream = new FileInputStream(selectedLogFile);
+                         OutputStream outputStream = exportedLog != null ? getContentResolver().openOutputStream(exportedLog.getUri()) : null) {
+                        if (outputStream == null) {
+                            return;
+                        }
+                        byte[] buffer = new byte[inputStream.available()];
+                        int read = inputStream.read(buffer);
+                        if (read > 0) {
+                            outputStream.write(buffer, 0, read);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return;
+            }
 
             ViewPager viewPager = findViewById(R.id.pager);
+            if (viewPager == null) {
+                return;
+            }
             ViewPagerAdapter v = (ViewPagerAdapter) viewPager.getAdapter();
-            Objects.requireNonNull(v).refresh_adapter();
-
+            if (v != null) {
+                v.refresh_adapter();
+            }
 
             viewPager.setAdapter(v);
             viewPager.setCurrentItem(requestCode);
 
             TabLayout tabLayout = findViewById(R.id.tabs);
-            tabLayout.setupWithViewPager(viewPager);
-
-        }
+            if (tabLayout != null) {
+                tabLayout.setupWithViewPager(viewPager);
+            }
+        });
     }
 
     public static String getPath(@NonNull final Context context, @NonNull final Uri uri) {
@@ -458,12 +494,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void requestPermission() {
-
-        if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            Toast.makeText(MainActivity.this, "Write External Storage permission allows to export logfile to your external storage. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
-        } else {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
-        }
+        UiSafety.runOnUiThreadIfAlive(this, () -> {
+            if (UiSafety.isUiDead(this)) {
+                return;
+            }
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                Toast.makeText(MainActivity.this, "Write External Storage permission allows to export logfile to your external storage. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
+            } else {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            }
+        });
     }
 
     @Override
@@ -482,42 +522,52 @@ public class MainActivity extends AppCompatActivity {
 
     public void config_clickHandler(@NonNull View v){
 
+        if (UiSafety.isUiDead(this)) {
+            return;
+        }
+
         if (v.getTag(R.id.bt_edit)!=null) {
-            int pos = (int) v.getTag(R.id.bt_edit);
-            Intent intent = new Intent(this,editConfig.class);
-            intent.putExtra("pos",pos);
-            this.startActivityForResult(intent,1);
+            final int pos = (int) v.getTag(R.id.bt_edit);
+            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                if (UiSafety.isUiDead(this)) {
+                    return;
+                }
+                Intent intent = new Intent(this,editConfig.class);
+                intent.putExtra("pos",pos);
+                this.startActivityForResult(intent,1);
+            });
         }
         else if (v.getTag(R.id.bt_delete)!=null) {
             final int pos = (int) v.getTag(R.id.bt_delete);
 
-            AlertDialog.Builder alertDialogBuilder =
-                    new AlertDialog.Builder(this)
-                            .setTitle("Delete Configuration")
-                            .setMessage("This action will delete this configuration and all its schedulers. Are you sure?")
-                            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    RS_Configuration deleted_config=configs.get(pos);
-                                    deleted_config.deleteFromDisk();
-                                    configs.remove(pos);
+            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                if (UiSafety.isUiDead(this)) {
+                    return;
+                }
+                new AlertDialog.Builder(this)
+                        .setTitle("Delete Configuration")
+                        .setMessage("This action will delete this configuration and all its schedulers. Are you sure?")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            if (UiSafety.isUiDead(this)) {
+                                return;
+                            }
+                            RS_Configuration deleted_config=configs.get(pos);
+                            deleted_config.deleteFromDisk();
+                            configs.remove(pos);
 
-                                    ArrayList<Scheduler> connected_schedulers_to_deleted_configuration=new ArrayList<>();
-                                    for (Scheduler s : schedulers){
-                                        if (deleted_config.id==s.config_id){
-                                            connected_schedulers_to_deleted_configuration.add(s);
-                                            s.deleteFromDisk();
-                                        }
-                                    }
-                                    schedulers.removeAll(connected_schedulers_to_deleted_configuration);
-                                    onActivityResult(1,RESULT_OK,null);
+                            ArrayList<Scheduler> connected_schedulers_to_deleted_configuration=new ArrayList<>();
+                            for (Scheduler s : schedulers){
+                                if (deleted_config.id==s.config_id){
+                                    connected_schedulers_to_deleted_configuration.add(s);
+                                    s.deleteFromDisk();
                                 }
-                            })
-                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                public void onClick(@NonNull DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            });
-            alertDialogBuilder.show();
+                            }
+                            schedulers.removeAll(connected_schedulers_to_deleted_configuration);
+                            onActivityResult(1,RESULT_OK,null);
+                        })
+                        .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
+                        .show();
+            });
 
 
         }
@@ -527,38 +577,60 @@ public class MainActivity extends AppCompatActivity {
 
     public void sched_clickHandler(@NonNull View v){
 
+        if (UiSafety.isUiDead(this)) {
+            return;
+        }
+
         if (v.getTag(R.id.bt_edit_sched)!=null) {
-            int pos = (int) v.getTag(R.id.bt_edit_sched);
-            Intent intent = new Intent(this,editSched.class);
-            intent.putExtra("pos",pos);
-            startActivityForResult(intent,2);
+            final int pos = (int) v.getTag(R.id.bt_edit_sched);
+            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                if (UiSafety.isUiDead(this)) {
+                    return;
+                }
+                Intent intent = new Intent(this,editSched.class);
+                intent.putExtra("pos",pos);
+                startActivityForResult(intent,2);
+            });
 
         }
         else if (v.getTag(R.id.bt_delete_sched)!=null) {
             final int pos = (int) v.getTag(R.id.bt_delete_sched);
 
-            AlertDialog.Builder alertDialogBuilder =
-                    new AlertDialog.Builder(this)
-                            .setTitle("Delete Scheduler")
-                            .setMessage("Are you sure?")
-                            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                    schedulers.get(pos).deleteFromDisk();
-                                    schedulers.get(pos).cancelAlarm(appContext);
-                                    schedulers.remove(pos);
-                                    onActivityResult(2,RESULT_OK,null);
-                                }
-                            })
-                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                                public void onClick(@NonNull DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                }
-                            });
-            alertDialogBuilder.show();
+            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                if (UiSafety.isUiDead(this)) {
+                    return;
+                }
+                new AlertDialog.Builder(this)
+                        .setTitle("Delete Scheduler")
+                        .setMessage("Are you sure?")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            if (UiSafety.isUiDead(this)) {
+                                return;
+                            }
+                            schedulers.get(pos).deleteFromDisk();
+                            schedulers.get(pos).cancelAlarm(appContext);
+                            schedulers.remove(pos);
+                            onActivityResult(2,RESULT_OK,null);
+                        })
+                        .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
+                        .show();
+            });
 
 
         }
 
+    }
+
+    @Override
+    protected void onStop() {
+        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
+        super.onDestroy();
     }
 
 

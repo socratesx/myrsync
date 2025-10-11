@@ -32,6 +32,7 @@ public class editConfig extends addConfig {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_config);
+        UiSafety.stripDecorViewDrawables(getWindow().getDecorView());
 
         Intent i = getIntent();
         final int p = i.getIntExtra("pos", 0);
@@ -215,4 +216,16 @@ public class editConfig extends addConfig {
 
 
 
+
+    @Override
+    protected void onStop() {
+        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
+        super.onDestroy();
+    }
 }
