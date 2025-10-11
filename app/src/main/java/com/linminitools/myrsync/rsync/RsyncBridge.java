@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 public final class RsyncBridge {
     private static volatile boolean loaded;
     private static volatile UnsatisfiedLinkError loadError;
+    private static final Object RUN_LOCK = new Object();
 
     private RsyncBridge() {
     }
@@ -44,7 +45,10 @@ public final class RsyncBridge {
             throw new NullPointerException("args == null");
         }
         loadLibraries();
-        RsyncResult result = runRsyncNative(args);
+        RsyncResult result;
+        synchronized (RUN_LOCK) {
+            result = runRsyncNative(args);
+        }
         if (result == null) {
             throw new IllegalStateException("Native rsync invocation returned null result");
         }
