@@ -87,7 +87,7 @@ public class myRsyncApplication extends Application {
 
                 Scheduler sched = new Scheduler(days,tp,(Integer) entry.getValue());
                 sched.name=name;
-                sched.addedOn = sched_prefs.getLong("addedon",0);
+                sched.addedOn = sched_prefs.getLong("addedon_"+id,0);
                 sched.config_id=config_id;
                 sched.wifi_sw = sched_prefs.getBoolean("wifi_switch_"+id,false);
                 sched.wifi_ssid = sched_prefs.getString("ssid_"+id,"");
