@@ -61,6 +61,34 @@ android {
 }
 
 def rsyncSharedLibrary = file("$projectDir/src/main/jniLibs/arm64-v8a/librsync-android.so")
+def buildRsyncSharedLibraryScript = file("$rootDir/scripts/build_rsync_android.sh")
+
+tasks.register("prepareRsyncSharedLibrary") {
+    inputs.file(buildRsyncSharedLibraryScript)
+    outputs.file(rsyncSharedLibrary)
+
+    doLast {
+        if (rsyncSharedLibrary.exists() && rsyncSharedLibrary.length() > 0L) {
+            return
+        }
+
+        if (!buildRsyncSharedLibraryScript.exists()) {
+            throw new GradleException("Unable to locate scripts/build_rsync_android.sh. Cannot build librsync shared library automatically.")
+        }
+
+        if (!buildRsyncSharedLibraryScript.canExecute()) {
+            buildRsyncSharedLibraryScript.setExecutable(true)
+        }
+
+        try {
+            project.exec {
+                commandLine("bash", buildRsyncSharedLibraryScript.absolutePath)
+            }
+        } catch (Exception exception) {
+            throw new GradleException("Failed to build librsync shared library automatically. Run scripts/build_rsync_android.sh manually for more details.", exception)
+        }
+    }
+}
 
 tasks.register("verifyRsyncSharedLibrary") {
     inputs.property("rsyncLibraryPath", rsyncSharedLibrary.absolutePath)
@@ -74,7 +102,14 @@ tasks.register("verifyRsyncSharedLibrary") {
     }
 }
 
-preBuild.dependsOn tasks.named("verifyRsyncSharedLibrary")
+tasks.named("verifyRsyncSharedLibrary").configure {
+    mustRunAfter("prepareRsyncSharedLibrary")
+}
+
+tasks.named("preBuild").configure {
+    dependsOn("prepareRsyncSharedLibrary")
+    dependsOn("verifyRsyncSharedLibrary")
+}
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
