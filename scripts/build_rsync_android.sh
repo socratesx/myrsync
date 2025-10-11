@@ -6,7 +6,7 @@ RSYNC_REPO_URL=${RSYNC_REPO_URL:-"https://github.com/RsyncProject/rsync.git"}
 RSYNC_VERSION=${RSYNC_VERSION:-"v3.4.1"}
 ANDROID_API_LEVEL=${ANDROID_API_LEVEL:-"24"}
 ANDROID_ABI=${ANDROID_ABI:-"arm64-v8a"}
-OUTPUT_DIR=${OUTPUT_DIR:-"$ROOT_DIR/app/src/main/assets/rsync_binary/$ANDROID_ABI"}
+LIB_OUTPUT_DIR=${LIB_OUTPUT_DIR:-"$ROOT_DIR/app/src/main/jniLibs/$ANDROID_ABI"}
 BUILD_DIR=${BUILD_DIR:-"$ROOT_DIR/build/rsync-android/$ANDROID_ABI"}
 RSYNC_SRC_DIR=${RSYNC_SRC_DIR:-"$ROOT_DIR/build/rsync-src"}
 
@@ -113,12 +113,41 @@ if [[ ! -f "$RSYNC_BIN" ]]; then
   exit 1
 fi
 
-mkdir -p "$OUTPUT_DIR"
-cp "$RSYNC_BIN" "$OUTPUT_DIR/rsync"
-chmod 755 "$OUTPUT_DIR/rsync"
+mkdir -p "$LIB_OUTPUT_DIR"
 
-${STRIP} --strip-unneeded "$OUTPUT_DIR/rsync" || true
+WRAPPER_SRC="$ROOT_DIR/scripts/rsync_android_wrapper.c"
+WRAPPER_OBJ="$BUILD_DIR/rsync_android_wrapper.o"
 
-echo "[rsync-android] rsync binary exported to $OUTPUT_DIR/rsync"
+echo "[rsync-android] Compiling Android wrapper"
+"$CC" -fPIC $CPPFLAGS -c "$WRAPPER_SRC" -o "$WRAPPER_OBJ"
+
+echo "[rsync-android] Collecting build artifacts for shared library"
+mapfile -t OBJECT_FILES < <(find . -type f -name '*.o' \
+  ! -path './support/*' \
+  ! -path './testsuite/*' \
+  ! -path './packaging/*')
+mapfile -t STATIC_LIBS < <(find . -type f -name '*.a' \
+  ! -path './support/*' \
+  ! -path './testsuite/*' \
+  ! -path './packaging/*')
+
+if [[ ${#OBJECT_FILES[@]} -eq 0 ]]; then
+  echo "[rsync-android] Unable to locate compiled object files. Verify that the build succeeded." >&2
+  exit 1
+fi
+
+echo "[rsync-android] Linking shared library"
+"$CC" -shared -Wl,-soname,librsync-android.so \
+  -o "$LIB_OUTPUT_DIR/librsync-android.so" \
+  "${OBJECT_FILES[@]}" \
+  "$WRAPPER_OBJ" \
+  "${STATIC_LIBS[@]}" \
+  -llog
+
+chmod 755 "$LIB_OUTPUT_DIR/librsync-android.so"
+
+${STRIP} --strip-unneeded "$LIB_OUTPUT_DIR/librsync-android.so" || true
+
+echo "[rsync-android] rsync shared library exported to $LIB_OUTPUT_DIR/librsync-android.so"
 
 popd >/dev/null

@@ -8,13 +8,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.system.ErrnoException;
-import android.system.Os;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -27,6 +24,7 @@ import androidx.documentfile.provider.DocumentFile;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
+import com.linminitools.myrsync.rsync.RsyncBridge;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -41,15 +39,9 @@ import android.widget.Toast;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 import java.util.Objects;
 
 import static com.linminitools.myrsync.myRsyncApplication.schedulers;
@@ -62,21 +54,6 @@ public class MainActivity extends AppCompatActivity {
     public static Context appContext;
     static File log_file;
     static File debug_log;
-
-    private static final String DEFAULT_RSYNC_ASSET = "rsync_binary/x86_64/rsync";
-    private static final Map<String, List<String>> RSYNC_ASSET_PATHS;
-
-    static {
-        Map<String, List<String>> assetPaths = new LinkedHashMap<>();
-        assetPaths.put("arm64-v8a", Collections.singletonList("rsync_binary/arm64-v8a/rsync"));
-        assetPaths.put("armeabi-v7a", Collections.singletonList("rsync_binary/armv7/rsync"));
-        assetPaths.put("armeabi", Collections.singletonList("rsync_binary/armv7/rsync"));
-        assetPaths.put("armv7", Collections.singletonList("rsync_binary/armv7/rsync"));
-        assetPaths.put("x86", Collections.singletonList(DEFAULT_RSYNC_ASSET));
-        assetPaths.put("x86_64", Collections.singletonList(DEFAULT_RSYNC_ASSET));
-        RSYNC_ASSET_PATHS = Collections.unmodifiableMap(assetPaths);
-    }
-
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
@@ -143,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         return ensureRsyncExecutable(this, forceCopy, formatter);
     }
 
-    static boolean ensureRsyncExecutable(@NonNull Context context, boolean forceCopy, SimpleDateFormat formatter) {
+    static boolean ensureRsyncExecutable(@NonNull Context context, @SuppressWarnings("unused") boolean forceCopy, SimpleDateFormat formatter) {
         Context appContext = context.getApplicationContext();
 
         if (log_file == null) {
@@ -156,256 +133,14 @@ public class MainActivity extends AppCompatActivity {
         ensureLogFileExists(log_file, "MainActivity", "Unable to create rsync log file");
         ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
 
-        List<File> candidateDirectories = getCandidateExecutableDirectories(appContext);
-        if (candidateDirectories.isEmpty()) {
-            appendDebugLog(formatter, "FAILED TO RESOLVE ANY CANDIDATE DIRECTORIES FOR rsync EXECUTABLE");
-            return false;
-        }
-
-        String binPath = null;
-        for (File directory : candidateDirectories) {
-            if (directory == null) {
-                continue;
-            }
-
-            if (!directory.exists() && !directory.mkdirs()) {
-                appendDebugLog(formatter, "FAILED TO CREATE DIRECTORY " + directory.getAbsolutePath());
-                continue;
-            }
-
-            if (!directory.canWrite()) {
-                appendDebugLog(formatter, "DIRECTORY " + directory.getAbsolutePath() + " IS NOT WRITABLE");
-                continue;
-            }
-
-            File rsyncExecutable = new File(directory, "rsync");
-            boolean shouldCopy = forceCopy || !rsyncExecutable.exists();
-            if (!shouldCopy && !rsyncExecutable.canExecute()) {
-                shouldCopy = true;
-            }
-
-            if (shouldCopy) {
-                if (rsyncExecutable.exists() && !rsyncExecutable.delete()) {
-                    Log.w("MainActivity", "Unable to delete existing rsync binary before refresh.");
-                }
-
-                if (binPath == null) {
-                    binPath = resolveRsyncBinaryAsset(appContext, formatter);
-                    if (binPath == null) {
-                        appendDebugLog(formatter, "FAILED TO LOCATE A COMPATIBLE RSYNC BINARY FOR ABIS "
-                                + Arrays.toString(Build.SUPPORTED_ABIS));
-                        return false;
-                    }
-
-                    Log.d("BINARY", binPath);
-                    appendDebugLog(formatter, "SELECTED RSYNC BINARY " + binPath + " FOR ABIS " + Arrays.toString(Build.SUPPORTED_ABIS));
-                }
-
-                try (InputStream in = appContext.getAssets().open(binPath, AssetManager.ACCESS_BUFFER);
-                     FileOutputStream fos = new FileOutputStream(rsyncExecutable)) {
-                    byte[] buffer = new byte[8192];
-                    int read;
-                    while ((read = in.read(buffer)) != -1) {
-                        fos.write(buffer, 0, read);
-                    }
-
-                    appendDebugLog(formatter, "RSYNC EXECUTABLE COPIED {\nSUPPORTED ABIS: " + Arrays.toString(Build.SUPPORTED_ABIS)
-                            + "\nSDK_Version: " + Build.VERSION.SDK_INT + "\n}");
-                } catch (IOException e) {
-                    appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
-                    continue;
-                }
-            }
-
-            if (!ensureExecutablePermissions(rsyncExecutable, formatter)) {
-                continue;
-            }
-
-            if (verifyExecutable(appContext, rsyncExecutable, formatter)) {
-                appContext.getSharedPreferences("Install", MODE_PRIVATE)
-                        .edit()
-                        .putString("rsync_binary", rsyncExecutable.getAbsolutePath())
-                        .apply();
-                return true;
-            }
-
-            appendDebugLog(formatter, "EXECUTABLE VERIFICATION FAILED FOR " + rsyncExecutable.getAbsolutePath());
-        }
-
-        appendDebugLog(formatter, "FAILED TO PREPARE rsync EXECUTABLE IN ANY SUPPORTED DIRECTORY");
-        return false;
-    }
-
-    private static boolean ensureExecutablePermissions(File executable, SimpleDateFormat formatter) {
-        boolean ownerReadable = executable.setReadable(true, true);
-        boolean ownerWritable = executable.setWritable(true, true);
-        boolean ownerExecutable = executable.setExecutable(true, true);
-
-        if (!ownerReadable || !ownerWritable || !ownerExecutable) {
-            appendDebugLog(formatter, "EXECUTABLE PERMISSION PRIMING FAILED FOR rsync");
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                Os.chmod(executable.getAbsolutePath(), 0755);
-            } catch (ErrnoException e) {
-                Log.w("MainActivity", "Unable to chmod rsync binary", e);
-                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
-            }
-        }
-
-        if (!executable.canExecute()) {
-            try {
-                Process process = new ProcessBuilder("/system/bin/chmod", "755", executable.getAbsolutePath()).start();
-                int exitCode = process.waitFor();
-                if (exitCode != 0) {
-                    appendDebugLog(formatter, "EXECUTABLE PERMISSION CHMOD FALLBACK FAILED WITH CODE " + exitCode);
-                }
-            } catch (Exception e) {
-                Log.w("MainActivity", "chmod fallback failed", e);
-                appendDebugLog(formatter, "EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage()));
-            }
-        }
-
-        if (!executable.canExecute()) {
-            appendDebugLog(formatter, "EXECUTABLE PERMISSION CHECK FAILED FOR rsync");
-            return false;
-        }
-
-        return true;
-    }
-
-    @NonNull
-    private static List<File> getCandidateExecutableDirectories(@NonNull Context context) {
-        Set<File> directories = new LinkedHashSet<>();
-        File filesDir = context.getFilesDir();
-        if (filesDir != null) {
-            directories.add(filesDir);
-        }
-
-        File noBackupDir = context.getNoBackupFilesDir();
-        if (noBackupDir != null) {
-            directories.add(noBackupDir);
-        }
-
-        File codeCacheDir = context.getCodeCacheDir();
-        if (codeCacheDir != null) {
-            directories.add(codeCacheDir);
-        }
-
         try {
-            File execDir = context.getDir("exec", Context.MODE_PRIVATE);
-            if (execDir != null) {
-                directories.add(execDir);
-            }
-        } catch (Exception e) {
-            Log.w("MainActivity", "Unable to create exec directory", e);
-        }
-
-        return new ArrayList<>(directories);
-    }
-
-    private static boolean verifyExecutable(@NonNull Context context, @NonNull File executable, SimpleDateFormat formatter) {
-        Process process = null;
-        try {
-            ProcessBuilder builder = new ProcessBuilder(executable.getAbsolutePath(), "--version");
-            builder.redirectErrorStream(true);
-            Map<String, String> environment = builder.environment();
-            String existingPath = environment.get("PATH");
-            String parentPath = executable.getParent();
-            if (parentPath != null) {
-                environment.put("PATH", parentPath + (existingPath == null ? "" : ":" + existingPath));
-            }
-            String nativeLibraryDir = context.getApplicationInfo().nativeLibraryDir;
-            if (nativeLibraryDir != null) {
-                environment.put("LD_LIBRARY_PATH", nativeLibraryDir);
-            }
-
-            process = builder.start();
-
-            StringBuilder builderOutput = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    builderOutput.append(line).append('\n');
-                }
-            }
-
-            int exitCode = process.waitFor();
-            if (exitCode == 0) {
-                return true;
-            }
-
-            appendDebugLog(formatter, "EXECUTABLE SELF-TEST FAILED WITH CODE " + exitCode + " FOR "
-                    + executable.getAbsolutePath() + " OUTPUT: \n" + builderOutput);
-        } catch (IOException e) {
-            String message = e.getMessage() == null ? e.toString() : e.getMessage();
-            appendDebugLog(formatter, "EXECUTABLE SELF-TEST IO EXCEPTION: \n" + message);
-            if (message.contains("Permission denied") || message.contains("error=13")) {
-                appendDebugLog(formatter, "EXECUTABLE SELF-TEST FAILED DUE TO EXECUTION PERMISSION RESTRICTIONS");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            appendDebugLog(formatter, "EXECUTABLE SELF-TEST INTERRUPTED: \n" + e);
-        } finally {
-            if (process != null) {
-                process.destroy();
-            }
-        }
-
-        return false;
-    }
-
-    @NonNull
-    private static List<String> getCandidatePathsForAbi(@NonNull String abi) {
-        List<String> paths = RSYNC_ASSET_PATHS.get(abi);
-        if (paths != null) {
-            return paths;
-        }
-        return Collections.emptyList();
-    }
-
-    @Nullable
-    private static String resolveRsyncBinaryAsset(@NonNull Context context, SimpleDateFormat formatter) {
-        AssetManager assets = context.getAssets();
-
-        for (String abi : Build.SUPPORTED_ABIS) {
-            List<String> candidatePaths = getCandidatePathsForAbi(abi);
-            if (candidatePaths.isEmpty()) {
-                continue;
-            }
-
-            for (String candidate : candidatePaths) {
-                if (assetExists(assets, candidate)) {
-                    boolean isPrimaryAbi = Build.SUPPORTED_ABIS.length > 0 && Objects.equals(abi, Build.SUPPORTED_ABIS[0]);
-                    if (!isPrimaryAbi) {
-                        appendDebugLog(formatter, "FALLBACK TO RSYNC BINARY " + candidate + " FOR ABI " + abi);
-                    }
-                    return candidate;
-                }
-            }
-
-            appendDebugLog(formatter, "NO RSYNC BINARY PACKAGED FOR ABI " + abi + " (checked " + candidatePaths + ")");
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            String[] supported64BitAbis = Build.SUPPORTED_64_BIT_ABIS;
-            String[] supported32BitAbis = Build.SUPPORTED_32_BIT_ABIS;
-            if (supported64BitAbis != null && supported64BitAbis.length > 0
-                    && (supported32BitAbis == null || supported32BitAbis.length == 0)) {
-                appendDebugLog(formatter,
-                        "DEVICE REPORTS ONLY 64-BIT ABIS " + Arrays.toString(supported64BitAbis)
-                                + " BUT NO 64-BIT RSYNC BINARY IS PACKAGED. PLEASE BUNDLE AN arm64-v8a BINARY.");
-            }
-        }
-
-        return null;
-    }
-
-    private static boolean assetExists(@NonNull AssetManager assets, @NonNull String assetPath) {
-        try (InputStream ignored = assets.open(assetPath)) {
+            RsyncBridge.ensureLoaded();
+            appendDebugLog(formatter, "RSYNC SHARED LIBRARY LOADED SUCCESSFULLY");
             return true;
-        } catch (IOException e) {
+        } catch (UnsatisfiedLinkError | SecurityException error) {
+            String message = "FAILED TO LOAD RSYNC SHARED LIBRARY: " + error.getMessage();
+            appendDebugLog(formatter, message);
+            Log.e("MainActivity", message, error);
             return false;
         }
     }

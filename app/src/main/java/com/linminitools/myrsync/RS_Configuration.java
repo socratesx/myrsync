@@ -34,12 +34,10 @@ import androidx.documentfile.provider.DocumentFile;
 import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -247,71 +245,44 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 update_result(context, "Failed to prepare rsync executable", schedulerKey);
                                 return;
                             }
-                            File defaultRsyncLocation = new File(context.getFilesDir(), "rsync");
-                            SharedPreferences installPrefs = context.getSharedPreferences("Install", MODE_PRIVATE);
-                            String storedExecutable = installPrefs.getString("rsync_binary", defaultRsyncLocation.getAbsolutePath());
-                            File rsyncExecutable = new File(storedExecutable);
-                            if (!rsyncExecutable.exists()) {
-                                rsyncExecutable = defaultRsyncLocation;
-                                storedExecutable = rsyncExecutable.getAbsolutePath();
-                            }
-
-                            String executableDirectory = rsyncExecutable.getParent();
-                            if (executableDirectory == null) {
-                                executableDirectory = context.getFilesDir().getPath();
-                            }
-
-                            ProcessBuilder p = new ProcessBuilder();
                             Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
-                            String cmd_string="";
-                            String rsync_bin = rsyncExecutable.getAbsolutePath();
+                            String commandLine;
                             if (mode.equals("Push")) {
-                                cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
-                                //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
-                            }
-                            else {
-                                if ((PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access",false))){
-                                    //p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                    cmd_string = "su -c "+ rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
-
+                                commandLine = "rsync " + options + " --log-file " + log + " " + local_path + " " + cmd;
+                            } else {
+                                boolean wantsRoot = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access", false);
+                                if (wantsRoot) {
+                                    String rootWarning = "ROOT EXECUTION REQUESTED BUT NOT SUPPORTED IN SHARED LIBRARY MODE";
+                                    MainActivity.appendDebugLog(formatter, rootWarning);
+                                    MainActivity.appendRsyncLog(formatter, rootWarning);
                                 }
-                                else {
-                                    //p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                    cmd_string = rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
-                                }
-
-                            }
-                            Log.d("CMD_STRING",cmd_string);
-
-                            p.command(tokenizeCommand(cmd_string));
-
-                            Log.d("FILES_FOLDER", executableDirectory);
-                            p.environment().put("PATH", executableDirectory+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
-                            String nativeLibraryDir = context.getApplicationInfo().nativeLibraryDir;
-                            if (nativeLibraryDir != null) {
-                                p.environment().put("LD_LIBRARY_PATH", nativeLibraryDir);
-                            }
-                            p.redirectErrorStream(true);
-                            Process process=p.start();
-
-                            BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                            StringBuilder builder = new StringBuilder();
-                            String line;
-
-                            while ( (line = std_out.readLine()) != null) {
-                                builder.append(line);
-                                builder.append(System.getProperty("line.separator"));
+                                commandLine = "rsync " + options + " --log-file " + log + " " + cmd + " " + local_path;
                             }
 
-                            String result = builder.toString();
+                            MainActivity.appendDebugLog(formatter, "RSYNC COMMAND LINE: " + commandLine);
+                            String[] argv = tokenizeCommand(commandLine);
 
-                            MainActivity.appendDebugLog(formatter, "OUT_STREAM = " + result);
-                            if (!result.isEmpty()) {
-                                MainActivity.appendRsyncLog(formatter, "RSYNC OUTPUT\n" + result);
+                            RsyncResult rsyncResult = RsyncBridge.runRsync(argv);
+                            String stdout = rsyncResult.getStdout();
+                            String stderr = rsyncResult.getStderr();
+
+                            if (!stdout.isEmpty()) {
+                                MainActivity.appendDebugLog(formatter, "RSYNC STDOUT =\n" + stdout);
+                                MainActivity.appendRsyncLog(formatter, "RSYNC STDOUT\n" + stdout);
+                            }
+                            if (!stderr.isEmpty()) {
+                                MainActivity.appendDebugLog(formatter, "RSYNC STDERR =\n" + stderr);
+                                MainActivity.appendRsyncLog(formatter, "RSYNC STDERR\n" + stderr);
                             }
 
-                            if (result.equals("")) result="OK";
-                            else result="Warning! Check Log!";
+                            MainActivity.appendDebugLog(formatter, "RSYNC EXIT CODE = " + rsyncResult.getExitCode());
+
+                            String result;
+                            if (rsyncResult.getExitCode() == 0) {
+                                result = "OK";
+                            } else {
+                                result = "Warning! Check Log!";
+                            }
 
 
                             if (scheduler_id!=null) {
@@ -497,3 +468,5 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     }
 
+import com.linminitools.myrsync.rsync.RsyncBridge;
+import com.linminitools.myrsync.rsync.RsyncResult;
