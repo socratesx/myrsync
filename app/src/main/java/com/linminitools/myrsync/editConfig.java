@@ -32,6 +32,7 @@ public class editConfig extends addConfig {
         Button bt_exec = findViewById(R.id.bt_execute);
 
         ImageButton info = findViewById(R.id.ib_info_daemon);
+        info.setImageDrawable(null);
         info.setImageResource(R.drawable.ic_info_black_24dp);
 
         save.setEnabled(true);

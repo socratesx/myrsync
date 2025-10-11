@@ -70,7 +70,8 @@
             android:label="Edit Configuration"
             android:windowSoftInputMode="stateHidden"
             android:parentActivityName=".FragmentInitializer"
-            android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+            android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+            android:hardwareAccelerated="false">
             <meta-data
                 android:name="androidx.core.app.NavUtils.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
