@@ -14,6 +14,8 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -23,6 +25,8 @@ import static com.linminitools.myrsync.myRsyncApplication.configs;
 import com.linminitools.myrsync.util.UiSafety;
 
 public class editConfig extends addConfig {
+
+    private static final String TAG = "editConfig";
 
 
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,14 +163,31 @@ public class editConfig extends addConfig {
                         });
                     }
                     else if (request==2){
-                        c.executeConfig(getApplication().getBaseContext(),null);
+                        Locale currentLocale = getApplication().getBaseContext().getResources().getConfiguration().locale;
+                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", currentLocale);
+                        try {
+                            Log.i(TAG, "Manually executing configuration '" + c.name + "' (id=" + c.id + ")");
+                            MainActivity.appendDebugLog(formatter, "CONFIGURATION RUN " + c.name + " TRIGGERED FROM EDIT SCREEN");
+                            c.executeConfig(getApplication().getBaseContext(),null);
 
-                        CharSequence text = "Rsync Job Started";
-                        int duration = Toast.LENGTH_SHORT;
-                        UiSafety.runOnUiThreadIfAlive(this, () -> {
-                            Toast toast = Toast.makeText(appContext, text, duration);
-                            toast.show();
-                        });
+                            CharSequence text = "Rsync Job Started";
+                            int duration = Toast.LENGTH_SHORT;
+                            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                                Toast toast = Toast.makeText(appContext, text, duration);
+                                toast.show();
+                            });
+                        } catch (Exception e) {
+                            String errorMessage = e.getMessage() == null ? e.toString() : e.getMessage();
+                            Log.e(TAG, "Failed to execute configuration '" + c.name + "' from edit screen", e);
+                            MainActivity.appendDebugLog(formatter, "CONFIGURATION RUN " + c.name + " FAILED TO START FROM EDIT SCREEN: " + errorMessage);
+                            MainActivity.appendRsyncLog(formatter, "CONFIGURATION RUN " + c.name + " FAILED TO START FROM EDIT SCREEN: " + errorMessage);
+                            CharSequence text = "Failed to start Rsync Job";
+                            int duration = Toast.LENGTH_LONG;
+                            UiSafety.runOnUiThreadIfAlive(this, () -> {
+                                Toast toast = Toast.makeText(appContext, text, duration);
+                                toast.show();
+                            });
+                        }
                     }
                     break;
                 }

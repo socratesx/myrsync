@@ -58,6 +58,8 @@ import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
 
+    private static final String TAG = "RS_Configuration";
+
     String rs_ip, rs_user, rs_module, rs_options, local_path, name, rs_mode, adv_options;
     Long addedOn;
     String rs_port="873";
@@ -156,166 +158,211 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     void executeConfig(final Context context, final Integer scheduler_id){
 
-        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
-        boolean sw_wifi = sched_prefs.getBoolean("wifi_switch_"+ String.valueOf(scheduler_id),false);
-        String wifi_ssid = sched_prefs.getString("ssid_"+ String.valueOf(scheduler_id),"");
-        int sched;
-        String ssid = get_current_ssid(context);
-        if (scheduler_id == null) sched =-1;
-        else sched = scheduler_id;
-        //Log.d("WIFI_SSID",ssid);
-        //Log.d("WIFI_SET",wifi_ssid);
-        //Log.d("WIFI_SW",String.valueOf(sw_wifi));
+        final Locale outerLocale = context.getResources().getConfiguration().locale;
+        final SimpleDateFormat outerFormatter = new SimpleDateFormat("EEE, dd/MM HH:mm", outerLocale);
+        final int schedulerKey = scheduler_id == null ? -1 : scheduler_id;
 
-        if (ssid == null) {
-            send_notification(context,0);
-            update_result(context,"Aborted",sched);
-        }
-        else {
-            if (sw_wifi && ssid.equals("none")){
-                send_notification(context,1);
-                update_result(context,"Aborted",sched);
-            }
-            else if (sw_wifi && !ssid.equals(wifi_ssid) && !wifi_ssid.isEmpty()){
-                send_notification(context,2);
+        Log.i(TAG, "executeConfig requested for configuration '" + name + "' (id=" + id + ") with schedulerId=" + scheduler_id);
+
+        try {
+            SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+            boolean sw_wifi = sched_prefs.getBoolean("wifi_switch_"+ String.valueOf(scheduler_id),false);
+            String wifi_ssid = sched_prefs.getString("ssid_"+ String.valueOf(scheduler_id),"");
+            int sched;
+            String ssid = get_current_ssid(context);
+            if (scheduler_id == null) sched =-1;
+            else sched = scheduler_id;
+
+            Log.i(TAG, "WiFi constraint enabled=" + sw_wifi + ", expected SSID='" + wifi_ssid + "', current SSID='" + ssid + "'");
+
+            if (ssid == null) {
+                String message = "CONFIGURATION RUN " + name + " ABORTED: network is not connected";
+                Log.w(TAG, message);
+                MainActivity.appendDebugLog(outerFormatter, message);
+                send_notification(context,0);
                 update_result(context,"Aborted",sched);
             }
             else {
-                send_notification(context,3);
-                final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
-                final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
-                final int id = this.id;
+                if (sw_wifi && ssid.equals("none")){
+                    String message = "CONFIGURATION RUN " + name + " ABORTED: WiFi switch enabled but device not connected to WiFi";
+                    Log.w(TAG, message);
+                    MainActivity.appendDebugLog(outerFormatter, message);
+                    send_notification(context,1);
+                    update_result(context,"Aborted",sched);
+                }
+                else if (sw_wifi && !ssid.equals(wifi_ssid) && !wifi_ssid.isEmpty()){
+                    String message = "CONFIGURATION RUN " + name + " ABORTED: connected SSID '" + ssid + "' does not match expected '" + wifi_ssid + "'";
+                    Log.w(TAG, message);
+                    MainActivity.appendDebugLog(outerFormatter, message);
+                    send_notification(context,2);
+                    update_result(context,"Aborted",sched);
+                }
+                else {
+                    Log.i(TAG, "Configuration '" + name + "' passed network checks. Preparing execution thread");
+                    send_notification(context,3);
+                    final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+                    final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
+                    final int id = this.id;
 
-                final String options = this.rs_options;
-                final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
-                final String local_path=this.local_path;
+                    final String options = this.rs_options;
+                    final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
+                    final String local_path=this.local_path;
 
-                String rsync_user_string=this.rs_user+"@";
-                if(this.rs_user.isEmpty()) rsync_user_string="";
+                    String rsync_user_string=this.rs_user+"@";
+                    if(this.rs_user.isEmpty()) rsync_user_string="";
 
-                final String cmd = "rsync://"+rsync_user_string+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
-                String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
-                debug_log = new File(Debug_log_path);
-                final String mode= this.rs_mode;
+                    final String cmd = "rsync://"+rsync_user_string+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
+                    String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
+                    debug_log = new File(Debug_log_path);
+                    final String mode= this.rs_mode;
 
-                //File selected_dir = new File(this.local_path);
-                //selected_dir.setWritable(true);
-
-
-                final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
-                final File f = new File(local_path);
-                final DocumentFile df = DocumentFile.fromFile(f);
-
-
-                File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
-
-                Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
-
-
-                Thread t = new Thread(){
-                    @SuppressLint("ApplySharedPref")
-                    @Override
-                    public void run() {
-                        Locale current_locale = context.getResources().getConfiguration().locale;
-                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
-
-                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
-                        SharedPreferences.Editor pref_Edit= pref.edit();
-                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
-                        try {
-
-                            if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
+                    final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
+                    final File f = new File(local_path);
+                    final DocumentFile df = DocumentFile.fromFile(f);
 
 
-                            pref_Edit.putBoolean("is_running",true);
-                            pref_Edit.commit();
+                    File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
 
-                            appendDebugLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
-                            appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
-                            if (!MainActivity.ensureRsyncExecutable(context, false, formatter)) {
-                                String message = "CONFIGURATION RUN " + name + " FAILED: unable to prepare rsync executable";
-                                appendDebugLog(formatter, message);
-                                appendRsyncLog(formatter, message);
-                                if (pref_Edit != null) {
-                                    pref_Edit.putBoolean("is_running", false);
-                                    pref_Edit.commit();
+                    Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
+
+
+                    Thread t = new Thread("RsyncConfig-" + id){
+                        @SuppressLint("ApplySharedPref")
+                        @Override
+                        public void run() {
+                            Locale current_locale = context.getResources().getConfiguration().locale;
+                            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+
+                            SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
+                            SharedPreferences.Editor pref_Edit= pref.edit();
+                            SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+                            boolean schedulerStatusUpdated = false;
+                            try {
+
+                                if (scheduler_id!=null) {
+                                    Log.i(TAG, "Marking scheduler " + scheduler_id + " as running for configuration '" + name + "'");
+                                    sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id),true).commit();
                                 }
-                                if (scheduler_id != null) {
-                                    sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
-                                }
-                                int schedulerKey = scheduler_id == null ? -1 : scheduler_id;
-                                update_result(context, "Failed to prepare rsync executable", schedulerKey);
-                                return;
-                            }
-                            Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
-                            String commandLine;
-                            if (mode.equals("Push")) {
-                                commandLine = "rsync " + options + " --log-file " + log + " " + local_path + " " + cmd;
-                            } else {
-                                boolean wantsRoot = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access", false);
-                                if (wantsRoot) {
-                                    String rootWarning = "ROOT EXECUTION REQUESTED BUT NOT SUPPORTED IN SHARED LIBRARY MODE";
-                                    MainActivity.appendDebugLog(formatter, rootWarning);
-                                    MainActivity.appendRsyncLog(formatter, rootWarning);
-                                }
-                                commandLine = "rsync " + options + " --log-file " + log + " " + cmd + " " + local_path;
-                            }
-
-                            MainActivity.appendDebugLog(formatter, "RSYNC COMMAND LINE: " + commandLine);
-                            String[] argv = tokenizeCommand(commandLine);
-
-                            RsyncResult rsyncResult = RsyncBridge.runRsync(argv);
-                            String stdout = rsyncResult.getStdout();
-                            String stderr = rsyncResult.getStderr();
-
-                            if (!stdout.isEmpty()) {
-                                MainActivity.appendDebugLog(formatter, "RSYNC STDOUT =\n" + stdout);
-                                MainActivity.appendRsyncLog(formatter, "RSYNC STDOUT\n" + stdout);
-                            }
-                            if (!stderr.isEmpty()) {
-                                MainActivity.appendDebugLog(formatter, "RSYNC STDERR =\n" + stderr);
-                                MainActivity.appendRsyncLog(formatter, "RSYNC STDERR\n" + stderr);
-                            }
-
-                            MainActivity.appendDebugLog(formatter, "RSYNC EXIT CODE = " + rsyncResult.getExitCode());
-
-                            String result;
-                            if (rsyncResult.getExitCode() == 0) {
-                                result = "OK";
-                            } else {
-                                result = "Warning! Check Log!";
-                            }
 
 
-                            if (scheduler_id!=null) {
-                                sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
-                                update_result(context,result,scheduler_id);
-                            }
-                            MainActivity.appendDebugLog(formatter, "CONFIGURATION RUN " + name + " FINISHED");
-                            MainActivity.appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " FINISHED WITH RESULT: " + result);
-                        }
-                        catch (Exception e) {
-                            String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage());
-                            MainActivity.appendDebugLog(formatter, message);
-                            MainActivity.appendRsyncLog(formatter, message);
-                            Log.e("RS_Configuration", "Unable to execute rsync", e);
-                            if (pref_Edit != null) {
-                                pref_Edit.putBoolean("is_running", false);
+                                pref_Edit.putBoolean("is_running",true);
                                 pref_Edit.commit();
+
+                                appendDebugLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
+                                appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " STARTED");
+                                if (!MainActivity.ensureRsyncExecutable(context, false, formatter)) {
+                                    String message = "CONFIGURATION RUN " + name + " FAILED: unable to prepare rsync executable";
+                                    appendDebugLog(formatter, message);
+                                    appendRsyncLog(formatter, message);
+                                    Log.e(TAG, message);
+                                    if (scheduler_id != null) {
+                                        sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                        schedulerStatusUpdated = true;
+                                    }
+                                    update_result(context, "Failed to prepare rsync executable", schedulerKey);
+                                    return;
+                                }
+                                Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
+                                String commandLine;
+                                if (mode.equals("Push")) {
+                                    commandLine = "rsync " + options + " --log-file " + log + " " + local_path + " " + cmd;
+                                } else {
+                                    boolean wantsRoot = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access", false);
+                                    if (wantsRoot) {
+                                        String rootWarning = "ROOT EXECUTION REQUESTED BUT NOT SUPPORTED IN SHARED LIBRARY MODE";
+                                        MainActivity.appendDebugLog(formatter, rootWarning);
+                                        MainActivity.appendRsyncLog(formatter, rootWarning);
+                                    }
+                                    commandLine = "rsync " + options + " --log-file " + log + " " + cmd + " " + local_path;
+                                }
+
+                                MainActivity.appendDebugLog(formatter, "RSYNC COMMAND LINE: " + commandLine);
+                                Log.i(TAG, "Executing command: " + commandLine);
+                                String[] argv = tokenizeCommand(commandLine);
+
+                                RsyncResult rsyncResult = RsyncBridge.runRsync(argv);
+                                String stdout = rsyncResult.getStdout();
+                                String stderr = rsyncResult.getStderr();
+
+                                if (!stdout.isEmpty()) {
+                                    MainActivity.appendDebugLog(formatter, "RSYNC STDOUT =\n" + stdout);
+                                    MainActivity.appendRsyncLog(formatter, "RSYNC STDOUT\n" + stdout);
+                                }
+                                if (!stderr.isEmpty()) {
+                                    MainActivity.appendDebugLog(formatter, "RSYNC STDERR =\n" + stderr);
+                                    MainActivity.appendRsyncLog(formatter, "RSYNC STDERR\n" + stderr);
+                                }
+
+                                MainActivity.appendDebugLog(formatter, "RSYNC EXIT CODE = " + rsyncResult.getExitCode());
+                                Log.i(TAG, "Rsync exit code for configuration '" + name + "' = " + rsyncResult.getExitCode());
+
+                                String result;
+                                if (rsyncResult.getExitCode() == 0) {
+                                    result = "OK";
+                                } else {
+                                    result = "Warning! Check Log!";
+                                }
+
+
+                                update_result(context,result,schedulerKey);
+                                if (scheduler_id!=null) {
+                                    sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
+                                    schedulerStatusUpdated = true;
+                                }
+                                MainActivity.appendDebugLog(formatter, "CONFIGURATION RUN " + name + " FINISHED");
+                                MainActivity.appendRsyncLog(formatter, "CONFIGURATION RUN " + name + " FINISHED WITH RESULT: " + result);
+                                Log.i(TAG, "Configuration '" + name + "' finished with result: " + result);
                             }
-                            if (scheduler_id != null && sched_prefs != null) {
-                                sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
-                                update_result(context, "Failed", scheduler_id);
-                            } else {
-                                update_result(context, "Failed", -1);
+                            catch (Exception e) {
+                                String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + (e.getMessage() == null ? e.toString() : e.getMessage());
+                                MainActivity.appendDebugLog(formatter, message);
+                                MainActivity.appendRsyncLog(formatter, message);
+                                Log.e(TAG, "Unable to execute rsync for configuration '" + name + "'", e);
+                                if (scheduler_id != null && sched_prefs != null) {
+                                    sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                    schedulerStatusUpdated = true;
+                                }
+                                update_result(context, "Failed", schedulerKey);
+                            }
+                            finally {
+                                try {
+                                    if (pref_Edit != null) {
+                                        pref_Edit.putBoolean("is_running", false);
+                                        pref_Edit.commit();
+                                    }
+                                } catch (Exception commitError) {
+                                    Log.w(TAG, "Unable to reset configuration running flag for '" + name + "'", commitError);
+                                }
+                                if (scheduler_id != null && sched_prefs != null && !schedulerStatusUpdated) {
+                                    try {
+                                        sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                    } catch (Exception schedulerError) {
+                                        Log.w(TAG, "Unable to reset scheduler running flag for configuration '" + name + "'", schedulerError);
+                                    }
+                                }
                             }
                         }
+                    };
+
+                    try {
+                        t.start();
+                        Log.i(TAG, "Execution thread started for configuration '" + name + "'");
+                    } catch (Exception threadError) {
+                        String message = "CONFIGURATION RUN " + name + " FAILED TO START THREAD: " + threadError.getMessage();
+                        MainActivity.appendDebugLog(outerFormatter, message);
+                        MainActivity.appendRsyncLog(outerFormatter, message);
+                        Log.e(TAG, "Unable to start execution thread for configuration '" + name + "'", threadError);
+                        update_result(context, "Failed", schedulerKey);
                     }
-                };
 
-                t.start();
-
+                }
             }
+        } catch (Exception generalError) {
+            String message = "CONFIGURATION RUN " + name + " FAILED BEFORE START: " + (generalError.getMessage() == null ? generalError.toString() : generalError.getMessage());
+            MainActivity.appendDebugLog(outerFormatter, message);
+            MainActivity.appendRsyncLog(outerFormatter, message);
+            Log.e(TAG, "Unexpected failure while preparing configuration execution for '" + name + "'", generalError);
+            update_result(context, "Failed", schedulerKey);
         }
     }
 
