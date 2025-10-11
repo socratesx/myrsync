@@ -48,25 +48,35 @@ STRIP="$TOOLCHAIN/bin/llvm-strip"
 mkdir -p "$RSYNC_SRC_DIR"
 
 if [[ ! -d "$RSYNC_SRC_DIR/.git" ]]; then
-  echo "[rsync-android] Fetching rsync sources from $RSYNC_REPO_URL ($RSYNC_VERSION)"
+  echo "[rsync-android] Fetching rsync sources from $RSYNC_REPO_URL"
   rm -rf "$RSYNC_SRC_DIR"
-  git clone --branch "$RSYNC_VERSION" --depth 1 "$RSYNC_REPO_URL" "$RSYNC_SRC_DIR"
-else
-  pushd "$RSYNC_SRC_DIR" >/dev/null
-  CURRENT_REMOTE=$(git config --get remote.origin.url || echo "")
-  if [[ "$CURRENT_REMOTE" != "$RSYNC_REPO_URL" ]]; then
-    echo "[rsync-android] Existing rsync checkout points to $CURRENT_REMOTE – resetting to $RSYNC_REPO_URL"
-    rm -rf "$RSYNC_SRC_DIR"
-    git clone --branch "$RSYNC_VERSION" --depth 1 "$RSYNC_REPO_URL" "$RSYNC_SRC_DIR"
-  else
-    git fetch origin "$RSYNC_VERSION" --depth 1
-    git checkout --force "$RSYNC_VERSION"
-    git reset --hard "origin/$RSYNC_VERSION"
-  fi
-  popd >/dev/null
+  git clone --depth 1 "$RSYNC_REPO_URL" "$RSYNC_SRC_DIR"
 fi
 
 pushd "$RSYNC_SRC_DIR" >/dev/null
+
+CURRENT_REMOTE=$(git config --get remote.origin.url || echo "")
+if [[ "$CURRENT_REMOTE" != "$RSYNC_REPO_URL" ]]; then
+  popd >/dev/null
+  echo "[rsync-android] Existing rsync checkout points to $CURRENT_REMOTE – resetting to $RSYNC_REPO_URL"
+  rm -rf "$RSYNC_SRC_DIR"
+  git clone --depth 1 "$RSYNC_REPO_URL" "$RSYNC_SRC_DIR"
+  pushd "$RSYNC_SRC_DIR" >/dev/null
+fi
+
+echo "[rsync-android] Checking out $RSYNC_VERSION"
+
+if git fetch --depth 1 origin tag "$RSYNC_VERSION" >/dev/null 2>&1; then
+  git checkout --force "refs/tags/$RSYNC_VERSION"
+  git reset --hard "refs/tags/$RSYNC_VERSION"
+elif git fetch --depth 1 origin "$RSYNC_VERSION" >/dev/null 2>&1; then
+  git checkout --force -B "$RSYNC_VERSION" "origin/$RSYNC_VERSION"
+  git reset --hard "origin/$RSYNC_VERSION"
+else
+  echo "[rsync-android] Unable to fetch $RSYNC_VERSION from $RSYNC_REPO_URL" >&2
+  echo "[rsync-android] Verify that the tag or branch exists and that the network is available." >&2
+  exit 1
+fi
 
 autoconf
 
