@@ -1,0 +1,3 @@
+/home/vvasiljevic/IdeaProjects/neos-myrsync/app/.cxx/Debug/2x96j3q4/arm64-v8a/CMakeFiles/myrsync-jni.dir
+/home/vvasiljevic/IdeaProjects/neos-myrsync/app/.cxx/Debug/2x96j3q4/arm64-v8a/CMakeFiles/edit_cache.dir
+/home/vvasiljevic/IdeaProjects/neos-myrsync/app/.cxx/Debug/2x96j3q4/arm64-v8a/CMakeFiles/rebuild_cache.dir

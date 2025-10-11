@@ -1,0 +1,1 @@
+/home/vvasiljevic/IdeaProjects/neos-myrsync/app/src/main/cpp/CMakeLists.txt

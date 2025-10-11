@@ -1,0 +1,1 @@
+/home/vvasiljevic/IdeaProjects/neos-myrsync/app/build/intermediates/cxx/Debug/2x96j3q4/obj/arm64-v8a

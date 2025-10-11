@@ -49,6 +49,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.StringTokenizer;
+import com.linminitools.myrsync.rsync.RsyncBridge;
+import com.linminitools.myrsync.rsync.RsyncResult;
 
 import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
@@ -467,6 +469,3 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         }
 
     }
-
-import com.linminitools.myrsync.rsync.RsyncBridge;
-import com.linminitools.myrsync.rsync.RsyncResult;
