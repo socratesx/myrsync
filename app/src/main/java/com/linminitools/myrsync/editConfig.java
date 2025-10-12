@@ -218,14 +218,10 @@ public class editConfig extends addConfig {
 
 
     @Override
-    protected void onStop() {
-        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
-        super.onStop();
-    }
-
-    @Override
     protected void onDestroy() {
-        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
+        final View decorView = getWindow() != null ? getWindow().getDecorView() : null;
         super.onDestroy();
+        // Only tear the decor view down after destruction to avoid races with the renderer.
+        UiSafety.safelyTearDownViewTree(decorView);
     }
 }

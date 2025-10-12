@@ -622,15 +622,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
-        super.onStop();
-    }
-
-    @Override
     protected void onDestroy() {
-        UiSafety.safelyTearDownViewTree(getWindow().getDecorView());
+        final View decorView = getWindow() != null ? getWindow().getDecorView() : null;
         super.onDestroy();
+        // The decor view is only safe to tear down once the Activity is fully destroyed.
+        UiSafety.safelyTearDownViewTree(decorView);
     }
 
 
