@@ -14,15 +14,16 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.provider.DocumentFile;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import com.google.android.material.tabs.TabLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
+import androidx.viewpager.widget.ViewPager;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -57,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
     public static final String SELECTED_TAB = "selected_tab";
 
     private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int MANAGE_STORAGE_REQUEST_CODE = 100;
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 101;
     public static Context appContext;
     static File log_file;
     static File debug_log;
@@ -69,8 +72,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         appContext = getApplicationContext();
 
-        if (Build.VERSION.SDK_INT >= 23)
-            if (!checkPermission()) requestPermission(); // Code for permission
+        requestRequiredPermissions();
 
         Locale current_locale = appContext.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
@@ -103,70 +105,24 @@ public class MainActivity extends AppCompatActivity {
             tab.select();
         }
 
-        Boolean is_first_run = getSharedPreferences("Install", MODE_PRIVATE).getBoolean("first_run", true);
-        //Log.d("ARCH", );
+        String rsyncBinaryPath = getApplicationInfo().nativeLibraryDir + "/librsync.so";
+        getSharedPreferences("Install", MODE_PRIVATE).edit()
+                .putString("rsync_binary", rsyncBinaryPath)
+                .apply();
+
+        boolean is_first_run = getSharedPreferences("Install", MODE_PRIVATE).getBoolean("first_run", true);
         if (is_first_run) {
             getSharedPreferences("Install", MODE_PRIVATE).edit().putBoolean("first_run", false).apply();
-            AssetManager AM = this.getAssets();
-
             try {
-
-                String appFileDirectory = getFilesDir().getPath();
-                String executableFilePath = appFileDirectory + "/rsync";
-
-                File old_file = new File(executableFilePath);
-                old_file.delete();
-
-                getSharedPreferences("Install", MODE_PRIVATE).edit().putString("rsync_binary", executableFilePath).apply();
-
-
-                String bin_path="rsync_binary/x86_64/rsync";
-
-
-                for (String arch : Build.SUPPORTED_ABIS) if (arch.equals("armeabi-v7a")) bin_path = "rsync_binary/armv7/rsync";
-
-                Log.d ("BINARY", bin_path);
-
-                InputStream in = AM.open(bin_path, AssetManager.ACCESS_BUFFER);
-
-                File rsync_executable = new File(executableFilePath);
-
-
-                FileOutputStream fos = new FileOutputStream(rsync_executable);
-                byte[] buffer = new byte[in.available()];
-
-                in.read(buffer);
-                in.close();
-
-                fos.write(buffer);
-
-                fos.close();
-                in.close();
-
-                rsync_executable.setExecutable(true);
-
-                try {
-                    FileWriter debug_writer = new FileWriter(debug_log, true);
-                    CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "FIRST RUN INITIALIZATION {\n"+
-                            "SUPPORTED ABIS: "+Arrays.toString(Build.SUPPORTED_ABIS)+"\nSDK_Version: "+ String.valueOf(Build.VERSION.SDK_INT)+"\n}";
-                    debug_writer.append(message);
-                    debug_writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
-
-            } catch (Exception e) {
-
-                try {
-                    FileWriter debug_writer = new FileWriter(debug_log, true);
-                    String exc = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] "+"EXCEPTION CAUGHT: \n" + e.getMessage();
-                    debug_writer.append(exc);
-                    debug_writer.close();
-                } catch (IOException e1) {
-                    e1.printStackTrace();
-                }
+                FileWriter debug_writer = new FileWriter(debug_log, true);
+                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "FIRST RUN INITIALIZATION {\n"+
+                        "RSYNC BINARY: " + rsyncBinaryPath + "\n" +
+                        "SUPPORTED ABIS: "+Arrays.toString(Build.SUPPORTED_ABIS)+"\nSDK_Version: "+ Build.VERSION.SDK_INT+"\n}";
+                debug_writer.append(message);
+                debug_writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
         }
     }
 
@@ -447,30 +403,37 @@ public class MainActivity extends AppCompatActivity {
         return "com.google.android.apps.photos.content".equals(uri.getAuthority());
     }
 
-    private boolean checkPermission() {
-        int result = ContextCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        return result == PackageManager.PERMISSION_GRANTED;
-    }
+    private void requestRequiredPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+            }
+        }
 
-    private void requestPermission() {
-
-        if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-            Toast.makeText(MainActivity.this, "Write External Storage permission allows to export logfile to your external storage. Please allow this permission in App Settings.", Toast.LENGTH_LONG).show();
-        } else {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_REQUEST_CODE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST_CODE);
+            }
         }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_CODE:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.e("value", "Permission Granted, Now you can use local drive .");
-                } else {
-                    Log.e("value", "Permission Denied, You cannot use local drive .");
-                }
-                break;
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Log.d("Permissions", "Permission granted for request code: " + requestCode);
+        } else {
+            Log.d("Permissions", "Permission denied for request code: " + requestCode);
         }
     }
 

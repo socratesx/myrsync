@@ -51,8 +51,8 @@ public class AlarmReceiver extends BroadcastReceiver {
                         TimePicker tp = new TimePicker(ctx);
 
                         tp.setIs24HourView(true);
-                        tp.setCurrentHour(sched_prefs.getInt("hour_" + id, 0));
-                        tp.setCurrentMinute(sched_prefs.getInt("min_" + id, 0));
+                        tp.setHour(sched_prefs.getInt("hour_" + id, 0));
+                        tp.setMinute(sched_prefs.getInt("min_" + id, 0));
                         String days = sched_prefs.getString("days_" + id, "");
                         String name = sched_prefs.getString("name_" + id, "");
                         int config_id = sched_prefs.getInt("config_id_" + id, 0);

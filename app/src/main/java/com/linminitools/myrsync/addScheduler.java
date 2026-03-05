@@ -5,12 +5,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -82,31 +80,28 @@ public class addScheduler extends AppCompatActivity {
 
     protected String get_current_ssid(Context context){
 
-        String ssid = null;
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        if (networkInfo == null) {
-            CharSequence text = "You are not connected!";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
+        android.net.Network activeNetwork = cm.getActiveNetwork();
+        if (activeNetwork == null) {
+            Toast.makeText(context, "You are not connected!", Toast.LENGTH_SHORT).show();
             return "";
         }
 
-        if (networkInfo.isConnected()) {
-            final WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-            Log.d("WIFI_INFO",connectionInfo.getSupplicantState().toString());
-            if (connectionInfo.getSupplicantState().toString().equals("COMPLETED") && !TextUtils.isEmpty(connectionInfo.getSSID())) {
-                ssid = connectionInfo.getSSID();
-            }
-            else {
-                CharSequence text = "You are not connected to a WiFi Network!";
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
-                return "";
-            }
+        android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+        if (caps == null || !caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) {
+            Toast.makeText(context, "You are not connected to a WiFi Network!", Toast.LENGTH_SHORT).show();
+            return "";
+        }
+
+        String ssid = "";
+        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+        if (connectionInfo != null && !android.text.TextUtils.isEmpty(connectionInfo.getSSID())
+                && !connectionInfo.getSSID().equals("<unknown ssid>")) {
+            ssid = connectionInfo.getSSID();
+        } else {
+            Toast.makeText(context, "Could not determine WiFi SSID.", Toast.LENGTH_SHORT).show();
+            return "";
         }
 
         return ssid.replaceAll("^\"|\"$", "");

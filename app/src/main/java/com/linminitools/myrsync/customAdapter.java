@@ -2,7 +2,7 @@ package com.linminitools.myrsync;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.v4.util.SparseArrayCompat;
+import androidx.collection.SparseArrayCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

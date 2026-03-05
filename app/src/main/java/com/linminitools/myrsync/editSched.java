@@ -41,8 +41,8 @@ public class editSched extends addScheduler {
 
         tp.setIs24HourView(true);
 
-        tp.setCurrentHour(sched.hour);
-        tp.setCurrentMinute(sched.min);
+        tp.setHour(sched.hour);
+        tp.setMinute(sched.min);
 
         int config_id = sched.config_id;
 

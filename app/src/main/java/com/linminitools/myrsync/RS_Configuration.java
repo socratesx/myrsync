@@ -16,7 +16,6 @@ import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -27,10 +26,10 @@ import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.provider.DocumentsProvider;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.os.EnvironmentCompat;
-import android.support.v4.provider.DocumentFile;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.os.EnvironmentCompat;
+import androidx.documentfile.provider.DocumentFile;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -237,12 +236,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                             catch (IOException e){
                                 e.printStackTrace();
                             }
-                            String app_folder = context.getFilesDir().getPath();
-                            //String rsync_bin= context.getSharedPreferences("Install",MODE_PRIVATE).getString("rsync_binary",".");
+                            String app_folder = context.getApplicationInfo().nativeLibraryDir;
                             ProcessBuilder p = new ProcessBuilder();
                             Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
                             String cmd_string="";
-                            String rsync_bin = app_folder+"/rsync";
+                            String rsync_bin = app_folder+"/librsync.so";
                             if (mode.equals("Push")) {
                                 cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
                                 //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
@@ -357,25 +355,39 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     private String get_current_ssid(Context context){
 
-        String ssid = "";
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        if (networkInfo == null) {
+        android.net.Network activeNetwork = cm.getActiveNetwork();
+        if (activeNetwork == null) {
             return null;
         }
 
-        if (networkInfo.isConnected()) {
-            final WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-            Log.d("WIFI_INFO",connectionInfo.getSupplicantState().toString());
-            if (connectionInfo.getSupplicantState().toString().equals("COMPLETED") && !TextUtils.isEmpty(connectionInfo.getSSID())) {
+        android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+        if (caps == null || !caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) {
+            return "none";
+        }
+
+        String ssid = "";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+            if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())
+                    && !connectionInfo.getSSID().equals("<unknown ssid>")) {
                 ssid = connectionInfo.getSSID();
+            } else {
+                return "none";
             }
-            else return "none";
+        } else {
+            WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+            if (connectionInfo.getSupplicantState().toString().equals("COMPLETED")
+                    && !TextUtils.isEmpty(connectionInfo.getSSID())) {
+                ssid = connectionInfo.getSSID();
+            } else {
+                return "none";
+            }
         }
 
         return ssid.replaceAll("^\"|\"$", "");
-
     }
 
     private void send_notification(Context ctx, int type) {
@@ -400,7 +412,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
             Intent intent = new Intent(ctx, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent, 0);
+            int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+            PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent, pendingFlags);
 
             NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
 

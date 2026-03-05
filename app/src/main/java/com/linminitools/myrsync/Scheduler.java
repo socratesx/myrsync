@@ -5,9 +5,10 @@ import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.os.Build;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.util.Log;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -51,8 +52,8 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         this.days=days;
         this.d=d;
         this.id=id;
-        this.hour=d.getCurrentHour();
-        this.min=d.getCurrentMinute();
+        this.hour=d.getHour();
+        this.min=d.getMinute();
         this.Alarm_Times = new ArrayList<>();
 
     }
@@ -63,8 +64,8 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
     }
 
     void update(){
-        this.hour=d.getCurrentHour();
-        this.min=d.getCurrentMinute();
+        this.hour=d.getHour();
+        this.min=d.getMinute();
     }
 
 
@@ -148,8 +149,8 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         Calendar saved_cal = new GregorianCalendar();
         cal.setFirstDayOfWeek(Calendar.MONDAY);
 
-        cal.set(Calendar.HOUR_OF_DAY, d.getCurrentHour());
-        cal.set(Calendar.MINUTE, d.getCurrentMinute());
+        cal.set(Calendar.HOUR_OF_DAY, d.getHour());
+        cal.set(Calendar.MINUTE, d.getMinute());
         long scheduler_time = cal.getTimeInMillis();
         final long time_selected = scheduler_time;
 
@@ -170,8 +171,8 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
                 int delta = today_number - weekdays.get(d);
                 cal = getInstance();
 
-                cal.set(Calendar.HOUR_OF_DAY, this.d.getCurrentHour());
-                cal.set(Calendar.MINUTE, this.d.getCurrentMinute());
+                cal.set(Calendar.HOUR_OF_DAY, this.d.getHour());
+                cal.set(Calendar.MINUTE, this.d.getMinute());
                 if (delta > 0) {
                     cal.set(Calendar.DAY_OF_MONTH, day_of_month - Math.abs(delta) + 7);
                 } else if (delta == 0) {
@@ -225,7 +226,11 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
             for (long t : alarms) {
                 jobcount = jobcount + 1;
-                PendingIntent pi = PendingIntent.getBroadcast(ctx, jobcount, i, PendingIntent.FLAG_UPDATE_CURRENT);
+                int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent pi = PendingIntent.getBroadcast(ctx, jobcount, i, pendingFlags);
                 alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, t, 604800000, pi);
                 message = "\nAlarm Time Set :"+formatter.format(t);
                 debug_writer.append(message);
@@ -255,7 +260,11 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
 
             for (long t : alarms) {
                 jobcount=jobcount+1;
-                PendingIntent pi = PendingIntent.getBroadcast(ctx, jobcount, i, PendingIntent.FLAG_UPDATE_CURRENT);
+                int cancelFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    cancelFlags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent pi = PendingIntent.getBroadcast(ctx, jobcount, i, cancelFlags);
                 alarmMgr.cancel(pi);
             }
         }
