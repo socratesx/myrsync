@@ -1,1 +1,19 @@
-<resources />
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+
+    <dimen name="screen_margin_horizontal">16dp</dimen>
+    <dimen name="card_margin_horizontal">16dp</dimen>
+    <dimen name="card_margin_vertical">6dp</dimen>
+    <dimen name="card_inner_padding">16dp</dimen>
+    <dimen name="card_corner_radius">12dp</dimen>
+
+    <dimen name="section_header_margin_top">24dp</dimen>
+    <dimen name="section_header_margin_bottom">8dp</dimen>
+
+    <dimen name="fab_margin">16dp</dimen>
+</resources>

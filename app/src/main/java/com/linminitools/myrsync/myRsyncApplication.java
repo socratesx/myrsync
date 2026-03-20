@@ -6,7 +6,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import android.widget.TimePicker;
-
+import androidx.appcompat.app.AppCompatDelegate;
+import android.preference.PreferenceManager;
 import com.linminitools.myrsync.RS_Configuration;
 import com.linminitools.myrsync.Scheduler;
 
@@ -26,6 +27,10 @@ public class myRsyncApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int themeMode = Integer.parseInt(defaultPrefs.getString("theme_mode", "-1"));
+        AppCompatDelegate.setDefaultNightMode(themeMode);
 
         appContext = getApplicationContext();
 
@@ -67,6 +72,9 @@ public class myRsyncApplication extends Application {
                 config.addedOn = config_prefs.getLong("rs_addedon_"+id,0);
                 config.rs_mode = config_prefs.getString("rs_mode_"+id,"Push");
                 config.adv_options = config_prefs.getString("rs_adv_options_"+id,"");
+                config.rs_transport_type = config_prefs.getString("rs_transport_type_"+id, "Rsync Daemon");
+                config.rs_ssh_private_key_path = config_prefs.getString("rs_ssh_private_key_path_"+id, "");
+                config.rs_ssh_remote_path = config_prefs.getString("rs_ssh_remote_path_"+id, "");
                 configs.add(config);
             }
         }

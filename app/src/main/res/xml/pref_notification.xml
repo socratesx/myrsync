@@ -2,6 +2,13 @@
 
     <!-- A 'parent' preference, which enables/disables child preferences (below)
          when checked/unchecked. -->
+    <ListPreference
+        android:key="theme_mode"
+        android:title="Theme"
+        android:summary="Follow system default"
+        android:entries="@array/theme_entries"
+        android:entryValues="@array/theme_values"
+        android:defaultValue="-1" />
     <SwitchPreference
         android:defaultValue="true"
         android:key="notifications"

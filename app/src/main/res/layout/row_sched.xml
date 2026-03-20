@@ -1,170 +1,170 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:backgroundTintMode="src_in">
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/card_margin_horizontal"
+    android:layout_marginEnd="@dimen/card_margin_horizontal"
+    android:layout_marginTop="@dimen/card_margin_vertical"
+    android:layout_marginBottom="@dimen/card_margin_vertical"
+    app:cardCornerRadius="@dimen/card_corner_radius"
+    style="?attr/materialCardViewFilledStyle">
 
-    <TextView
-        android:id="@+id/tv_wednesday"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="W"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/tv_tuesday"
-        app:layout_constraintTop_toTopOf="@+id/tv_tuesday"
-        tools:ignore="HardcodedText" />
-
-    <TextView
-        android:id="@+id/tv_thursday"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="T"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/tv_wednesday"
-        app:layout_constraintTop_toTopOf="@+id/tv_wednesday"
-        tools:ignore="HardcodedText" />
-
-    <TextView
-        android:id="@+id/tv_friday"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="F"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/tv_thursday"
-        app:layout_constraintTop_toTopOf="@+id/tv_thursday"
-        tools:ignore="HardcodedText" />
-
-    <TextView
-        android:id="@+id/tv_tuesday"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="T"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/tv_monday"
-        app:layout_constraintTop_toTopOf="@+id/tv_monday"
-        tools:ignore="HardcodedText" />
-
-    <TextView
-        android:id="@+id/tv_sched_name"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:gravity="center_vertical|center_horizontal"
-        android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:padding="@dimen/card_inner_padding">
 
-    <TextView
-        android:id="@+id/tv_monday"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="M"
-        android:textSize="12sp"
-        app:layout_constraintBaseline_toBaselineOf="@+id/tv_sched_repeat"
-        app:layout_constraintStart_toEndOf="@+id/tv_sched_repeat"
-        tools:ignore="HardcodedText" />
+        <ImageButton
+            android:id="@+id/bt_edit_sched"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="?attr/selectableItemBackground"
+            android:contentDescription="@string/edit_scheduler"
+            android:onClick="sched_clickHandler"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/bt_delete_sched"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@android:color/transparent" />
 
-    <TextView
-        android:id="@+id/tv_saturday"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="S"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/tv_friday"
-        app:layout_constraintTop_toTopOf="@+id/tv_friday"
-        tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/tv_sched_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            app:layout_constraintEnd_toStartOf="@id/bt_delete_sched"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_sunday"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="8dp"
-        android:background="@android:color/transparent"
-        android:gravity="center_vertical|center_horizontal"
-        android:text="S"
-        android:textSize="12sp"
-        app:layout_constraintStart_toEndOf="@+id/tv_saturday"
-        app:layout_constraintTop_toTopOf="@+id/tv_saturday"
-        tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/tv_sched_repeat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_sm"
+            android:text="@string/repeat"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_sched_name" />
 
-    <TextView
-        android:id="@+id/tv_sched_repeat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/repeat"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_sched_name" />
+        <TextView
+            android:id="@+id/tv_monday"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:gravity="center"
+            android:text="M"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_sched_repeat"
+            app:layout_constraintStart_toEndOf="@id/tv_sched_repeat"
+            tools:ignore="HardcodedText" />
 
-    <ImageButton
-        android:id="@+id/bt_delete_sched"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="16dp"
-        android:backgroundTint="@android:color/transparent"
-        android:contentDescription="@string/delete"
-        android:onClick="sched_clickHandler"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_delete_forever_black_36" />
+        <TextView
+            android:id="@+id/tv_tuesday"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:text="T"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_monday"
+            app:layout_constraintStart_toEndOf="@id/tv_monday"
+            tools:ignore="HardcodedText" />
 
-    <TextView
-        android:id="@+id/tv_start_time"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/start_time"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tv_sched_repeat" />
+        <TextView
+            android:id="@+id/tv_wednesday"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:text="W"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_tuesday"
+            app:layout_constraintStart_toEndOf="@id/tv_tuesday"
+            tools:ignore="HardcodedText" />
 
-    <TextView
-        android:id="@+id/tv_sched_showtime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:textSize="14sp"
-        app:layout_constraintBaseline_toBaselineOf="@+id/tv_start_time"
-        app:layout_constraintStart_toEndOf="@+id/tv_start_time" />
+        <TextView
+            android:id="@+id/tv_thursday"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:text="T"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_wednesday"
+            app:layout_constraintStart_toEndOf="@id/tv_wednesday"
+            tools:ignore="HardcodedText" />
 
-    <ImageButton
-        android:id="@+id/bt_edit_sched"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:background="@android:color/transparent"
-        android:contentDescription="@string/edit_scheduler"
-        android:onClick="sched_clickHandler"
-        app:layout_constraintBottom_toBottomOf="@+id/tv_start_time"
-        app:layout_constraintEnd_toEndOf="@+id/tv_sunday"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/tv_sched_name"
-        app:srcCompat="@android:color/transparent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tv_friday"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:text="F"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_thursday"
+            app:layout_constraintStart_toEndOf="@id/tv_thursday"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/tv_saturday"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:text="S"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_friday"
+            app:layout_constraintStart_toEndOf="@id/tv_friday"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/tv_sunday"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_marginStart="4dp"
+            android:gravity="center"
+            android:text="S"
+            android:textAppearance="?attr/textAppearanceLabelSmall"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_saturday"
+            app:layout_constraintStart_toEndOf="@id/tv_saturday"
+            tools:ignore="HardcodedText" />
+
+        <TextView
+            android:id="@+id/tv_start_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing_xs"
+            android:text="@string/start_time"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_sched_repeat" />
+
+        <TextView
+            android:id="@+id/tv_sched_showtime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_sm"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            app:layout_constraintBaseline_toBaselineOf="@id/tv_start_time"
+            app:layout_constraintStart_toEndOf="@id/tv_start_time" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/bt_delete_sched"
+            style="?attr/materialIconButtonStyle"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@string/delete"
+            android:onClick="sched_clickHandler"
+            app:icon="@drawable/baseline_delete_forever_24"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

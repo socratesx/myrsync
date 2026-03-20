@@ -5,12 +5,9 @@ import android.annotation.TargetApi;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.usage.ExternalStorageStats;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.UriPermission;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
@@ -21,44 +18,39 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
-import android.os.Parcel;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
-import android.provider.DocumentsContract;
-import android.provider.DocumentsProvider;
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
-import androidx.core.os.EnvironmentCompat;
-import androidx.documentfile.provider.DocumentFile;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.documentfile.provider.DocumentFile;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
-import static android.content.Context.MODE_PRIVATE;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 
 public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
 
-    String rs_ip, rs_user, rs_module, rs_options, local_path, name, rs_mode, adv_options;
+    String rs_ip, rs_port, rs_user, rs_module, rs_options, local_path, name, rs_mode, adv_options;
+    String rs_transport_type, rs_ssh_private_key_path, rs_ssh_remote_path;
+
     Long addedOn;
-    String rs_port="873";
     final int id;
 
 
@@ -71,7 +63,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         this.id=id;
         this.name="Config "+String.valueOf(id);
     }
-    
+
     void saveToDisk(){
         
         SharedPreferences prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
@@ -89,9 +81,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putString("local_path_"+String.valueOf(this.id),local_path);
         prefseditor.putString("last_result_"+String.valueOf(this.id),"Never Run");
         prefseditor.putString("last_run_"+String.valueOf(this.id),"Never Run");
-        //prefseditor.putString("path_uri_"+String.valueOf(this.id),this.path_uri);
         prefseditor.putString("rs_adv_options_"+String.valueOf(this.id),this.adv_options);
         prefseditor.putLong("rs_addedon_"+String.valueOf(this.id),addedOn);
+        prefseditor.putString("rs_transport_type_"+String.valueOf(this.id), rs_transport_type);
+        prefseditor.putString("rs_ssh_private_key_path_"+String.valueOf(this.id), rs_ssh_private_key_path);
+        prefseditor.putString("rs_ssh_remote_path_"+String.valueOf(this.id), rs_ssh_remote_path);
 
         prefseditor.apply();
         Locale current_locale = appContext.getResources().getConfiguration().locale;
@@ -127,8 +121,10 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.remove("last_result_"+String.valueOf(this.id));
         prefseditor.remove("last_run_"+String.valueOf(this.id));
         prefseditor.remove("rs_addedon_"+String.valueOf(this.id));
-        //prefseditor.remove("path_uri_"+String.valueOf(this.id));
         prefseditor.remove("rs_adv_options_"+String.valueOf(this.id));
+        prefseditor.remove("rs_transport_type_"+String.valueOf(this.id));
+        prefseditor.remove("rs_ssh_private_key_path_"+String.valueOf(this.id));
+        prefseditor.remove("rs_ssh_remote_path_"+String.valueOf(this.id));
         prefseditor.apply();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
@@ -158,174 +154,267 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         boolean sw_wifi = sched_prefs.getBoolean("wifi_switch_"+ String.valueOf(scheduler_id),false);
         String wifi_ssid = sched_prefs.getString("ssid_"+ String.valueOf(scheduler_id),"");
         int sched;
-        String ssid = get_current_ssid(context);
+
+        boolean is_connected_to_wifi = isConnectedToWifi(context);
         if (scheduler_id == null) sched =-1;
         else sched = scheduler_id;
-        //Log.d("WIFI_SSID",ssid);
-        //Log.d("WIFI_SET",wifi_ssid);
-        //Log.d("WIFI_SW",String.valueOf(sw_wifi));
 
-        if (ssid == null) {
+        if (!is_connected_to_wifi) {
             send_notification(context,0);
             update_result(context,"Aborted",sched);
         }
         else {
-            if (sw_wifi && ssid.equals("none")){
-                send_notification(context,1);
-                update_result(context,"Aborted",sched);
-            }
-            else if (sw_wifi && !ssid.equals(wifi_ssid) && !wifi_ssid.isEmpty()){
-                send_notification(context,2);
-                update_result(context,"Aborted",sched);
-            }
-            else {
-                send_notification(context,3);
-                final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
-                final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
-                final int id = this.id;
+            send_notification(context,3);
+            final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+            final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
+            final int id = this.id;
 
-                final String options = this.rs_options;
-                final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
-                final String local_path=this.local_path;
+            final String options = this.rs_options;
+            final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
+            final String local_path=this.local_path;
 
-                String rsync_user_string=this.rs_user+"@";
-                if(this.rs_user.isEmpty()) rsync_user_string="";
+            String rsync_user_string=this.rs_user+"@";
+            if(this.rs_user.isEmpty()) rsync_user_string="";
 
-                final String cmd = "rsync://"+rsync_user_string+this.rs_ip+":"+this.rs_port+"/"+this.rs_module;
-                String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
-                debug_log = new File(Debug_log_path);
-                final String mode= this.rs_mode;
-
-                //File selected_dir = new File(this.local_path);
-                //selected_dir.setWritable(true);
+            String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
+            debug_log = new File(Debug_log_path);
+            final String mode= this.rs_mode;
 
 
-                final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
-                final File f = new File(local_path);
-                final DocumentFile df = DocumentFile.fromFile(f);
+            final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
+            final File f = new File(local_path);
+            final DocumentFile df = DocumentFile.fromFile(f);
 
 
-                File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
+            File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
 
-                Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
+            Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
 
 
-                Thread t = new Thread(){
-                    @SuppressLint("ApplySharedPref")
-                    @Override
-                    public void run() {
+            Thread t = new Thread(){
+                @SuppressLint("ApplySharedPref")
+                @Override
+                public void run() {
+                    try {
+                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
+                        SharedPreferences.Editor pref_Edit= pref.edit();
+                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+                        Locale current_locale = context.getResources().getConfiguration().locale;
+                        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+
+                        if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
+
+
+                        pref_Edit.putBoolean("is_running",true);
+                        pref_Edit.commit();
+
                         try {
-                            SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
-                            SharedPreferences.Editor pref_Edit= pref.edit();
-                            SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
-                            Locale current_locale = context.getResources().getConfiguration().locale;
-                            SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " STARTED";
+                            debug_writer.append(message);
+                            debug_writer.close();
+                        }
+                        catch (IOException e){
+                            e.printStackTrace();
+                        }
+                        String app_folder = context.getApplicationInfo().nativeLibraryDir;
+                        ProcessBuilder p = new ProcessBuilder();
+                        Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
+                        String rsync_bin = app_folder+"/librsync.so";
+                        String ssh_bin = app_folder+"/libdbclient.so";
+                        String convert_bin = app_folder+"/libdbconvert.so";
 
-                            if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
+                        ArrayList<String> cmdList = new ArrayList<>();
 
+                        boolean isRoot = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access", false);
 
-                            pref_Edit.putBoolean("is_running",true);
-                            pref_Edit.commit();
+                        String destination;
+                        String transport_options = "";
+                        String workingKeyPath = "";
 
+                        if ("SSH".equals(rs_transport_type)) {
+                            File keyFile = new File(rs_ssh_private_key_path);
+                            workingKeyPath = rs_ssh_private_key_path;
+
+                            // SSH keys must have 600 permissions. On Android, files on SD card usually have 777 or similar
+                            // and chmod doesn't work. We copy it to the app's internal storage and chmod it there.
+                            File internalKey = new File(context.getFilesDir(), "ssh_key_" + id);
                             try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " STARTED";
-                                debug_writer.append(message);
-                                debug_writer.close();
+                                copyFile(keyFile, internalKey);
+                                Runtime.getRuntime().exec("chmod 600 " + internalKey.getAbsolutePath()).waitFor();
+                                workingKeyPath = internalKey.getAbsolutePath();
+
+                                // Try to convert key if it's OpenSSH format
+                                File convertedKey = new File(context.getFilesDir(), "ssh_key_db_" + id);
+                                String[] convertCmd = {convert_bin, "openssh", "dropbear", internalKey.getAbsolutePath(), convertedKey.getAbsolutePath()};
+                                try {
+                                    Process convertProc = Runtime.getRuntime().exec(convertCmd);
+                                    int exitCode = convertProc.waitFor();
+                                    if (exitCode == 0 && convertedKey.exists() && convertedKey.length() > 0) {
+                                        workingKeyPath = convertedKey.getAbsolutePath();
+                                        Runtime.getRuntime().exec("chmod 600 " + workingKeyPath).waitFor();
+                                        try (FileWriter debug_writer = new FileWriter(debug_log, true)) {
+                                            debug_writer.append("\nDEBUG: Key converted successfully to Dropbear format.");
+                                        }
+                                    } else {
+                                        try (FileWriter debug_writer = new FileWriter(debug_log, true)) {
+                                            debug_writer.append("\nDEBUG: Key conversion skipped or failed (exit code: " + exitCode + "). Using original key.");
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    try (FileWriter debug_writer = new FileWriter(debug_log, true)) {
+                                        debug_writer.append("\nDEBUG: Key conversion exception: " + e.getMessage());
+                                    }
+                                }
+                            } catch (IOException | InterruptedException e) {
+                                Log.e("SSH_KEY", "Failed to prepare key file", e);
                             }
-                            catch (IOException e){
-                                e.printStackTrace();
+
+                            transport_options = "-e '" + ssh_bin + " -p " + rs_port + " -i " + workingKeyPath + " -o StrictHostKeyChecking=no'";
+                            destination = rs_user + "@" + rs_ip + ":" + rs_ssh_remote_path;
+                        } else {
+                            destination = "rsync://" + rs_user + "@" + rs_ip + ":" + rs_port + "/" + rs_module;
+                        }
+
+                        if (isRoot) {
+                            StringBuilder rootCmd = new StringBuilder(rsync_bin);
+
+                            String cleanOptions = options.strip();
+                            if (!cleanOptions.isEmpty()) {
+                                rootCmd.append(" ").append(cleanOptions);
                             }
-                            String app_folder = context.getApplicationInfo().nativeLibraryDir;
-                            ProcessBuilder p = new ProcessBuilder();
-                            Log.d("External Cache dir", context.getExternalCacheDirs()[0].getAbsolutePath());
-                            String cmd_string="";
-                            String rsync_bin = app_folder+"/librsync.so";
+
+                            if (!transport_options.isEmpty()) {
+                                rootCmd.append(" ").append(transport_options);
+                            }
+
+                            rootCmd.append(" --log-file=").append(log);
+
                             if (mode.equals("Push")) {
-                                cmd_string = rsync_bin + " " + options + " --log-file " + log + " " + local_path + " " + cmd;
-                                //p = new ProcessBuilder(rsync_bin,options,"--debug","ALL","--log-file",log,local_path,cmd);
-                            }
-                            else {
-                                if ((PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access",false))){
-                                    //p=new ProcessBuilder("su","-c",rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                    cmd_string = "su -c "+ rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
-
-                                }
-                                else {
-                                    //p=new ProcessBuilder(rsync_bin,options,"--log-file",log,"--debug","ALL",cmd,local_path);
-                                    cmd_string = rsync_bin +" "+options+ " --log-file "+log+" "+cmd +" "+local_path;
-                                }
-
-                            }
-                            //Log.d("CMD_STRING",Arrays.toString(cmd_string.split(" ")));
-                            Log.d("CMD_STRING",cmd_string);
-
-                            p.command(cmd_string.split(" "));
-
-
-                            Log.d("FILES_FOLDER",app_folder);
-                            p.environment().put("PATH", app_folder+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
-                            p.redirectErrorStream(true);
-                            Process process=p.start();
-
-                            BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                            StringBuilder builder = new StringBuilder();
-                            String line;
-
-                            while ( (line = std_out.readLine()) != null) {
-                                builder.append(line);
-                                builder.append(System.getProperty("line.separator"));
+                                rootCmd.append(" ").append(local_path).append(" ").append(destination);
+                            } else {
+                                rootCmd.append(" ").append(destination).append(" ").append(local_path);
                             }
 
-                            String result = builder.toString();
+                            cmdList.add("su");
+                            cmdList.add("-c");
+                            cmdList.add(rootCmd.toString());
 
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+result;
-                                debug_writer.append(message);
-                                debug_writer.close();
+                        } else {
+                            cmdList.add(rsync_bin);
+
+                            String cleanOptions = options.strip();
+                            if (!cleanOptions.isEmpty()) {
+                                String[] splitOptions = cleanOptions.split("\\s+");
+                                cmdList.addAll(Arrays.asList(splitOptions));
                             }
-                            catch (IOException e){
-                                e.printStackTrace();
+
+                            if (!transport_options.isEmpty()) {
+                                cmdList.add("-e");
+                                cmdList.add(ssh_bin + " -p " + rs_port + " -i " + workingKeyPath + " -o StrictHostKeyChecking=no");
                             }
 
-                            if (result.equals("")) result="OK";
-                            else result="Warning! Check Log!";
+                            cmdList.add("--log-file");
+                            cmdList.add(log);
+
+                            if (mode.equals("Push")) {
+                                cmdList.add(local_path);
+                                cmdList.add(destination);
+                            } else {
+                                cmdList.add(destination);
+                                cmdList.add(local_path);
+                            }
+                        }
+
+                        // Logging the command to debug.log as requested
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            String cmdLog = "\nRSYNC_COMMAND=" + cmdList.toString();
+                            debug_writer.append(cmdLog);
+                            debug_writer.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                        Log.d("CMD_STRING", cmdList.toString());
+
+                        p.command(cmdList);
+
+                        Log.d("FILES_FOLDER",app_folder);
+                        p.environment().put("PATH", app_folder+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
+                        p.redirectErrorStream(true);
+                        Process process=p.start();
+
+                        BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                        StringBuilder builder = new StringBuilder();
+                        String line;
+
+                        while ( (line = std_out.readLine()) != null) {
+                            builder.append(line);
+                            builder.append(System.getProperty("line.separator"));
+                        }
+                        String stdout = builder.toString();
+
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+stdout;
+                            debug_writer.append(message);
+                            debug_writer.close();
+                        }
+                        catch (IOException e){
+                            e.printStackTrace();
+                        }
 
 
+
+                        String result = process.waitFor() == 0 ? "OK" : "Warning! Check Log!";
+
+                        if (scheduler_id!=null) {
+                            sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
+                            update_result(context,result,scheduler_id);
+                        }
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
+                            debug_writer.append(message);
+                            debug_writer.close();
+                        }
+                        catch (IOException e){
+                            e.printStackTrace();
+                        }
+                    }
+                    catch (Exception e) {
+                        try {
+                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + e.getMessage();
+                            debug_writer.append(message);
+                            debug_writer.close();
+                            e.printStackTrace();
                             if (scheduler_id!=null) {
-                                sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
-                                update_result(context,result,scheduler_id);
-                            }
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
-                                debug_writer.append(message);
-                                debug_writer.close();
-                            }
-                            catch (IOException e){
-                                e.printStackTrace();
+                                sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                update_result(context, "Error", scheduler_id);
                             }
                         }
-                        catch (Exception e) {
-                            try {
-                                FileWriter debug_writer = new FileWriter(debug_log, true);
-                                String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + e.getMessage();
-                                debug_writer.append(message);
-                                debug_writer.close();
-                                e.printStackTrace();
-                            }
-                            catch (IOException ioe){
-                                ioe.printStackTrace();
-                            }
+                        catch (IOException ioe){
+                            ioe.printStackTrace();
+                        }
 
-                        }
+                    }
                     }
                 };
 
                 t.start();
-
             }
+    }
+
+    private void copyFile(File sourceFile, File destFile) throws IOException {
+        if (!destFile.exists()) {
+            destFile.createNewFile();
+        }
+
+        try (FileChannel source = new FileInputStream(sourceFile).getChannel();
+             FileChannel destination = new FileOutputStream(destFile).getChannel()) {
+            destination.transferFrom(source, 0, source.size());
         }
     }
 
@@ -353,41 +442,61 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     }
 
-    private String get_current_ssid(Context context){
+//    private String get_current_ssid(Context context) {
+//        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+//
+//        // 1. Check if we have an active network
+//        android.net.Network network = cm.getActiveNetwork();
+//        if (network == null) return "none";
+//
+//        // 2. Check if it's WiFi
+//        android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(network);
+//        if (caps == null || !caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) {
+//            return "none";
+//        }
+//
+//        // 3. Modern way (Android 10+)
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//            // The SSID is often embedded in the TransportInfo
+//            android.net.TransportInfo transportInfo = caps.getTransportInfo();
+//            if (transportInfo instanceof WifiInfo) {
+//                WifiInfo info = (WifiInfo) transportInfo;
+//                String ssid = info.getSSID();
+//                if (ssid != null && !ssid.equals("<unknown ssid>")) {
+//                    return ssid.replaceAll("^\"|\"$", "");
+//                }
+//            }
+//        }
+//
+//        // 4. Fallback for older versions or if TransportInfo fails
+//        WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//        WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+//        if (connectionInfo != null) {
+//            String ssid = connectionInfo.getSSID();
+//            if (ssid != null && !ssid.equals("<unknown ssid>")) {
+//                return ssid.replaceAll("^\"|\"$", "");
+//            }
+//        }
+//
+//        return "none";
+//    }
 
+    private boolean isConnectedToWifi(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (cm == null) return false;
+
         android.net.Network activeNetwork = cm.getActiveNetwork();
-        if (activeNetwork == null) {
-            return null;
-        }
+        if (activeNetwork == null) return false;
 
         android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
-        if (caps == null || !caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) {
-            return "none";
-        }
+        if (caps == null) return false;
 
-        String ssid = "";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-            if (connectionInfo != null && !TextUtils.isEmpty(connectionInfo.getSSID())
-                    && !connectionInfo.getSSID().equals("<unknown ssid>")) {
-                ssid = connectionInfo.getSSID();
-            } else {
-                return "none";
-            }
-        } else {
-            WifiManager wifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            WifiInfo connectionInfo = wifiManager.getConnectionInfo();
-            if (connectionInfo.getSupplicantState().toString().equals("COMPLETED")
-                    && !TextUtils.isEmpty(connectionInfo.getSSID())) {
-                ssid = connectionInfo.getSSID();
-            } else {
-                return "none";
-            }
-        }
+        // This check does NOT require Location permissions
 
-        return ssid.replaceAll("^\"|\"$", "");
+        boolean is_connected_to_wifi = caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI);
+        Log.d("WIFI_STATE", Boolean.toString(is_connected_to_wifi));
+        return is_connected_to_wifi;
     }
 
     private void send_notification(Context ctx, int type) {
@@ -482,4 +591,3 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         }
 
     }
-

@@ -1,550 +1,488 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     tools:context=".addConfig">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/config_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="?attr/homeAsUpIndicator" />
+
+    </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:context=".MainActivity">
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="@dimen/screen_margin_horizontal"
+            android:paddingEnd="@dimen/screen_margin_horizontal"
+            android:paddingBottom="@dimen/spacing_lg">
 
+            <!-- transport type -->
+            <TextView
+                android:id="@+id/tv_transport_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:text="@string/transport_type"
+                android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+            <RadioGroup
+                android:id="@+id/rg_transport_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:checkedButton="@+id/rb_push"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_daemon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/daemon"
+                    android:checked="true"
+                    android:layout_marginEnd="@dimen/spacing_lg" />
+
+                <RadioButton
+                    android:id="@+id/rb_ssh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ssh" />
+            </RadioGroup>
+
+            <!-- Server Settings Section -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:gravity="center_horizontal"
-                android:hint="@string/srv_settings"
-                android:singleLine="true"
+                android:layout_marginTop="@dimen/spacing_md"
                 android:text="@string/srv_settings"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:visibility="visible" />
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorPrimary" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:hint="@string/configuration_name">
 
-                <EditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/et_rsync_alias"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:importantForAutofill="no" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/spacing_sm">
+
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:ems="10"
-                    android:hint="@string/configuration_name"
-                    android:inputType="text"
-                    android:visibility="visible"
-                    app:layout_constraintEnd_toEndOf="@+id/ed_srv_ip"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    android:importantForAutofill="no"
-                    tools:targetApi="o" />
+                    android:layout_weight="1"
+                    android:layout_marginEnd="@dimen/spacing_sm"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:hint="@string/srv_ip">
 
-                <EditText
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/ed_srv_ip"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:importantForAutofill="no" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="100dp"
+                    android:layout_height="wrap_content"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:hint="@string/srv_port">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/ed_srv_port"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:importantForAutofill="no" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/lt_rsync_user"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:hint="@string/rsync_user">
+
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/ed_rsync_user"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:ems="10"
-                    android:hint="@string/rsync_user"
                     android:inputType="text"
-                    android:visibility="visible"
-                    app:layout_constraintEnd_toEndOf="@+id/ed_srv_ip"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/ed_srv_ip"
-                    android:importantForAutofill="no"
-                    tools:targetApi="o" />
+                    android:importantForAutofill="no" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                <EditText
-                    android:id="@+id/ed_rsync_mod"
+            <LinearLayout
+                android:id="@+id/lt_rsync_srv_mod"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="@dimen/spacing_sm">
+
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:hint="@string/srv_mod"
-                    android:importantForAutofill="no"
-                    android:inputType="text"
-                    android:visibility="visible"
-                    app:layout_constraintEnd_toEndOf="@+id/ed_rsync_user"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/ed_rsync_user"
-                    tools:targetApi="o" />
-
-                <EditText
-                    android:id="@+id/ed_srv_ip"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
                     android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="@string/srv_ip"
-                    android:inputType="text"
-                    android:visibility="visible"
-                    app:layout_constraintEnd_toStartOf="@+id/ed_srv_port"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/et_rsync_alias"
-                    android:importantForAutofill="no"
-                    tools:targetApi="o" />
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:hint="@string/srv_mod">
 
-                <EditText
-                    android:id="@+id/ed_srv_port"
-                    android:layout_width="64dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="@string/srv_port"
-                    android:inputType="number"
-                    android:visibility="visible"
-                    android:importantForAutofill="no"
-                    app:layout_constraintBaseline_toBaselineOf="@+id/ed_srv_ip"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/ed_srv_ip"
-                    tools:targetApi="o" />
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/ed_rsync_mod"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:importantForAutofill="no" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/ib_info_daemon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="16dp"
-                    android:backgroundTint="@android:color/transparent"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="@dimen/spacing_sm"
                     android:contentDescription="@string/info"
                     android:onClick="rsync_daemon_info"
-                    app:layout_constraintStart_toStartOf="@+id/ed_srv_port"
-                    app:layout_constraintTop_toBottomOf="@+id/ed_srv_port"
-                    app:srcCompat="@drawable/ic_info_black_24dp" />
+                    app:icon="@drawable/ic_info_black_24dp"
+                    app:iconTint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
 
-                <TextView
-                    android:id="@+id/tv_mode"
+            <!-- Mode -->
+            <TextView
+                android:id="@+id/tv_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:text="@string/mode"
+                android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+            <RadioGroup
+                android:id="@+id/rg_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_xs"
+                android:checkedButton="@+id/rb_push"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_push"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:paddingStart="4dp"
-                    android:paddingEnd="4dp"
-                    android:text="@string/mode"
-                    android:textSize="18sp"
-                    app:layout_constraintStart_toStartOf="@+id/ed_rsync_mod"
-                    app:layout_constraintTop_toBottomOf="@+id/ed_rsync_mod" />
+                    android:text="@string/push"
+                    android:layout_marginEnd="@dimen/spacing_lg" />
 
-                <RadioGroup
-                    android:id="@+id/rg_mode"
+                <RadioButton
+                    android:id="@+id/rb_pull"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checkedButton="@+id/rb_push"
-                    android:visibility="visible"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/ed_rsync_mod"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_mode">
+                    android:text="@string/pull" />
+            </RadioGroup>
 
-                    <RadioButton
-                        android:id="@+id/rb_push"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/push" />
-
-                    <RadioButton
-                        android:id="@+id/rb_pull"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/pull" />
-                </RadioGroup>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
+            <!-- Local Settings Section -->
             <TextView
                 android:id="@+id/tv_loc_settings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:ems="10"
-                android:gravity="center_horizontal"
-                android:hint="@string/loc_settings"
-                android:singleLine="true"
+                android:layout_marginTop="@dimen/section_header_margin_top"
                 android:text="@string/loc_settings"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:visibility="visible" />
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorPrimary" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/linearLayout"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:layout_marginTop="@dimen/spacing_md"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <Button
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="@dimen/spacing_sm"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:hint="@string/select_a_path">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/ed_path"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:focusable="true"
+                        android:textIsSelectable="true" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/bt_add"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:hint="@string/add_path"
                     android:onClick="addPath"
-                    android:text="@string/add_path"
-                    android:visibility="visible"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintVertical_chainStyle="spread_inside"
-                    tools:layout_conversion_absoluteHeight="48dp"
-                    tools:layout_conversion_absoluteWidth="411dp"
-                    tools:layout_conversion_wrapHeight="126"
-                    tools:layout_conversion_wrapWidth="243" />
+                    android:text="@string/add_path" />
+            </LinearLayout>
 
-                <EditText
-                    android:id="@+id/ed_path"
-                    android:layout_width="296dp"
-                    android:layout_height="29dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@android:color/background_light"
-                    android:hint="Enter SRC Path"
-                    android:inputType="text"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:singleLine="true"
-                    android:textIsSelectable="true"
-                    android:textSize="14sp"
-                    android:visibility="visible"
-                    app:layout_constraintBottom_toBottomOf="@+id/bt_add"
-                    app:layout_constraintEnd_toStartOf="@+id/bt_add"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <TextView
+            <LinearLayout
+                android:id="@+id/lt_ssh_options"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/rs_opt"
-                android:text="@string/opt"
-                android:textAlignment="center"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:orientation="vertical"
+                android:visibility="gone">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="16dp">
-
-                <CheckBox
-                    android:id="@+id/cb_n"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginTop="16dp"
-                    android:checked="false"
-                    android:hint="@string/n"
-                    android:textSize="18sp"
-                    app:layout_constraintStart_toStartOf="@+id/cb_a"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_a" />
-
-                <CheckBox
-                    android:id="@+id/cb_g"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:checked="false"
-                    android:hint="@string/g"
-                    android:textSize="18sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/cb_O"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_O" />
-
-                <CheckBox
-                    android:id="@+id/cb_m"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:checked="false"
-                    android:hint="-m"
-                    android:textSize="18sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/cb_p"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_p"
-                    />
-
-                <CheckBox
-                    android:id="@+id/cb_u"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:checked="false"
-                    android:hint="-u"
-                    android:textSize="18sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/cb_t"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_t"
-                    tools:ignore="HardcodedText" />
-
-                <CheckBox
-                    android:id="@+id/cb_q"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginStart="3dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp"
-                    android:checked="false"
-                    android:hint="-q"
-                    android:textSize="18sp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="@+id/cb_n"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_n"
-                    tools:ignore="HardcodedText" />
-
-                <CheckBox
-                    android:id="@+id/cb_p"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginTop="16dp"
-                    android:checked="false"
-                    android:hint="-p"
-                    android:textSize="18sp"
-                    app:layout_constraintStart_toStartOf="@+id/cb_r"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_r"
-                    tools:ignore="HardcodedText" />
-
-                <CheckBox
-                    android:id="@+id/cb_t"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginTop="16dp"
-                    android:checked="false"
-                    android:hint="-t"
-                    android:textSize="18sp"
-                    app:layout_constraintStart_toStartOf="@+id/cb_z"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_z"
-                    tools:ignore="HardcodedText" />
-
-                <CheckBox
-                    android:id="@+id/cb_O"
-                    android:layout_width="wrap_content"
-                    android:layout_height="35dp"
-                    android:layout_marginTop="16dp"
-                    android:checked="false"
-                    android:hint="-O"
-                    android:textSize="18sp"
-                    app:layout_constraintStart_toStartOf="@+id/cb_v"
-                    app:layout_constraintTop_toBottomOf="@+id/cb_v"
-                    tools:ignore="HardcodedText" />
-
-                <CheckBox
-                    android:id="@+id/cb_a"
-                    android:layout_width="0dp"
-                    android:layout_height="35dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:checked="false"
-                    android:hint="-a"
-                    android:textSize="18sp"
-                    app:layout_constraintEnd_toStartOf="@+id/cb_r"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:ignore="HardcodedText" />
-
-                <CheckBox
-                    android:id="@+id/cb_r"
-                    android:layout_width="0dp"
-                    android:layout_height="35dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginTop="8dp"
-                    android:hint="-r"
-                    android:textSize="18sp"
-                    app:layout_constraintEnd_toStartOf="@+id/cb_z"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toEndOf="@+id/cb_a"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:ignore="HardcodedText" />
-
-                <!--suppress AndroidDomInspection -->
-                <CheckBox
-                    android:id="@+id/cb_z"
-                    android:layout_width="0dp"
-                    android:layout_height="35dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginTop="8dp"
-                    android:hint="-z"
-                    android:textSize="18sp"
-                    app:layout_constraintEnd_toStartOf="@+id/cb_v"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toEndOf="@+id/cb_r"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:ignore="HardcodedText" />
-
-                <CheckBox
-                    android:id="@+id/cb_v"
-                    android:layout_width="0dp"
-                    android:layout_height="35dp"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="16dp"
-                    android:hint="-v"
-                    android:textSize="18sp"
-                    app:layout_constraintEnd_toStartOf="@+id/bt_help_rsync"
-                    app:layout_constraintStart_toEndOf="@+id/cb_z"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:ignore="HardcodedText" />
-
-                <ImageButton
-                    android:id="@+id/bt_help_rsync"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="16dp"
-                    android:backgroundTint="@android:color/transparent"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:hint="@string/remote_path">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/ed_remote_path"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:importantForAutofill="no" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="@dimen/spacing_sm"
+                        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                        android:hint="@string/ssh_key_path">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/ed_ssh_key_path"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:importantForAutofill="no" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/bt_ssh_path_add"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:onClick="addSshKeyPath"
+                        android:text="@string/add_path" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Rsync Options Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/section_header_margin_top"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/opt"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorPrimary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/bt_help_rsync"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:contentDescription="@string/options_help"
                     android:onClick="rsync_help"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/baseline_help_black_24" />
+                    app:icon="@drawable/baseline_help_24"
+                    app:iconTint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                app:cardCornerRadius="@dimen/card_corner_radius"
+                style="?attr/materialCardViewFilledStyle">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_md">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <CheckBox android:id="@+id/cb_a" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-a" />
+                        <CheckBox android:id="@+id/cb_r" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-r" />
+                        <CheckBox android:id="@+id/cb_z" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-z" />
+                        <CheckBox android:id="@+id/cb_v" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-v" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <CheckBox android:id="@+id/cb_n" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-n" />
+                        <CheckBox android:id="@+id/cb_p" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-p" />
+                        <CheckBox android:id="@+id/cb_t" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-t" />
+                        <CheckBox android:id="@+id/cb_O" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-O" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <CheckBox android:id="@+id/cb_q" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-q" />
+                        <CheckBox android:id="@+id/cb_m" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-m" />
+                        <CheckBox android:id="@+id/cb_u" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-u" />
+                        <CheckBox android:id="@+id/cb_g" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="-g" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Advanced Options -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/section_header_margin_top"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/tv_advanced"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/advanced"
-                    android:textSize="18sp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <EditText
-                    android:id="@+id/ed_advanced_options"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginBottom="8dp"
-                    android:hint="@string/type_rsync_options_manually"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/bt_advanced_help"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_advanced"
-                    android:inputType="text"
-                    android:importantForAutofill="no" tools:targetApi="o"/>
+                    android:layout_weight="1"
+                    android:text="@string/advanced"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:textColor="?attr/colorPrimary" />
 
-                <ImageButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/bt_advanced_help"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:backgroundTint="@android:color/transparent"
+                    style="?attr/materialIconButtonStyle"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:contentDescription="@string/options_help"
                     android:onClick="rsync_adv_opts_help"
-                    app:layout_constraintBottom_toBottomOf="@+id/ed_advanced_options"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:srcCompat="@drawable/baseline_help_black_24" />
+                    app:icon="@drawable/baseline_help_24"
+                    app:iconTint="?attr/colorOnSurfaceVariant" />
+            </LinearLayout>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <TextView
+            <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/save_and_view_command"
-                android:textAlignment="center"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:layout_marginTop="@dimen/spacing_sm"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:hint="@string/type_rsync_options_manually">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <Button
-                    android:id="@+id/bt_view"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/ed_advanced_options"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:onClick="viewCommand"
-                    android:text="@string/view_command"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:inputType="text"
+                    android:importantForAutofill="no" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                <TextView
-                    android:id="@+id/tv_rsync_command"
-                    android:layout_width="181dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="24dp"
-                    android:text="@string/generated_rsync_command"
-                    android:textAlignment="viewStart"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/bt_view" />
+            <!-- Command Preview & Actions -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/bt_view"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/section_header_margin_top"
+                android:onClick="viewCommand"
+                android:text="@string/view_command" />
+
+            <TextView
+                android:id="@+id/tv_rsync_command"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:text="@string/generated_rsync_command"
+                android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_sm"
+                app:cardCornerRadius="@dimen/spacing_sm"
+                style="?attr/materialCardViewFilledStyle">
 
                 <TextView
                     android:id="@+id/tv_rs_cmd_View"
                     android:layout_width="match_parent"
-                    android:layout_height="78dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@android:color/white"
+                    android:layout_height="wrap_content"
+                    android:minHeight="60dp"
+                    android:padding="@dimen/spacing_md"
                     android:textIsSelectable="true"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_rsync_command" />
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:fontFamily="monospace" />
+            </com.google.android.material.card.MaterialCardView>
 
-                <Button
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/spacing_md"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/bt_execute"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/spacing_sm"
+                    android:enabled="false"
+                    android:text="@string/run_now" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/bt_save"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
                     android:onClick="saveConfig"
-                    android:text="@string/save"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_rs_cmd_View" />
-
-                <Button
-                    android:id="@+id/bt_execute"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginTop="16dp"
-                    android:enabled="false"
-                    android:text="@string/run_now"
-                    android:visibility="visible"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/tv_rs_cmd_View" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                    android:text="@string/save" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

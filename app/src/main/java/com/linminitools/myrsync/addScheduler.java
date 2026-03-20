@@ -9,18 +9,18 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.Spinner;
-import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
-import android.widget.ToggleButton;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
+import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,49 +37,39 @@ public class addScheduler extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_scheduler);
 
+        MaterialToolbar toolbar = findViewById(R.id.scheduler_toolbar);
+        toolbar.setTitle(getTitle());
+        toolbar.setNavigationOnClickListener(v -> finish());
+
         TimePicker tp = findViewById(R.id.timePicker);
         tp.setIs24HourView(true);
 
-        Spinner sp_configs= findViewById(R.id.sp_configs);
+        Spinner sp_configs = findViewById(R.id.sp_configs);
         List<String> listLoadToSpinner = new ArrayList<>();
 
-        for (RS_Configuration c : configs){
+        for (RS_Configuration c : configs) {
             listLoadToSpinner.add(c.name);
         }
 
         ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
-                appContext,
+                this,
                 android.R.layout.simple_spinner_dropdown_item,
                 listLoadToSpinner);
 
         sp_configs.setAdapter(spinnerAdapter);
 
-        final EditText ed_ssid = findViewById(R.id.ed_wifi_ssid);
-        final ImageButton get_ssid = findViewById(R.id.ib_get_ssid);
-        get_ssid.setEnabled(ed_ssid.isEnabled());
+        MaterialButtonToggleGroup toggleDays = findViewById(R.id.toggle_days);
+        int[] dayBtnIds = {R.id.tb_monday, R.id.tb_tuesday, R.id.tb_wednesday,
+                R.id.tb_thursday, R.id.tb_friday, R.id.tb_saturday, R.id.tb_sunday};
+        for (int id : dayBtnIds) {
+            toggleDays.check(id);
+        }
 
-        Switch sw_wifi = findViewById(R.id.sw_wifi_switch);
-        sw_wifi.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                ed_ssid.setEnabled(isChecked);
-                get_ssid.setEnabled(isChecked);
-            }
-        });
-
-        get_ssid.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String ssid=get_current_ssid(appContext);
-                ed_ssid.setText(ssid);
-            }
-        });
-
-
+        MaterialSwitch sw_wifi = findViewById(R.id.sw_wifi_switch);
+        sw_wifi.setOnCheckedChangeListener((buttonView, isChecked) -> {});
     }
 
-    protected String get_current_ssid(Context context){
-
+    protected String get_current_ssid(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         android.net.Network activeNetwork = cm.getActiveNetwork();
         if (activeNetwork == null) {
@@ -107,81 +97,66 @@ public class addScheduler extends AppCompatActivity {
         return ssid.replaceAll("^\"|\"$", "");
     }
 
-    public void saveScheduler(View v){
-
-        TextView tv = findViewById(R.id.ed_name);
+    public void saveScheduler(View v) {
+        TextInputEditText tv = findViewById(R.id.ed_name);
         TimePicker tp = findViewById(R.id.timePicker);
         tp.setIs24HourView(true);
-        List<String> day_string = Arrays.asList("sunday","monday","tuesday","wednesday","thursday","friday","saturday");
+        List<String> day_string = Arrays.asList("sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday");
 
-        EditText wifi_ssid = findViewById(R.id.ed_wifi_ssid);
-        Switch wifi_sw = findViewById(R.id.sw_wifi_switch);
+        MaterialSwitch wifi_sw = findViewById(R.id.sw_wifi_switch);
 
         String name = String.valueOf(tv.getText());
         Spinner sp = findViewById(R.id.sp_configs);
-        int config_id=-1;
-        String config_name=(String)sp.getSelectedItem();
-        for (RS_Configuration c : configs) if((c.name).equals(config_name)) config_id = c.id;
+        int config_id = -1;
+        String config_name = (String) sp.getSelectedItem();
+        for (RS_Configuration c : configs) if ((c.name).equals(config_name)) config_id = c.id;
 
-
-        if (config_id>-1) {
-            // 604800000;        1 week in milliseconds
-
+        if (config_id > -1) {
             String repeat2 = ".";
 
-            for (String d : day_string) {
-                int resID = getResources().getIdentifier("tb_" + d, "id", getPackageName());
-                ToggleButton tb = findViewById(resID);
-                if (tb.isChecked()) {
-                    repeat2 = repeat2.concat(d + ".");
+            int[] dayBtnIds = {R.id.tb_sunday, R.id.tb_monday, R.id.tb_tuesday,
+                    R.id.tb_wednesday, R.id.tb_thursday, R.id.tb_friday, R.id.tb_saturday};
+
+            for (int i = 0; i < day_string.size(); i++) {
+                MaterialButton btn = findViewById(dayBtnIds[i]);
+                if (btn.isChecked()) {
+                    repeat2 = repeat2.concat(day_string.get(i) + ".");
                 }
             }
 
             int id = 1;
+            SharedPreferences sched_prefs = getSharedPreferences("schedulers", MODE_PRIVATE);
 
-            SharedPreferences sched_prefs = getSharedPreferences("schedulers",MODE_PRIVATE);
-
-            while (sched_prefs.getInt("id_"+String.valueOf(id),-1)>0){
-                id=id+1;
+            while (sched_prefs.getInt("id_" + String.valueOf(id), -1) > 0) {
+                id = id + 1;
             }
 
             if (repeat2.equals(".")) {
-                String Message = "This scheduler has no repeat days and will not be saved. Please select at least one day otherwise there is no need for a scheduler. ";
-                int duration = Toast.LENGTH_LONG;
-                Toast toast = Toast.makeText(appContext, Message, duration);
-                toast.show();
-            }
-            else {
+                Toast.makeText(appContext,
+                        "This scheduler has no repeat days and will not be saved. Please select at least one day.",
+                        Toast.LENGTH_LONG).show();
+            } else {
                 Scheduler sched = new Scheduler(repeat2, tp, id);
                 sched.name = name;
                 sched.config_id = config_id;
                 sched.wifi_sw = wifi_sw.isChecked();
-                sched.wifi_ssid = String.valueOf(wifi_ssid.getText());
                 sched.saveToDisk();
                 sched.setAlarm(appContext);
                 schedulers.add(sched);
-
                 this.finish();
             }
-        }
-        else{
-            String Message = "This scheduler has no configuration to attach to and it will not be saved. Create at least one configuration before creating a scheduler. ";
-            int duration = Toast.LENGTH_LONG;
-            Toast toast = Toast.makeText(appContext, Message, duration);
-            toast.show();
+        } else {
+            Toast.makeText(appContext,
+                    "This scheduler has no configuration to attach to. Create at least one configuration first.",
+                    Toast.LENGTH_LONG).show();
         }
     }
 
-    public void scheduler_info(View v){
-        AlertDialog.Builder alertDialogBuilder =
-                new AlertDialog.Builder(v.getContext())
-                        .setTitle("Rsync Options Help")
-                        .setMessage(getResources().getString(R.string.scheduler_info))
-                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                ;
-        alertDialogBuilder.show();
+    public void scheduler_info(View v) {
+        new MaterialAlertDialogBuilder(v.getContext())
+                .setTitle("Scheduler Info")
+                .setMessage(getResources().getString(R.string.scheduler_info))
+                .setPositiveButton("Close", (dialog, which) -> {})
+                .show();
     }
 }

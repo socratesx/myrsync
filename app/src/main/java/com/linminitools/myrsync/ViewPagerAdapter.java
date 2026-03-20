@@ -1,62 +1,36 @@
 package com.linminitools.myrsync;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import java.util.ArrayList;
-import java.util.List;
+class ViewPagerAdapter extends FragmentStateAdapter {
 
-class ViewPagerAdapter extends FragmentStatePagerAdapter {
+    private static final String[] TAB_TITLES = {"Overview", "Configurations", "Schedulers", "Log"};
 
-    // Adapter for the viewpager using FragmentPagerAdapter
+    ViewPagerAdapter(@NonNull FragmentActivity activity) {
+        super(activity);
+    }
 
-    private final List<Fragment> mFragmentList = new java.util.ArrayList<>();
-    private final List<String> mFragmentTitleList = new ArrayList<>();
-
-    ViewPagerAdapter(FragmentManager manager) {
-        super(manager);
+    @NonNull
+    @Override
+    public Fragment createFragment(int position) {
+        switch (position) {
+            case 0: return new tab1();
+            case 1: return new tab3();
+            case 2: return new tab2();
+            case 3: return new tab4();
+            default: return new tab1();
+        }
     }
 
     @Override
-    public Fragment getItem(int position) {
-        return mFragmentList.get(position);
+    public int getItemCount() {
+        return TAB_TITLES.length;
     }
 
-    @Override
-    public int getCount() {
-        return mFragmentList.size();
+    static String getTabTitle(int position) {
+        return TAB_TITLES[position];
     }
-
-    private void addFragment(Fragment fragment, String title) {
-        mFragmentList.add(fragment);
-        mFragmentTitleList.add(title);
-
-    }
-
-    void refresh_adapter(){
-        mFragmentList.clear();
-        mFragmentTitleList.clear();
-
-        FragmentInitializer tab1 = new FragmentInitializer(new tab1());
-        FragmentInitializer tab2 = new FragmentInitializer(new tab2());
-        FragmentInitializer tab3 = new FragmentInitializer(new tab3());
-        FragmentInitializer tab4 = new FragmentInitializer(new tab4());
-
-        // Add Fragments to adapter one by one
-        this.addFragment(tab1.fHolder, "Overview");
-        this.addFragment(tab2.fHolder, "Configurations");
-        this.addFragment(tab3.fHolder, "Schedulers");
-        this.addFragment(tab4.fHolder, "Log");
-
-    }
-
-    @Override
-    public CharSequence getPageTitle(int position) {
-        return mFragmentTitleList.get(position);
-    }
-
 }
-
-
-

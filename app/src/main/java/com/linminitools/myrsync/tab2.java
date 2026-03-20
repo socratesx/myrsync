@@ -1,38 +1,39 @@
 package com.linminitools.myrsync;
 
-
-import android.content.Context;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ListView;
+import android.widget.TextView;
 
-import static com.linminitools.myrsync.myRsyncApplication.configs;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
+import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 
-
-public class tab2 extends androidx.fragment.app.Fragment {
+public class tab2 extends Fragment {
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        ViewGroup rootView = (ViewGroup) inflater.inflate(
-                R.layout.tab2, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.tab2, container, false);
         rootView.setTag("tab2");
         return rootView;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        Context c = this.getContext();
-        ListView lv_configs = view.findViewById(R.id.lv_configs);
-        lv_configs.setEmptyView(view.findViewById(android.R.id.empty));
-        customAdapter adapter = new customAdapter(c,configs,2);
+        RecyclerView rv = view.findViewById(R.id.lv_schedulers);
+        TextView emptyView = view.findViewById(R.id.empty_view);
+        customAdapter adapter = new customAdapter(this.getContext(), schedulers, 3);
+        rv.setAdapter(adapter);
 
-        lv_configs.setAdapter(adapter);
+        if (schedulers.isEmpty()) {
+            rv.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+        } else {
+            rv.setVisibility(View.VISIBLE);
+            emptyView.setVisibility(View.GONE);
+        }
     }
-
 }
-

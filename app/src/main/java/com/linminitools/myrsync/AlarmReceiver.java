@@ -85,7 +85,6 @@ public class AlarmReceiver extends BroadcastReceiver {
                 for (Map.Entry<String, ?> entry : config_keys.entrySet()) {
                     if (entry.getKey().contains("rs_id_")) {
                         String id = String.valueOf(entry.getValue());
-
                         if (Integer.parseInt(id) == config_id_to_run) {
                             RS_Configuration config = new RS_Configuration((Integer) entry.getValue());
                             config.rs_user = config_prefs.getString("rs_user_" + id, "");
@@ -97,6 +96,9 @@ public class AlarmReceiver extends BroadcastReceiver {
                             config.name = config_prefs.getString("rs_name_" + id, "");
                             config.rs_mode = config_prefs.getString("rs_mode_" + id, "push");
                             config.addedOn = config_prefs.getLong("rs_addedon_" + id, 0);
+                            config.rs_transport_type = config_prefs.getString("rs_transport_type_" + id, "");
+                            config.rs_ssh_private_key_path = config_prefs.getString("rs_ssh_private_key_path_" + id, "");
+                            config.rs_ssh_remote_path = config_prefs.getString("rs_ssh_remote_path_" + id, "");
                             config.executeConfig(ctx, scheduler_id);
                             break;
                         }

@@ -1,8 +1,6 @@
 package com.linminitools.myrsync;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -14,17 +12,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
-import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
 import java.util.HashMap;
@@ -36,190 +36,238 @@ import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
 import static com.linminitools.myrsync.MainActivity.getPath;
 
-
 public class addConfig extends AppCompatActivity {
     boolean path_is_not_writable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_config);
-        final Button save = findViewById(R.id.bt_save);
-        final Button view = findViewById(R.id.bt_view);
+
+        MaterialToolbar toolbar = findViewById(R.id.config_toolbar);
+        toolbar.setTitle(getTitle());
+        toolbar.setNavigationOnClickListener(v -> finish());
+
+        final MaterialButton save = findViewById(R.id.bt_save);
+        final MaterialButton view = findViewById(R.id.bt_view);
         save.setEnabled(false);
         view.setEnabled(false);
-        EditText path_textbox =  findViewById(R.id.ed_path);
-        path_textbox.addTextChangedListener(new TextWatcher() {
+
+        TextWatcher commonWatcher = new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (count>0) {
-                    save.setEnabled(true);
-                    view.setEnabled(true);
-                }
-                else {
-                    save.setEnabled(false);
-                    view.setEnabled(false);
-                }
+                updateButtons();
             }
-
             @Override
-            public void afterTextChanged(Editable s) {
+            public void afterTextChanged(Editable s) {}
+        };
 
+        ((TextInputEditText)findViewById(R.id.ed_path)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_remote_path)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_rsync_mod)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_ssh_key_path)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_srv_ip)).addTextChangedListener(commonWatcher);
+
+        RadioGroup transport_type = findViewById(R.id.rg_transport_type);
+        transport_type.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                if (checkedId == R.id.rb_daemon) {
+                    findViewById(R.id.lt_ssh_options).setVisibility(View.GONE);
+                    findViewById(R.id.lt_rsync_srv_mod).setVisibility(View.VISIBLE);
+                    TextInputLayout lt_rsync_user = findViewById(R.id.lt_rsync_user);
+                    lt_rsync_user.setHint(getString(R.string.rsync_user));
+
+                } else if (checkedId == R.id.rb_ssh) {
+                    findViewById(R.id.lt_ssh_options).setVisibility(View.VISIBLE);
+                    findViewById(R.id.lt_rsync_srv_mod).setVisibility(View.GONE);
+
+                    TextInputLayout lt_rsync_user = findViewById(R.id.lt_rsync_user);
+                    lt_rsync_user.setHint(getString(R.string.ssh_user));
+
+                }
+                updateButtons();
             }
         });
     }
 
-    public void addPath(View v){
+    protected void updateButtons() {
+        MaterialButton save = findViewById(R.id.bt_save);
+        MaterialButton view = findViewById(R.id.bt_view);
+        TextInputEditText local_path = findViewById(R.id.ed_path);
+        TextInputEditText remote_path = findViewById(R.id.ed_remote_path);
+        TextInputEditText rsync_mod = findViewById(R.id.ed_rsync_mod);
+        TextInputEditText ssh_key_path = findViewById(R.id.ed_ssh_key_path);
+        TextInputEditText srv_ip = findViewById(R.id.ed_srv_ip);
+        RadioGroup transport_type = findViewById(R.id.rg_transport_type);
+
+        boolean hasIp = srv_ip.getText() != null && srv_ip.getText().length() > 0;
+        boolean hasLocalPath = local_path.getText() != null && local_path.getText().length() > 0;
+        boolean hasRemote = false;
+
+        if (transport_type.getCheckedRadioButtonId() == R.id.rb_ssh) {
+            boolean hasRemotePath = remote_path.getText() != null && remote_path.getText().length() > 0;
+            boolean hasKeyPath = ssh_key_path.getText() != null && ssh_key_path.getText().length() > 0;
+            hasRemote = hasRemotePath && hasKeyPath;
+        } else {
+            hasRemote = rsync_mod.getText() != null && rsync_mod.getText().length() > 0;
+        }
+
+        boolean enabled = hasIp && hasLocalPath && hasRemote;
+        save.setEnabled(enabled);
+        view.setEnabled(enabled);
+    }
+
+    public void addPath(View v) {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         i.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
         i.setFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
         i.setFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-        Intent chooser = Intent.createChooser(i,"Choose Directory");
-        startActivityForResult(chooser,1);
+        Intent chooser = Intent.createChooser(i, "Choose Directory");
+        startActivityForResult(chooser, 1);
+    }
+
+    public void addSshKeyPath(View v) {
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        i.addCategory(Intent.CATEGORY_OPENABLE);
+        i.setType("*/*");
+        startActivityForResult(i, 2);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Check which request it is that we're responding to
-        if (requestCode == 1) {
-            // Make sure the request was successful
-            if (resultCode == RESULT_OK) {
-                // Get the URI that points to the selected path
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && data != null) {
+            Uri pathUri = data.getData();
 
-                Uri pathUri = data.getData();
+            if (requestCode == 1) {
                 Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
-                String local_path = getPath(appContext, dirUri);
-                File dir = new File(local_path);
-                DocumentFile df = DocumentFile.fromTreeUri(appContext, dirUri);
-
+                String path = getPath(appContext, dirUri);
+                File dir = new File(path);
                 boolean has_root_access = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getBoolean("root_access", false);
                 RadioGroup rg = findViewById(R.id.rg_mode);
                 RadioButton checked = findViewById(rg.getCheckedRadioButtonId());
 
-                Log.d("WRITABLE_PULL",String.valueOf(checked.getText().equals("Pull")));
-                Log.d("WRITABLE_ROOT",String.valueOf(has_root_access));
-                Log.d("WRITABLE_CANWRITE",String.valueOf(!dir.canWrite()));
-
                 if (checked.getText().equals("Pull") && (!has_root_access) && (!dir.canWrite())) {
-
                     path_is_not_writable = true;
-
-                }
-                else {
+                } else {
                     path_is_not_writable = false;
-                    File f = new File(local_path);
+                    File f = new File(path);
                     f.setWritable(true, false);
-                    Log.d("IS_WRITABLE", String.valueOf(df.canWrite()));
 
                     SharedPreferences path_prefs = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE);
                     SharedPreferences.Editor path_prefseditor = path_prefs.edit();
-                    path_prefseditor.putString("local_path", local_path);
+                    path_prefseditor.putString("local_path", path);
                     path_prefseditor.putString("path_uri", dirUri.toString());
                     path_prefseditor.commit();
 
-                    TextView tv_path = findViewById(R.id.ed_path);
-                    if (!Objects.requireNonNull(local_path).isEmpty()) {
-                        tv_path.setText(path_prefs.getString("local_path", ""));
-                        tv_path.setVisibility(View.VISIBLE);
-
-                        Button tv_addpath = findViewById(R.id.bt_add);
+                    TextInputEditText tv_path = findViewById(R.id.ed_path);
+                    if (!Objects.requireNonNull(path).isEmpty()) {
+                        tv_path.setText(path);
+                        MaterialButton tv_addpath = findViewById(R.id.bt_add);
                         tv_addpath.setText(R.string.change_path);
-
                     }
+                }
+            } else if (requestCode == 2) {
+                String path = getPath(appContext, pathUri);
+                TextInputEditText et_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
+                if (path != null && !path.isEmpty()) {
+                    et_ssh_key_path.setText(path);
                 }
             }
         }
     }
 
-
     @Override
-    protected void onResume(){
+    protected void onResume() {
         super.onResume();
-        if (path_is_not_writable){
-            AlertDialog.Builder alertDialogBuilder =
-                    new AlertDialog.Builder(this)
-                            .setTitle("Selected Folder is not Writable!")
-                            .setMessage(getResources().getString(R.string.select_folder))
-                            .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-                                }
-                            });
-            alertDialogBuilder.show();
+        if (path_is_not_writable) {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Selected Folder is not Writable!")
+                    .setMessage(getResources().getString(R.string.select_folder))
+                    .setPositiveButton("Close", (dialog, which) -> {})
+                    .show();
+            path_is_not_writable = false;
         }
-        }
+    }
 
+    Map<String, String> processForm() {
+        Map<String, String> configMap = new HashMap<>();
 
+        int checked_rb_transport_type = ((RadioGroup) findViewById(R.id.rg_transport_type)).getCheckedRadioButtonId();
+        RadioButton rb_transport_type = findViewById(checked_rb_transport_type);
 
-    Map<String,String> processForm(){
+        TextInputEditText et_srv_ip = findViewById(R.id.ed_srv_ip);
+        TextInputEditText et_srv_port = findViewById(R.id.ed_srv_port);
+        TextInputEditText et_rs_user = findViewById(R.id.ed_rsync_user);
+        TextInputEditText et_rs_mod = findViewById(R.id.ed_rsync_mod);
+        TextInputEditText et_config_name = findViewById(R.id.et_rsync_alias);
 
-        Map<String,String> configMap = new HashMap<>();
+        int checked_rb_mode = ((RadioGroup) findViewById(R.id.rg_mode)).getCheckedRadioButtonId();
+        RadioButton rb_mode = findViewById(checked_rb_mode);
 
-        EditText et_srv_ip= findViewById(R.id.ed_srv_ip);
-        EditText et_srv_port= findViewById(R.id.ed_srv_port);
-        EditText et_rs_user= findViewById(R.id.ed_rsync_user);
-        EditText et_rs_mod= findViewById(R.id.ed_rsync_mod);
-        EditText et_config_name = findViewById(R.id.et_rsync_alias);
-        int checked_rb = ((RadioGroup)findViewById(R.id.rg_mode)).getCheckedRadioButtonId();
-        RadioButton rb = findViewById(checked_rb);
+        String options = "-";
+        String[] availableOptions = {"a", "r", "z", "v", "n", "p", "t", "O", "q", "m", "u", "g"};
 
-
-        String options="-";
-
-
-        String[] availableOptions={"a","r","z","v","n","p","t","O","q","m","u","g"};
-
-        for(String check_box : availableOptions){
+        for (String check_box : availableOptions) {
             int resID = getResources().getIdentifier("cb_" + check_box, "id", getPackageName());
-            //Log.d("RESID",String.valueOf(resID));
             CheckBox cb = findViewById(resID);
-            if(cb.isChecked()){
-                options=options.concat(check_box);
+            if (cb.isChecked()) {
+                options = options.concat(check_box);
             }
         }
 
-        if (Objects.equals(options, "-")){options="";}
+        if (Objects.equals(options, "-")) {
+            options = "";
+        }
 
-        EditText ed_adv_opts = findViewById(R.id.ed_advanced_options);
-        String adv_options=ed_adv_opts.getText().toString();
-        options = options.concat(" "+adv_options);
+        TextInputEditText ed_adv_opts = findViewById(R.id.ed_advanced_options);
+        String adv_options = ed_adv_opts.getText().toString();
+        options = options.concat(" " + adv_options);
 
-        EditText ed_path = findViewById(R.id.ed_path);
+        TextInputEditText et_path = findViewById(R.id.ed_path);
+        TextInputEditText et_remote_path = findViewById(R.id.ed_remote_path);
+        TextInputEditText et_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
 
-        String rs_user=String.valueOf(et_rs_user.getText()).trim() ;
-        String rs_ip=String.valueOf(et_srv_ip.getText()).trim();
-        String rs_port=String.valueOf(et_srv_port.getText()).trim();
-        String rs_module=String.valueOf(et_rs_mod.getText()).trim();
+        String rs_transport_type = String.valueOf(rb_transport_type.getText()).trim();
+        String rs_user = String.valueOf(et_rs_user.getText()).trim();
+        String rs_ip = String.valueOf(et_srv_ip.getText()).trim();
+        String rs_port = String.valueOf(et_srv_port.getText()).trim();
+        String rs_module = String.valueOf(et_rs_mod.getText()).trim();
         String rs_name = String.valueOf(et_config_name.getText()).trim();
-        String rs_mode = String.valueOf(rb.getText()).trim();
-        //String local_path=appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("local_path","");
-        String local_path=String.valueOf(ed_path.getText());
-        String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri","");
-        if (rs_port.isEmpty()) { rs_port="873";}
+        String rs_mode = String.valueOf(rb_mode.getText()).trim();
+        String local_path = String.valueOf(et_path.getText());
+        String ssh_remote_path = String.valueOf(et_remote_path.getText());
+        String ssh_private_key_path = String.valueOf(et_ssh_key_path.getText());
 
-        configMap.put("rs_ip",rs_ip);
-        configMap.put("rs_user",rs_user);
-        configMap.put("rs_port",rs_port);
-        configMap.put("rs_module",rs_module);
-        configMap.put("local_path",local_path);
-        configMap.put("rs_options",options);
-        configMap.put("rs_name",rs_name);
-        configMap.put("rs_mode",rs_mode);
-        configMap.put("path_uri",path_uri);
-        configMap.put("adv_options",adv_options);
+        String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri", "");
+        if (rs_port.isEmpty()) {
+            rs_port = rs_transport_type.equals("SSH") ? "22" : "873";
+        }
+
+        configMap.put("rs_ip", rs_ip);
+        configMap.put("rs_user", rs_user);
+        configMap.put("rs_port", rs_port);
+        configMap.put("rs_module", rs_module);
+        configMap.put("local_path", local_path);
+        configMap.put("rs_options", options);
+        configMap.put("rs_name", rs_name);
+        configMap.put("rs_mode", rs_mode);
+        configMap.put("path_uri", path_uri);
+        configMap.put("adv_options", adv_options);
+        configMap.put("rs_ssh_remote_path", ssh_remote_path);
+        configMap.put("rs_ssh_private_key_path", ssh_private_key_path);
+        configMap.put("rs_transport_type", rs_transport_type);
 
         return configMap;
     }
 
+    public void viewCommand(View v) {
+        Map<String, String> configMap = processForm();
 
-
-    public void viewCommand(View v){
-
-        Map<String,String> configMap=processForm();
-
+        String rs_transport_type = configMap.get("rs_transport_type");
         String options = configMap.get("rs_options");
         String rs_user = configMap.get("rs_user");
         String rs_ip = configMap.get("rs_ip");
@@ -227,20 +275,31 @@ public class addConfig extends AppCompatActivity {
         String rs_module = configMap.get("rs_module");
         String local_path = configMap.get("local_path");
         String rs_mode = configMap.get("rs_mode");
+        String rs_ssh_private_key_path = configMap.get("rs_ssh_private_key_path");
+        String rs_ssh_remote_path = configMap.get("rs_ssh_remote_path");
 
-        TextView tv= findViewById(R.id.tv_rs_cmd_View);
+        TextView tv = findViewById(R.id.tv_rs_cmd_View);
 
         String Rsync_command;
-        if (rs_mode.equals("Push")) Rsync_command= "rsync "+options+" "+ local_path+" "+"rsync://"+rs_user+"@"+rs_ip+":"+rs_port+"/"+rs_module;
-        else Rsync_command= "rsync "+options+ " " + "rsync://"+rs_user+"@"+rs_ip+":"+rs_port+"/"+rs_module + " "+ local_path ;
+        String ssh_destination = rs_user + "@" + rs_ip + ":" + rs_ssh_remote_path;
+        String daemon_destination = "rsync://" + rs_user + "@" + rs_ip + ":" + rs_port + "/" + rs_module;
+
+        if (rs_transport_type.equals("SSH")) {
+            Rsync_command = rs_mode.equals("Push") ?
+                    "rsync " + options + " " + local_path + " " + ssh_destination :
+                    "rsync " + options + " " + ssh_destination + " " + local_path;
+        }
+        else {
+            Rsync_command = rs_mode.equals("Push") ?
+                    "rsync " + options + " " + local_path + " " + daemon_destination :
+                    "rsync " + options + " " + daemon_destination + " " + local_path;
+        }
 
         tv.setText(Rsync_command);
-
     }
 
-
-    public void saveConfig(View v){
-        Map<String,String> configMap=processForm();
+    public void saveConfig(View v) {
+        Map<String, String> configMap = processForm();
 
         String rs_options = configMap.get("rs_options");
         String rs_user = configMap.get("rs_user");
@@ -252,101 +311,81 @@ public class addConfig extends AppCompatActivity {
         String rs_mode = configMap.get("rs_mode");
         String path_uri = configMap.get("path_uri");
         String adv_options = configMap.get("adv_options");
+        String rs_transport_type = configMap.get("rs_transport_type");
+        String rs_ssh_private_key_path = configMap.get("rs_ssh_private_key_path");
+        String rs_ssh_remote_path = configMap.get("rs_ssh_remote_path");
 
-        if (!rs_ip.isEmpty() && !rs_module.isEmpty() && !local_path.isEmpty()) {
+        boolean is_ssh = rs_transport_type.equals("SSH");
+        boolean remote_complete = false;
+        if (is_ssh) {
+            remote_complete = !rs_ssh_remote_path.isEmpty() && !rs_ssh_private_key_path.isEmpty();
+        } else {
+            remote_complete = !rs_module.isEmpty();
+        }
 
+        if (!rs_ip.isEmpty() && remote_complete && !local_path.isEmpty()) {
             int id = 1;
+            SharedPreferences config_prefs = getSharedPreferences("configs", MODE_PRIVATE);
 
-            SharedPreferences config_prefs = getSharedPreferences("configs",MODE_PRIVATE);
-
-            while (config_prefs.getInt("rs_id_"+String.valueOf(id),-1)>0){
-                id=id+1;
+            while (config_prefs.getInt("rs_id_" + String.valueOf(id), -1) > 0) {
+                id = id + 1;
             }
 
             RS_Configuration config = new RS_Configuration(id);
-
             config.rs_ip = rs_ip;
             config.rs_user = rs_user;
             config.rs_port = rs_port;
             config.rs_options = rs_options;
             config.rs_module = rs_module;
             config.local_path = local_path;
-            config.name= rs_name;
-            config.rs_mode=rs_mode;
-            //config.path_uri = path_uri;
+            config.name = rs_name;
+            config.rs_mode = rs_mode;
             config.adv_options = adv_options;
+            config.rs_transport_type = rs_transport_type;
+            config.rs_ssh_private_key_path = rs_ssh_private_key_path;
+            config.rs_ssh_remote_path = rs_ssh_remote_path;
+
             config.saveToDisk();
             configs.add(config);
             this.finish();
-
+        } else {
+            Toast.makeText(getApplicationContext(), "Configuration is not Complete!", Toast.LENGTH_SHORT).show();
         }
-        else{
-
-            Context context = getApplicationContext();
-            CharSequence text = "Configuration is not Complete!";
-            int duration = Toast.LENGTH_SHORT;
-
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-        }
-
-
     }
 
-    public void rsync_help(View v){
-        AlertDialog.Builder alertDialogBuilder =
-                new AlertDialog.Builder(v.getContext())
-                        .setTitle("Rsync Options Help")
-                        .setMessage(getResources().getString(R.string.rsync_options))
-                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                ;
-        alertDialogBuilder.show();
+    public void rsync_help(View v) {
+        new MaterialAlertDialogBuilder(v.getContext())
+                .setTitle("Rsync Options Help")
+                .setMessage(getResources().getString(R.string.rsync_options))
+                .setPositiveButton("Close", (dialog, which) -> {})
+                .show();
     }
 
-    public void rsync_adv_opts_help(View v){
-        AlertDialog.Builder alertDialogBuilder =
-                new AlertDialog.Builder(v.getContext())
-                        .setTitle("Rsync Advanced Options Help")
-                        .setMessage(getResources().getString(R.string.rsync_adv_options))
-                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                ;
-        alertDialogBuilder.show();
+    public void rsync_adv_opts_help(View v) {
+        new MaterialAlertDialogBuilder(v.getContext())
+                .setTitle("Rsync Advanced Options Help")
+                .setMessage(getResources().getString(R.string.rsync_adv_options))
+                .setPositiveButton("Close", (dialog, which) -> {})
+                .show();
     }
 
-    public void select_path_help(View v){
-        AlertDialog.Builder alertDialogBuilder =
-                new AlertDialog.Builder(v.getContext())
-                        .setTitle("Pull Configuration Folder Select")
-                        .setMessage(getResources().getString(R.string.select_folder))
-                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        })
-                ;
-        alertDialogBuilder.show();
+    public void select_path_help(View v) {
+        new MaterialAlertDialogBuilder(v.getContext())
+                .setTitle("Pull Configuration Folder Select")
+                .setMessage(getResources().getString(R.string.select_folder))
+                .setPositiveButton("Close", (dialog, which) -> {})
+                .show();
     }
 
-    public void rsync_daemon_info(View v){
+    public void rsync_daemon_info(View v) {
         SpannableString s = new SpannableString(getResources().getString(R.string.rsync_daemon_info));
         Pattern p = Pattern.compile("https://download.samba.org/pub/rsync/rsyncd.conf.html");
-        Linkify.addLinks(s,p,null);
+        Linkify.addLinks(s, p, null);
 
-        AlertDialog d= new AlertDialog.Builder(v.getContext())
-                        .setTitle("Build Rsync Configuration")
-                        .setMessage(s)
-                        .setPositiveButton("Close", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                            }
-                        }).show();
-        TextView textView = d.findViewById(android.R.id.message);
-
-        textView.setTextSize(13);
-        textView.setMovementMethod(LinkMovementMethod.getInstance());
+        new MaterialAlertDialogBuilder(v.getContext())
+                .setTitle("Build Rsync Configuration")
+                .setMessage(s)
+                .setPositiveButton("Close", (dialog, which) -> {})
+                .show();
     }
 }

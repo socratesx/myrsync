@@ -300,7 +300,4 @@ public class Scheduler extends MainActivity implements Comparable<Scheduler>{
         else
             return "Never";
     }
-
-
-
 }

@@ -15,7 +15,7 @@ import androidx.appcompat.app.ActionBar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
-
+import androidx.appcompat.app.AppCompatDelegate;
 import java.io.IOException;
 
 public class Settings  extends AppCompatPreferenceActivity {
@@ -29,6 +29,11 @@ public class Settings  extends AppCompatPreferenceActivity {
                 // the preference's 'entries' list.
                 ListPreference listPreference = (ListPreference) preference;
                 int index = listPreference.findIndexOfValue(stringValue);
+
+                if (preference.getKey().equals("theme_mode")) {
+                    int newMode = Integer.parseInt(stringValue);
+                    AppCompatDelegate.setDefaultNightMode(newMode);
+                }              
                 // Set the summary to reflect the new value.
                 preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
 
@@ -89,6 +94,7 @@ public class Settings  extends AppCompatPreferenceActivity {
             else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
+
                 preference.setSummary(stringValue);
             }
             return true;
@@ -155,11 +161,11 @@ public class Settings  extends AppCompatPreferenceActivity {
                 // to their values. When their values change, their summaries are
                 // updated to reflect the new value, per the Android Design
                 // guidelines.
+                bindPreferenceSummaryToValue(findPreference("theme_mode"));
                 bindPreferenceSummaryToValue(findPreference("notifications"));
                 bindPreferenceSummaryToValue(findPreference("vibrate"));
                 bindPreferenceSummaryToValue(findPreference("ringtone"));
                 bindPreferenceSummaryToValue(findPreference("root_access"));
-
             }
 
 
