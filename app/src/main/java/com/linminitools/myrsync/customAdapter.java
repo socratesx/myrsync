@@ -15,11 +15,8 @@ import com.google.android.material.chip.Chip;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import static android.content.Context.MODE_PRIVATE;
-import static com.linminitools.myrsync.myRsyncApplication.configs;
-import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 
 class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
@@ -61,10 +58,6 @@ class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 View v = inflater.inflate(R.layout.row, parent, false);
                 return new ConfigViewHolder(v);
             }
-            case 3: {
-                View v = inflater.inflate(R.layout.row_sched, parent, false);
-                return new SchedViewHolder(v);
-            }
             default:
                 throw new IllegalArgumentException("Unknown view type: " + viewType);
         }
@@ -79,9 +72,8 @@ class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             case 2:
                 bindConfig((ConfigViewHolder) holder, position);
                 break;
-            case 3:
-                bindSched((SchedViewHolder) holder, position);
-                break;
+            default:
+                throw new IllegalArgumentException("Unknown view type: " + fromTab);
         }
     }
 
@@ -143,35 +135,6 @@ class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         vh.cloneBtn.setTag(R.id.bt_clone, position);
     }
 
-    private void bindSched(SchedViewHolder vh, int position) {
-        Scheduler sched = (Scheduler) data.get(position);
-        vh.name.setText(sched.name);
-        vh.editBtn.setTag(R.id.bt_edit_sched, position);
-        vh.deleteBtn.setTag(R.id.bt_delete_sched, position);
-        vh.time.setText(String.format(Locale.getDefault(), "%02d:%02d", sched.hour, sched.min));
-
-        int[] dayViewIds = {R.id.tv_monday, R.id.tv_tuesday, R.id.tv_wednesday,
-                R.id.tv_thursday, R.id.tv_friday, R.id.tv_saturday, R.id.tv_sunday};
-
-        for (int dayId : dayViewIds) {
-            TextView tv = vh.itemView.findViewById(dayId);
-            tv.setBackgroundResource(0);
-            tv.setTextColor(tv.getResources().getColor(android.R.color.darker_gray, tv.getContext().getTheme()));
-        }
-
-        String days = sched.days;
-        String[] active_days = days.split("[.]");
-        for (String d : active_days) {
-            if (!d.isEmpty()) {
-                int rid = context.getResources().getIdentifier("tv_" + d, "id", context.getPackageName());
-                if (rid != 0) {
-                    TextView tv_day = vh.itemView.findViewById(rid);
-                    tv_day.setBackgroundResource(R.drawable.textview_selector);
-                }
-            }
-        }
-    }
-
     static class StatusViewHolder extends RecyclerView.ViewHolder {
         final TextView configName, schedName, nextRun, lastRun, result;
         final ImageView errorIcon, warningIcon, successIcon;
@@ -203,19 +166,6 @@ class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             deleteBtn = v.findViewById(R.id.bt_delete);
             cloneBtn = v.findViewById(R.id.bt_clone);
             runBtn = v.findViewById(R.id.bt_run);
-        }
-    }
-
-    static class SchedViewHolder extends RecyclerView.ViewHolder {
-        final TextView name, time;
-        final View editBtn, deleteBtn;
-
-        SchedViewHolder(View v) {
-            super(v);
-            name = v.findViewById(R.id.tv_sched_name);
-            time = v.findViewById(R.id.tv_sched_showtime);
-            editBtn = v.findViewById(R.id.bt_edit_sched);
-            deleteBtn = v.findViewById(R.id.bt_delete_sched);
         }
     }
 }

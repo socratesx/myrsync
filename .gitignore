@@ -1,7 +1,7 @@
 *.iml
 .gradle
 /local.properties
-/.idea/
+.idea/
 .DS_Store
 /build
 /captures
@@ -10,3 +10,5 @@
 *.keystore
 keystore.properties
 app/release/
+*.deb
+app/src/main/assets/rsync_binary/
