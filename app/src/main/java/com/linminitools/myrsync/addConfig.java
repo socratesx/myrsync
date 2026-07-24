@@ -13,20 +13,26 @@ import android.text.Editable;
 import android.text.SpannableString;
 import android.text.TextWatcher;
 import android.text.util.Linkify;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.materialswitch.MaterialSwitch;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -34,6 +40,7 @@ import java.util.regex.Pattern;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
+import static com.linminitools.myrsync.myRsyncApplication.schedulers;
 import static com.linminitools.myrsync.MainActivity.getPath;
 
 public class addConfig extends AppCompatActivity {
@@ -91,6 +98,44 @@ public class addConfig extends AppCompatActivity {
                 updateButtons();
             }
         });
+
+        initScheduleEditorControls();
+    }
+
+    /** Call after {@code setContentView} whenever the hierarchy is (re)inflated (e.g. edit screen). */
+    protected void initScheduleEditorControls() {
+        MaterialButton addSched = findViewById(R.id.bt_add_schedule_slot);
+        View schedulesBlock = findViewById(R.id.schedules_section_block);
+        TextView schedulesLocked = findViewById(R.id.tv_schedules_pro_locked);
+
+        boolean proSchedules = ProEntitlement.canUseSchedules(this);
+        if (schedulesLocked != null) {
+            schedulesLocked.setVisibility(proSchedules ? View.GONE : View.VISIBLE);
+            if (!proSchedules) {
+                schedulesLocked.setOnClickListener(v ->
+                        ProUpgradeUi.showFeatureLocked(this, R.string.pro_limit_schedules));
+            }
+        }
+        if (addSched != null) {
+            addSched.setVisibility(proSchedules ? View.VISIBLE : View.GONE);
+            addSched.setOnClickListener(v -> {
+                if (!ProEntitlement.canUseSchedules(this)) {
+                    ProUpgradeUi.showFeatureLocked(this, R.string.pro_limit_schedules);
+                    return;
+                }
+                addSchedulerEditorRow(null);
+            });
+        }
+        LinearLayout container = findViewById(R.id.schedulers_editor_container);
+        if (container != null) {
+            container.setVisibility(proSchedules ? View.VISIBLE : View.GONE);
+            if (!proSchedules) {
+                container.removeAllViews();
+            }
+        }
+        if (schedulesBlock != null) {
+            schedulesBlock.setAlpha(proSchedules ? 1f : 0.85f);
+        }
     }
 
     protected void updateButtons() {
@@ -324,6 +369,14 @@ public class addConfig extends AppCompatActivity {
         }
 
         if (!rs_ip.isEmpty() && remote_complete && !local_path.isEmpty()) {
+            if (!ProEntitlement.canCreateConfig(this)) {
+                ProUpgradeUi.showFeatureLocked(this, R.string.pro_limit_configs);
+                return;
+            }
+            if (!validateScheduleRows()) {
+                return;
+            }
+
             int id = 1;
             SharedPreferences config_prefs = getSharedPreferences("configs", MODE_PRIVATE);
 
@@ -346,7 +399,9 @@ public class addConfig extends AppCompatActivity {
             config.rs_ssh_remote_path = rs_ssh_remote_path;
 
             config.saveToDisk();
+            config_prefs.edit().putString("path_uri_" + config.id, path_uri).apply();
             configs.add(config);
+            syncSchedulersFromContainer(config.id);
             this.finish();
         } else {
             Toast.makeText(getApplicationContext(), "Configuration is not Complete!", Toast.LENGTH_SHORT).show();
@@ -388,4 +443,145 @@ public class addConfig extends AppCompatActivity {
                 .setPositiveButton("Close", (dialog, which) -> {})
                 .show();
     }
+
+    private static final int[] SCHED_DAY_BTN_IDS = {
+            R.id.tb_monday, R.id.tb_tuesday, R.id.tb_wednesday, R.id.tb_thursday,
+            R.id.tb_friday, R.id.tb_saturday, R.id.tb_sunday
+    };
+    private static final String[] SCHED_DAY_NAMES = {
+            "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"
+    };
+
+    protected static class ScheduleRowData {
+        final String days;
+        final int hour, min;
+        final boolean wifiSw;
+
+        ScheduleRowData(String days, int hour, int min, boolean wifiSw) {
+            this.days = days;
+            this.hour = hour;
+            this.min = min;
+            this.wifiSw = wifiSw;
+        }
+    }
+
+    protected void addSchedulerEditorRow(Scheduler existing) {
+        LinearLayout container = findViewById(R.id.schedulers_editor_container);
+        View row = LayoutInflater.from(this).inflate(R.layout.item_scheduler_editor, container, false);
+        container.addView(row);
+
+        TimePicker tp = row.findViewById(R.id.sched_time_picker);
+        tp.setIs24HourView(true);
+
+        MaterialSwitch sw = row.findViewById(R.id.sched_sw_wifi);
+
+        row.findViewById(R.id.bt_remove_schedule_slot).setOnClickListener(v -> {
+            container.removeView(row);
+            refreshScheduleSlotTitles();
+        });
+
+        if (existing != null) {
+            tp.setHour(existing.hour);
+            tp.setMinute(existing.min);
+            String[] active = existing.days.split("[.]");
+            for (String a : active) {
+                if (a.isEmpty()) continue;
+                int rid = getResources().getIdentifier("tb_" + a, "id", getPackageName());
+                if (rid != 0) {
+                    MaterialButton btn = row.findViewById(rid);
+                    if (btn != null) btn.setChecked(true);
+                }
+            }
+            sw.setChecked(Boolean.TRUE.equals(existing.wifi_sw));
+        }
+
+        refreshScheduleSlotTitles();
+    }
+
+    protected void refreshScheduleSlotTitles() {
+        LinearLayout c = findViewById(R.id.schedulers_editor_container);
+        for (int i = 0; i < c.getChildCount(); i++) {
+            View row = c.getChildAt(i);
+            TextView title = row.findViewById(R.id.tv_schedule_slot_title);
+            title.setText(getString(R.string.schedule_number, i + 1));
+        }
+    }
+
+    protected void loadSchedulerEditorsForConfig(int configId) {
+        LinearLayout c = findViewById(R.id.schedulers_editor_container);
+        if (c == null || !ProEntitlement.canUseSchedules(this)) {
+            return;
+        }
+        c.removeAllViews();
+        ArrayList<Scheduler> list = Scheduler.schedulersForConfig(configId);
+        for (Scheduler s : list) {
+            addSchedulerEditorRow(s);
+        }
+    }
+
+    protected ScheduleRowData readScheduleRow(View row) {
+        TimePicker tp = row.findViewById(R.id.sched_time_picker);
+        StringBuilder repeat = new StringBuilder(".");
+        for (int i = 0; i < SCHED_DAY_BTN_IDS.length; i++) {
+            MaterialButton btn = row.findViewById(SCHED_DAY_BTN_IDS[i]);
+            if (btn != null && btn.isChecked()) {
+                repeat.append(SCHED_DAY_NAMES[i]).append(".");
+            }
+        }
+        MaterialSwitch sw = row.findViewById(R.id.sched_sw_wifi);
+        return new ScheduleRowData(repeat.toString(), tp.getHour(), tp.getMinute(), sw.isChecked());
+    }
+
+    protected boolean validateScheduleRows() {
+        if (!ProEntitlement.canUseSchedules(this)) {
+            return true;
+        }
+        LinearLayout c = findViewById(R.id.schedulers_editor_container);
+        if (c == null) {
+            return true;
+        }
+        for (int i = 0; i < c.getChildCount(); i++) {
+            ScheduleRowData rd = readScheduleRow(c.getChildAt(i));
+            if (rd.days.equals(".")) {
+                Toast.makeText(this, R.string.schedule_needs_day, Toast.LENGTH_LONG).show();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected void syncSchedulersFromContainer(int configId) {
+        LinearLayout container = findViewById(R.id.schedulers_editor_container);
+        ArrayList<ScheduleRowData> pending = new ArrayList<>();
+        if (ProEntitlement.canUseSchedules(this) && container != null) {
+            for (int i = 0; i < container.getChildCount(); i++) {
+                pending.add(readScheduleRow(container.getChildAt(i)));
+            }
+        }
+        for (Scheduler s : new ArrayList<>(schedulers)) {
+            if (s.config_id == configId) {
+                s.cancelAlarm(this);
+                s.deleteFromDisk();
+                schedulers.remove(s);
+            }
+        }
+        for (int i = 0; i < pending.size(); i++) {
+            ScheduleRowData rd = pending.get(i);
+            TimePicker tp = new TimePicker(this);
+            tp.setIs24HourView(true);
+            tp.setHour(rd.hour);
+            tp.setMinute(rd.min);
+            int sid = SchedulerIds.makeId(configId, i);
+            Scheduler sched = new Scheduler(rd.days, tp, sid);
+            sched.name = SchedulerIds.internalLabel(configId, i);
+            sched.config_id = configId;
+            sched.wifi_sw = rd.wifiSw;
+            sched.wifi_ssid = "";
+            sched.saveToDisk();
+            sched.setAlarm(appContext);
+            schedulers.add(sched);
+        }
+        Collections.sort(schedulers);
+    }
+
 }

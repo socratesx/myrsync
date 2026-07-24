@@ -1,13 +1,11 @@
 package com.linminitools.myrsync;
 
-import com.twofortyfouram.locale.sdk.client.receiver.AbstractPluginSettingReceiver;
-
+import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import android.widget.Toast;
-import com.linminitools.myrsync.PluginBundleValues;
+import android.os.PowerManager;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -15,78 +13,134 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
 
-import static android.content.Context.MODE_PRIVATE;
+/**
+ * Handles Tasker / Locale {@code FIRE_SETTING} broadcasts.
+ */
+public final class TaskerPluginReceiver extends BroadcastReceiver {
 
-public final class TaskerPluginReceiver extends AbstractPluginSettingReceiver {
-
-    @Override
-    protected boolean isBundleValid(@NonNull final Bundle bundle) {
-        return PluginBundleValues.isBundleValid(bundle);
-    }
-
-    @Override
-    protected boolean isAsync() {
-        return true;
-    }
+    private static final String TAG = "TaskerPluginFire";
+    private static final String EXTRA_BUNDLE =
+            "com.twofortyfouram.locale.intent.extra.BUNDLE";
+    private static final String ACTION_FIRE =
+            "com.twofortyfouram.locale.intent.action.FIRE_SETTING";
+    private static final long WAKELOCK_TIMEOUT_MS = 15L * 60L * 1000L;
 
     @Override
-    protected void firePluginSetting(@NonNull final Context context, @NonNull final Bundle bundle) {
-        int configId = PluginBundleValues.getConfigId(bundle);
+    public void onReceive(final Context context, final Intent intent) {
+        Log.i(TAG, "onReceive action=" + (intent != null ? intent.getAction() : "null")
+                + " component=" + (intent != null ? intent.getComponent() : "null"));
 
-        String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
-        File debug_log = new File(Debug_log_path);
-        Locale current_locale = context.getResources().getConfiguration().locale;
-        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
-        FileWriter debug_writer = null;
-
-        try {
-            boolean configFound = false;
-            SharedPreferences config_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
-            Map<String, ?> config_keys = config_prefs.getAll();
-
-            for (Map.Entry<String, ?> entry : config_keys.entrySet()) {
-                if (entry.getKey().contains("rs_id_")) {
-                    String id = String.valueOf(entry.getValue());
-
-                    if (Integer.parseInt(id) == configId) {
-                        configFound = true;
-
-                        RS_Configuration config = new RS_Configuration((Integer) entry.getValue());
-                        config.rs_user = config_prefs.getString("rs_user_" + id, "");
-                        config.rs_ip = config_prefs.getString("rs_ip_" + id, "");
-                        config.rs_port = config_prefs.getString("rs_port_" + id, "");
-                        config.rs_options = config_prefs.getString("rs_options_" + id, "");
-                        config.rs_module = config_prefs.getString("rs_module_" + id, "");
-                        config.local_path = config_prefs.getString("local_path_" + id, "");
-                        config.name = config_prefs.getString("rs_name_" + id, "");
-                        config.rs_mode = config_prefs.getString("rs_mode_" + id, "push");
-                        config.addedOn = config_prefs.getLong("rs_addedon_" + id, 0);
-
-                        debug_writer = new FileWriter(debug_log, true);
-
-                        CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] CONFIGURATION RUN " + config.name + " TRIGGERED FROM TASKER PLUGIN";
-                        debug_writer.append(message);
-                        debug_writer.close();
-
-                        config.executeConfig(context, null);
-                        break;
-                    }
-                }
-            }
-
-            if (!configFound) {
-                debug_writer = new FileWriter(debug_log, true);
-
-                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] CONFIGURATION RUN TRIGGERED FROM TASKER PLUGIN BUT NO CONFIG FOUND WITH ID " + configId;
-                debug_writer.append(message);
-                debug_writer.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (intent == null || !ACTION_FIRE.equals(intent.getAction())) {
+            Log.w(TAG, "Ignoring non-FIRE_SETTING intent");
+            return;
         }
 
+        if (!ProEntitlement.canUseTasker(context)) {
+            Log.w(TAG, "Ignoring fire: Pro required");
+            appendDebug(context, "TASKER FIRE IGNORED: Pro required");
+            return;
+        }
+
+        Bundle bundle = intent.getBundleExtra(EXTRA_BUNDLE);
+        // Allow a flat config-id extra for adb/device testing when EXTRA_BUNDLE is absent.
+        if (bundle == null && intent.hasExtra(PluginBundleValues.BUNDLE_EXTRA_INT_CONFIG)) {
+            bundle = new Bundle();
+            bundle.putInt(PluginBundleValues.BUNDLE_EXTRA_INT_CONFIG,
+                    intent.getIntExtra(PluginBundleValues.BUNDLE_EXTRA_INT_CONFIG, -1));
+            bundle.putInt(PluginBundleValues.BUNDLE_EXTRA_INT_VERSION_CODE, 0);
+        }
+        if (bundle == null) {
+            Log.e(TAG, "Missing EXTRA_BUNDLE");
+            appendDebug(context, "TASKER FIRE IGNORED: missing EXTRA_BUNDLE");
+            return;
+        }
+
+        Log.i(TAG, "bundle keys=" + bundle.keySet()
+                + " configId=" + bundle.getInt(PluginBundleValues.BUNDLE_EXTRA_INT_CONFIG, -1));
+
+        if (!PluginBundleValues.isBundleValid(bundle)) {
+            Log.e(TAG, "Bundle failed validation");
+            appendDebug(context, "TASKER FIRE IGNORED: invalid bundle keys=" + bundle.keySet());
+            return;
+        }
+
+        final int configId = PluginBundleValues.getConfigId(bundle);
+        final PendingResult pendingResult = goAsync();
+        final Context appContext = context.getApplicationContext();
+
+        final PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        final PowerManager.WakeLock wakeLock = pm != null
+                ? pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "myrsync:TaskerPluginFire")
+                : null;
+        if (wakeLock != null) {
+            wakeLock.setReferenceCounted(false);
+            wakeLock.acquire(WAKELOCK_TIMEOUT_MS);
+        }
+
+        // Safe on a background thread now that RS_Configuration is a plain model class.
+        new Thread(() -> {
+            try {
+                runConfig(appContext, configId);
+            } catch (Throwable t) {
+                Log.e(TAG, "Fire failed for configId=" + configId, t);
+                appendDebug(appContext, "TASKER FIRE FAILED: " + t.getMessage());
+            } finally {
+                try {
+                    if (wakeLock != null && wakeLock.isHeld()) {
+                        wakeLock.release();
+                    }
+                } catch (RuntimeException ignored) {
+                    // May already be released by timeout.
+                }
+                if (pendingResult != null) {
+                    pendingResult.finish();
+                }
+            }
+        }, "TaskerPluginFire").start();
+    }
+
+    private static void runConfig(Context context, int configId) {
+        RS_Configuration config = myRsyncApplication.loadConfigById(context, configId);
+        if (config == null) {
+            Log.e(TAG, "No config for id=" + configId);
+            appendDebug(context,
+                    "CONFIGURATION RUN TRIGGERED FROM TASKER PLUGIN BUT NO CONFIG FOUND WITH ID "
+                            + configId);
+            return;
+        }
+
+        Log.i(TAG, "Starting config id=" + configId + " name=" + config.name
+                + " thread=" + Thread.currentThread().getName());
+        appendDebug(context, "CONFIGURATION RUN " + config.name + " TRIGGERED FROM TASKER PLUGIN");
+
+        Thread rsyncThread = config.executeConfig(context, null);
+        if (rsyncThread == null) {
+            Log.w(TAG, "executeConfig returned null (likely aborted by network gate)");
+            appendDebug(context, "TASKER FIRE: executeConfig aborted before start for " + config.name);
+            return;
+        }
+
+        try {
+            rsyncThread.join(WAKELOCK_TIMEOUT_MS - 5_000L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            Log.w(TAG, "Interrupted while waiting for config run", e);
+        }
+        Log.i(TAG, "Finished waiting for config id=" + configId);
+    }
+
+    private static void appendDebug(Context context, String message) {
+        File debugLog = new File(context.getApplicationInfo().dataDir + "/debug.log");
+        Locale currentLocale = context.getResources().getConfiguration().locale;
+        SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", currentLocale);
+        try (FileWriter debugWriter = new FileWriter(debugLog, true)) {
+            debugWriter.append("\n\n[ ")
+                    .append(formatter.format(Calendar.getInstance().getTime()))
+                    .append(" ] ")
+                    .append(message);
+        } catch (IOException e) {
+            Log.e(TAG, "Failed writing debug.log", e);
+        }
     }
 }

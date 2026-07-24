@@ -76,6 +76,14 @@
     <color name="status_error_dark">#FFB4AB</color>
     <color name="status_success_dark">#5CDBC4</color>
 
+    <!-- Schedule day toggles (light): explicit high contrast on pale cards -->
+    <color name="day_toggle_bg_unchecked">#FFFFFF</color>
+    <color name="day_toggle_bg_checked">#006B5E</color>
+    <color name="day_toggle_stroke_unchecked">#4A5C56</color>
+    <color name="day_toggle_stroke_checked">#00332C</color>
+    <color name="day_toggle_text_unchecked">#0A1210</color>
+    <color name="day_toggle_text_checked">#FFFFFF</color>
+
     <!-- Legacy (kept for backward compat) -->
     <color name="colorAccent">#006B5E</color>
     <color name="red">#BA1A1A</color>

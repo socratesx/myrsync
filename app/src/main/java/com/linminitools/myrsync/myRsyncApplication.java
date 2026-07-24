@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import android.widget.TimePicker;
-import androidx.appcompat.app.AppCompatDelegate;
+import androidx.annotation.Nullable;
 import android.preference.PreferenceManager;
 import com.linminitools.myrsync.RS_Configuration;
 import com.linminitools.myrsync.Scheduler;
@@ -24,13 +24,16 @@ public class myRsyncApplication extends Application {
     public static final ArrayList<Scheduler> schedulers = new ArrayList<>();
     public static Context appContext;
 
+    private BillingManager billingManager;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int themeMode = Integer.parseInt(defaultPrefs.getString("theme_mode", "-1"));
-        AppCompatDelegate.setDefaultNightMode(themeMode);
+        ThemeModeHelper.migrateLegacyThemePreference(defaultPrefs);
+        ThemeModeHelper.applyFromPreferenceString(
+                defaultPrefs.getString("theme_mode", "follow_system"));
 
         appContext = getApplicationContext();
 
@@ -38,6 +41,59 @@ public class myRsyncApplication extends Application {
         configs.clear();
         schedulers.clear();
         populateArrays(appContext);
+
+        ProEntitlement.migrateIfNeeded(this);
+        billingManager = new BillingManager(this);
+        billingManager.start();
+    }
+
+    @NonNull
+    public BillingManager getBillingManager() {
+        if (billingManager == null) {
+            billingManager = new BillingManager(this);
+            billingManager.start();
+        }
+        return billingManager;
+    }
+
+    /** Reload in-memory configs from disk (e.g. Tasker plugin editor after app was already running). */
+    public static void reloadConfigsFromDisk(@NonNull Context ctx) {
+        configs.clear();
+        loadConfigsFromDisk(ctx, configs);
+        Collections.sort(configs);
+    }
+
+    /** Load configs into a caller-owned list without touching global in-memory state. */
+    public static void loadConfigsInto(@NonNull Context ctx,
+                                       @NonNull ArrayList<RS_Configuration> target) {
+        target.clear();
+        loadConfigsFromDisk(ctx, target);
+        Collections.sort(target);
+    }
+
+    /** Load one configuration by id, or null if it does not exist on disk. */
+    @Nullable
+    public static RS_Configuration loadConfigById(@NonNull Context ctx, int configId) {
+        SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
+        String id = String.valueOf(configId);
+        if (config_prefs.getInt("rs_id_" + id, -1) != configId) {
+            return null;
+        }
+        RS_Configuration config = new RS_Configuration(configId);
+        config.rs_user = config_prefs.getString("rs_user_" + id, "");
+        config.rs_ip = config_prefs.getString("rs_ip_" + id, "");
+        config.rs_port = config_prefs.getString("rs_port_" + id, "");
+        config.rs_options = config_prefs.getString("rs_options_" + id, "");
+        config.rs_module = config_prefs.getString("rs_module_" + id, "");
+        config.local_path = config_prefs.getString("local_path_" + id, "");
+        config.name = config_prefs.getString("rs_name_" + id, "");
+        config.addedOn = config_prefs.getLong("rs_addedon_" + id, 0);
+        config.rs_mode = config_prefs.getString("rs_mode_" + id, "Push");
+        config.adv_options = config_prefs.getString("rs_adv_options_" + id, "");
+        config.rs_transport_type = config_prefs.getString("rs_transport_type_" + id, "Rsync Daemon");
+        config.rs_ssh_private_key_path = config_prefs.getString("rs_ssh_private_key_path_" + id, "");
+        config.rs_ssh_remote_path = config_prefs.getString("rs_ssh_remote_path_" + id, "");
+        return config;
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -56,28 +112,7 @@ public class myRsyncApplication extends Application {
             e.printStackTrace();
         }
 
-        Map<String,?> config_keys = config_prefs.getAll();
-        for(Map.Entry<String,?> entry : config_keys.entrySet()){
-            if (entry.getKey().contains("rs_id_")) {
-                String id=String.valueOf(entry.getValue());
-
-                RS_Configuration config = new RS_Configuration((Integer)entry.getValue());
-                config.rs_user = config_prefs.getString("rs_user_"+id,"");
-                config.rs_ip = config_prefs.getString("rs_ip_"+id, "");
-                config.rs_port = config_prefs.getString("rs_port_"+id, "");
-                config.rs_options = config_prefs.getString("rs_options_"+id,"");
-                config.rs_module = config_prefs.getString("rs_module_"+id, "");
-                config.local_path = config_prefs.getString("local_path_"+id, "");
-                config.name = config_prefs.getString("rs_name_"+id, "");
-                config.addedOn = config_prefs.getLong("rs_addedon_"+id,0);
-                config.rs_mode = config_prefs.getString("rs_mode_"+id,"Push");
-                config.adv_options = config_prefs.getString("rs_adv_options_"+id,"");
-                config.rs_transport_type = config_prefs.getString("rs_transport_type_"+id, "Rsync Daemon");
-                config.rs_ssh_private_key_path = config_prefs.getString("rs_ssh_private_key_path_"+id, "");
-                config.rs_ssh_remote_path = config_prefs.getString("rs_ssh_remote_path_"+id, "");
-                configs.add(config);
-            }
-        }
+        loadConfigsFromDisk(ctx, configs);
 
         Map<String,?> sched_keys = sched_prefs.getAll();
         for(Map.Entry<String,?> entry : sched_keys.entrySet()){
@@ -105,5 +140,24 @@ public class myRsyncApplication extends Application {
         }
         Collections.sort(schedulers);
         Collections.sort(configs);
+    }
+
+    private static void loadConfigsFromDisk(@NonNull Context ctx, @NonNull ArrayList<RS_Configuration> target) {
+        SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
+        Map<String, ?> config_keys = config_prefs.getAll();
+        for (Map.Entry<String, ?> entry : config_keys.entrySet()) {
+            if (!entry.getKey().contains("rs_id_")) {
+                continue;
+            }
+            Object rawId = entry.getValue();
+            if (!(rawId instanceof Integer)) {
+                continue;
+            }
+            int configId = (Integer) rawId;
+            RS_Configuration config = loadConfigById(ctx, configId);
+            if (config != null) {
+                target.add(config);
+            }
+        }
     }
 }

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>myRSync Privacy Policy</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height: 1.55; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+    h1, h2 { line-height: 1.25; }
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.15rem; margin-top: 1.75rem; }
+    .meta { color: #555; font-size: 0.95rem; }
+    ul { padding-left: 1.25rem; }
+    a { color: #0b57d0; }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy for myRSync</h1>
+  <p class="meta">Last updated: 24 July 2026<br />
+  App: myRSync (<code>com.linminitools.myrsync</code>)<br />
+  Developer: linminitools / SocratesX</p>
+
+  <p>This Privacy Policy explains how myRSync (“the App”) handles information when you install and use it on your Android device.</p>
+
+  <h2>Summary</h2>
+  <p>myRSync is a local rsync client. It does <strong>not</strong> create user accounts, does <strong>not</strong> include advertising SDKs, and does <strong>not</strong> send your files or configuration to the developer. Optional Pro unlock is handled by Google Play Billing.</p>
+
+  <h2>Information the App stores on your device</h2>
+  <p>The App stores the following locally on your device (for example in app preferences and app-private files):</p>
+  <ul>
+    <li>Rsync configuration details you enter (such as host, port, paths, options, and SSH key path)</li>
+    <li>Scheduler settings (times, days, linked configuration)</li>
+    <li>App preferences (theme, notification settings, optional root-access toggle)</li>
+    <li>Local log and debug files related to rsync runs</li>
+  </ul>
+  <p>These items stay on your device unless you choose to sync them with a remote server you configure yourself via rsync.</p>
+
+  <h2>Network and file access</h2>
+  <ul>
+    <li><strong>Network:</strong> The App connects to servers <em>you</em> specify (rsync daemon or SSH) to transfer files according to your configurations and schedules.</li>
+    <li><strong>Storage:</strong> On Android 11+, the App may ask for “All files access” so rsync can read/write folders outside the App’s private storage (for example Downloads or other user-selected paths). This access is used only to perform the backup/sync jobs you configure.</li>
+    <li><strong>Notifications:</strong> Optional job-status notifications if you enable them.</li>
+    <li><strong>Exact alarms:</strong> Used so scheduled syncs can run near the times you set.</li>
+  </ul>
+
+  <h2>Purchases</h2>
+  <p>If you unlock myRSync Pro, payment is processed by Google Play. Google handles payment details under Google’s privacy policy. The App only receives a purchase token / entitlement status from Play to unlock Pro features on your device.</p>
+
+  <h2>Third parties</h2>
+  <p>The App does not sell personal data and does not use third-party analytics or advertising libraries.</p>
+  <p>If you use the Tasker / Locale plugin action (Pro), Tasker (or another automation host you install) may store plugin configuration needed to trigger a sync. That data is handled by that host app under its own privacy policy.</p>
+  <p>When you sync to a remote server, that server’s operator is responsible for data stored there.</p>
+
+  <h2>Children</h2>
+  <p>The App is not directed at children under 13, and we do not knowingly collect personal information from children.</p>
+
+  <h2>Data retention and deletion</h2>
+  <p>Local data remains until you delete configurations/schedulers in the App or uninstall the App. Uninstalling removes app-private storage. Files you synced to other folders or remote servers are not automatically deleted.</p>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li>You can deny or revoke All files access, notifications, or exact-alarm permission in Android Settings (some features may stop working).</li>
+    <li>You can clear app data or uninstall the App at any time.</li>
+  </ul>
+
+  <h2>Changes</h2>
+  <p>We may update this Privacy Policy when the App changes. The “Last updated” date at the top will be revised when that happens.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy: open an issue on the project repository<br />
+  <a href="https://github.com/socratesx/myrsync">https://github.com/socratesx/myrsync</a></p>
+</body>
+</html>

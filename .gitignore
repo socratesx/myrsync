@@ -6,3 +6,7 @@
 /build
 /captures
 .externalNativeBuild
+*.jks
+*.keystore
+keystore.properties
+app/release/

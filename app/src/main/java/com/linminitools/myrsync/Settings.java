@@ -1,5 +1,7 @@
 package com.linminitools.myrsync;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -15,7 +17,6 @@ import androidx.appcompat.app.ActionBar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
-import androidx.appcompat.app.AppCompatDelegate;
 import java.io.IOException;
 
 public class Settings  extends AppCompatPreferenceActivity {
@@ -30,10 +31,6 @@ public class Settings  extends AppCompatPreferenceActivity {
                 ListPreference listPreference = (ListPreference) preference;
                 int index = listPreference.findIndexOfValue(stringValue);
 
-                if (preference.getKey().equals("theme_mode")) {
-                    int newMode = Integer.parseInt(stringValue);
-                    AppCompatDelegate.setDefaultNightMode(newMode);
-                }              
                 // Set the summary to reflect the new value.
                 preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
 
@@ -129,7 +126,9 @@ public class Settings  extends AppCompatPreferenceActivity {
             // Trigger the listener immediately with the preference's
             // current value.
             try {
-                sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getString(preference.getKey(), ""));
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(preference.getContext());
+                String def = "theme_mode".equals(preference.getKey()) ? "follow_system" : "";
+                sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, sp.getString(preference.getKey(), def));
             }
             catch (ClassCastException e){
                 sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, PreferenceManager.getDefaultSharedPreferences(preference.getContext()).getBoolean(preference.getKey(), true));
@@ -157,15 +156,119 @@ public class Settings  extends AppCompatPreferenceActivity {
                 addPreferencesFromResource(R.xml.pref_notification);
                 //setHasOptionsMenu(true);
 
-                // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-                // to their values. When their values change, their summaries are
-                // updated to reflect the new value, per the Android Design
-                // guidelines.
-                bindPreferenceSummaryToValue(findPreference("theme_mode"));
+                ListPreference themePref = (ListPreference) findPreference("theme_mode");
+                android.app.Activity activity = getActivity();
+                if (activity != null) {
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(activity);
+                    ThemeModeHelper.migrateLegacyThemePreference(sp);
+                    String themeVal = sp.getString("theme_mode", "follow_system");
+                    themePref.setValue(themeVal);
+                    int ti = themePref.findIndexOfValue(themeVal);
+                    if (ti >= 0) {
+                        themePref.setSummary(themePref.getEntries()[ti]);
+                    }
+                }
+
+                /*
+                 * Theme list: sync value + summary from prefs explicitly (ListPreference can disagree
+                 * with SharedPreferences until setValue). Persist with commit() before recreate so
+                 * the restarted activity reads the choice the user just picked; then recreate() so
+                 * the screen matches AppCompatDelegate night mode.
+                 */
+                themePref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    String sv = String.valueOf(newValue);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(
+                            preference.getContext());
+                    prefs.edit().putString("theme_mode", sv).commit();
+                    ThemeModeHelper.applyFromPreferenceString(sv);
+                    ListPreference lp = (ListPreference) preference;
+                    int idx = lp.findIndexOfValue(sv);
+                    if (idx >= 0) {
+                        preference.setSummary(lp.getEntries()[idx]);
+                    }
+                    android.app.Activity act = getActivity();
+                    if (act != null && !act.isFinishing()) {
+                        act.getWindow().getDecorView().post(act::recreate);
+                    }
+                    return true;
+                });
+
                 bindPreferenceSummaryToValue(findPreference("notifications"));
                 bindPreferenceSummaryToValue(findPreference("vibrate"));
                 bindPreferenceSummaryToValue(findPreference("ringtone"));
                 bindPreferenceSummaryToValue(findPreference("root_access"));
+
+                Preference privacy = findPreference("privacy_policy");
+                if (privacy != null) {
+                    privacy.setOnPreferenceClickListener(preference -> {
+                        android.app.Activity act = getActivity();
+                        if (act == null) {
+                            return true;
+                        }
+                        Uri uri = Uri.parse(act.getString(R.string.privacy_policy_url));
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        try {
+                            act.startActivity(intent);
+                        } catch (Exception e) {
+                            Log.w("Settings", "Unable to open privacy policy URL", e);
+                        }
+                        return true;
+                    });
+                }
+
+                Preference proUpgrade = findPreference("pro_upgrade");
+                Preference proRestore = findPreference("pro_restore");
+                SwitchPreference debugUnlock = (SwitchPreference) findPreference("pro_debug_unlock");
+                android.app.Activity act = getActivity();
+                if (act != null && proUpgrade != null) {
+                    refreshProPreferenceSummaries(proUpgrade, proRestore, act);
+                    proUpgrade.setOnPreferenceClickListener(preference -> {
+                        if (ProEntitlement.isPro(act)) {
+                            return true;
+                        }
+                        ProUpgradeUi.showUpgradeDialog(act,
+                                act.getString(R.string.pro_limit_configs));
+                        return true;
+                    });
+                }
+                if (act != null && proRestore != null) {
+                    proRestore.setOnPreferenceClickListener(preference -> {
+                        ProUpgradeUi.restore(act);
+                        refreshProPreferenceSummaries(proUpgrade, proRestore, act);
+                        return true;
+                    });
+                }
+                if (debugUnlock != null) {
+                    if (!BuildConfig.DEBUG) {
+                        getPreferenceScreen().removePreference(debugUnlock);
+                    } else if (act != null) {
+                        debugUnlock.setChecked(ProEntitlement.isPro(act));
+                        debugUnlock.setOnPreferenceChangeListener((preference, newValue) -> {
+                            boolean unlock = Boolean.TRUE.equals(newValue);
+                            ProEntitlement.setPro(preference.getContext(), unlock);
+                            refreshProPreferenceSummaries(proUpgrade, proRestore, act);
+                            return true;
+                        });
+                    } else {
+                        getPreferenceScreen().removePreference(debugUnlock);
+                    }
+                }
+            }
+
+            private void refreshProPreferenceSummaries(Preference proUpgrade,
+                                                       Preference proRestore,
+                                                       android.app.Activity act) {
+                if (act == null) {
+                    return;
+                }
+                boolean pro = ProEntitlement.isPro(act);
+                if (proUpgrade != null) {
+                    proUpgrade.setSummary(pro ? R.string.pro_status_pro : R.string.pro_status_free);
+                    proUpgrade.setEnabled(!pro);
+                }
+                if (proRestore != null) {
+                    proRestore.setEnabled(!pro);
+                }
             }
 
 

@@ -7,7 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 class ViewPagerAdapter extends FragmentStateAdapter {
 
-    private static final String[] TAB_TITLES = {"Overview", "Configurations", "Schedulers", "Log"};
+    private static final String[] TAB_TITLES = {"Overview", "Configurations", "Log"};
 
     ViewPagerAdapter(@NonNull FragmentActivity activity) {
         super(activity);
@@ -19,8 +19,7 @@ class ViewPagerAdapter extends FragmentStateAdapter {
         switch (position) {
             case 0: return new tab1();
             case 1: return new tab3();
-            case 2: return new tab2();
-            case 3: return new tab4();
+            case 2: return new tab4();
             default: return new tab1();
         }
     }

@@ -12,8 +12,6 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import static com.linminitools.myrsync.myRsyncApplication.configs;
-import static com.twofortyfouram.assertion.Assertions.assertNotEmpty;
 import static com.twofortyfouram.assertion.Assertions.assertNotNull;
 
 /**
@@ -59,27 +57,24 @@ public final class PluginBundleValues {
             return false;
         }
 
-        try {
-            BundleAssertions.assertHasInt(bundle, BUNDLE_EXTRA_INT_CONFIG);
-            BundleAssertions.assertHasInt(bundle, BUNDLE_EXTRA_INT_VERSION_CODE);
-            BundleAssertions.assertKeyCount(bundle, 2);
-        } catch (final AssertionError e) {
-            Lumberjack.e("Bundle failed verification%s", e); //$NON-NLS-1$
+        // Tasker may round-trip extras with slightly different typing; only require the config id.
+        if (!bundle.containsKey(BUNDLE_EXTRA_INT_CONFIG)) {
+            Lumberjack.e("Bundle missing %s", BUNDLE_EXTRA_INT_CONFIG); //$NON-NLS-1$
             return false;
         }
 
-        int configId = bundle.getInt(BUNDLE_EXTRA_INT_CONFIG);
-
-        boolean configFound = false;
-
-        for (RS_Configuration c : configs) {
-            if (c.id == configId) {
-                configFound = true;
-                break;
+        // Reject clearly wrong types (e.g. String) without depending on BundleAssertions defaults.
+        Object raw = bundle.get(BUNDLE_EXTRA_INT_CONFIG);
+        if (!(raw instanceof Integer) && !(raw instanceof Long)) {
+            try {
+                BundleAssertions.assertHasInt(bundle, BUNDLE_EXTRA_INT_CONFIG);
+            } catch (final AssertionError e) {
+                Lumberjack.e("Bundle failed verification%s", e); //$NON-NLS-1$
+                return false;
             }
         }
 
-        return configFound;
+        return bundle.getInt(BUNDLE_EXTRA_INT_CONFIG, -1) >= 0;
     }
 
     /**

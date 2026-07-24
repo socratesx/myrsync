@@ -2,6 +2,12 @@ plugins {
     id 'com.android.application'
 }
 
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace "com.linminitools.myrsync"
     compileSdk 35
@@ -12,6 +18,19 @@ android {
         targetSdk 34
         versionCode 14
         versionName "0.13.1"
+        // Keep in sync with the one-time product id created in Play Console.
+        buildConfigField "String", "PRO_PRODUCT_ID", "\"myrsync_pro\""
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
     }
 
     android.applicationVariants.all { variant ->
@@ -29,11 +48,17 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         beta {
             minifyEnabled false
             debuggable false
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -47,6 +72,10 @@ android {
         main {
             assets.srcDirs = ['src/main/assets', 'src/main/assets/']
         }
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     lint {
@@ -78,6 +107,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.8.1'
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'org.jetbrains:annotations:23.0.0'
+    implementation 'com.android.billingclient:billing:7.1.1'
 
     //tasker plugin dependencies
     implementation 'com.twofortyfouram:android-annotation:3.0.0'

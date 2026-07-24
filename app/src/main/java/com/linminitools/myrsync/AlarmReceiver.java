@@ -4,7 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.widget.TimePicker;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -21,6 +23,8 @@ import static android.content.Context.MODE_PRIVATE;
 
 public class AlarmReceiver extends BroadcastReceiver {
 
+    private static final String TAG = "AlarmReceiver";
+
 
     @Override
     public void onReceive(Context ctx, Intent i) {
@@ -33,6 +37,27 @@ public class AlarmReceiver extends BroadcastReceiver {
         Locale current_locale = ctx.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
+        Log.i(TAG, "onReceive action=" + i.getAction()
+                + " config_id=" + config_id_to_run
+                + " sched_id=" + scheduler_id);
+
+        // Scheduled fires require Pro. Boot re-arm path still runs below and will no-op if Free.
+        String action = i.getAction();
+        if (action != null
+                && action.equals("android.intent.action.RUN")
+                && !ProEntitlement.canUseSchedules(ctx)) {
+            Log.w(TAG, "Ignoring scheduled run: Pro required");
+            try {
+                FileWriter debug_writer = new FileWriter(debug_log, true);
+                debug_writer.append("\n[ ")
+                        .append(formatter.format(Calendar.getInstance().getTime()))
+                        .append(" ] ALARM IGNORED: Pro required");
+                debug_writer.close();
+            } catch (IOException ignored) {
+            }
+            ProEntitlement.clearSchedules(ctx);
+            return;
+        }
 
         if ((Objects.requireNonNull(i.getAction())).equals("android.intent.action.BOOT_COMPLETED")) {
             try {
@@ -48,20 +73,17 @@ public class AlarmReceiver extends BroadcastReceiver {
                     if (entry.getKey().startsWith("id_")) {
                         String id = String.valueOf(entry.getValue());
 
-                        TimePicker tp = new TimePicker(ctx);
-
-                        tp.setIs24HourView(true);
-                        tp.setHour(sched_prefs.getInt("hour_" + id, 0));
-                        tp.setMinute(sched_prefs.getInt("min_" + id, 0));
-                        String days = sched_prefs.getString("days_" + id, "");
-                        String name = sched_prefs.getString("name_" + id, "");
-                        int config_id = sched_prefs.getInt("config_id_" + id, 0);
-
-                        Scheduler sched = new Scheduler(days, tp, (Integer) entry.getValue());
-                        sched.name = name;
-                        sched.addedOn = sched_prefs.getLong("addedon", 0);
-                        sched.config_id = config_id;
-                        sched.setAlarm(ctx);
+                        // TimePicker must be created on the main thread.
+                        final int schedId = (Integer) entry.getValue();
+                        final Context appCtx = ctx.getApplicationContext();
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            try {
+                                Scheduler sched = Scheduler.fromPrefs(appCtx, schedId);
+                                sched.setAlarm(appCtx);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Failed to restore scheduler " + schedId, e);
+                            }
+                        });
 
                     }
                 }
@@ -77,44 +99,63 @@ public class AlarmReceiver extends BroadcastReceiver {
                 }
             }
         } else {
+            try {
+                FileWriter debug_writer = new FileWriter(debug_log, true);
+                CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] "
+                        + "ALARM FIRED sched_id=" + scheduler_id + " config_id=" + config_id_to_run;
+                debug_writer.append(message);
+                debug_writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             if (config_id_to_run > -1) {
-
-                SharedPreferences config_prefs = ctx.getSharedPreferences("configs", MODE_PRIVATE);
-                Map<String, ?> config_keys = config_prefs.getAll();
-
-                for (Map.Entry<String, ?> entry : config_keys.entrySet()) {
-                    if (entry.getKey().contains("rs_id_")) {
-                        String id = String.valueOf(entry.getValue());
-                        if (Integer.parseInt(id) == config_id_to_run) {
-                            RS_Configuration config = new RS_Configuration((Integer) entry.getValue());
-                            config.rs_user = config_prefs.getString("rs_user_" + id, "");
-                            config.rs_ip = config_prefs.getString("rs_ip_" + id, "");
-                            config.rs_port = config_prefs.getString("rs_port_" + id, "");
-                            config.rs_options = config_prefs.getString("rs_options_" + id, "");
-                            config.rs_module = config_prefs.getString("rs_module_" + id, "");
-                            config.local_path = config_prefs.getString("local_path_" + id, "");
-                            config.name = config_prefs.getString("rs_name_" + id, "");
-                            config.rs_mode = config_prefs.getString("rs_mode_" + id, "push");
-                            config.addedOn = config_prefs.getLong("rs_addedon_" + id, 0);
-                            config.rs_transport_type = config_prefs.getString("rs_transport_type_" + id, "");
-                            config.rs_ssh_private_key_path = config_prefs.getString("rs_ssh_private_key_path_" + id, "");
-                            config.rs_ssh_remote_path = config_prefs.getString("rs_ssh_remote_path_" + id, "");
-                            config.executeConfig(ctx, scheduler_id);
-                            break;
-                        }
-
+                RS_Configuration config = myRsyncApplication.loadConfigById(ctx, config_id_to_run);
+                if (config != null) {
+                    config.executeConfig(ctx, scheduler_id > -1 ? scheduler_id : null);
+                } else {
+                    Log.e(TAG, "No config found for id=" + config_id_to_run);
+                    try {
+                        FileWriter debug_writer = new FileWriter(debug_log, true);
+                        CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] "
+                                + "WARNING: JOB FIRED BUT CONFIG NOT FOUND (config_id=" + config_id_to_run + ")";
+                        debug_writer.append(message);
+                        debug_writer.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                 }
 
-            }
-            else{
+                // Exact one-shot alarms: re-arm the next weekly occurrence(s).
+                if (scheduler_id > -1) {
+                    final int schedId = scheduler_id;
+                    final Context appCtx = ctx.getApplicationContext();
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        try {
+                            SharedPreferences sched_prefs =
+                                    appCtx.getSharedPreferences("schedulers", MODE_PRIVATE);
+                            if (sched_prefs.getInt("id_" + schedId, -1) != schedId) {
+                                return;
+                            }
+                            Scheduler sched = Scheduler.fromPrefs(appCtx, schedId);
+                            sched.setAlarm(appCtx);
+                            // Overview uses in-memory Scheduler objects; clear their stale cache
+                            // so Next Run jumps to the following occurrence instead of
+                            // "About to start" for the slot that just fired.
+                            Scheduler.refreshInMemoryAlarmCache(schedId);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to reschedule scheduler " + schedId, e);
+                        }
+                    });
+                }
+
+            } else {
                 try {
                     FileWriter debug_writer = new FileWriter(debug_log, true);
                     CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "WARNING: JOB FIRED BUT NO RSYNC CONFIGURATION EXECUTED (config_id=-1)";
                     debug_writer.append(message);
                     debug_writer.close();
-                }
-                catch (IOException e){
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -122,7 +163,3 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     }
 }
-
-
-
-

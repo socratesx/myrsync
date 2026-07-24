@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Schedule day toggles (dark): strong separation from card; checked = bright teal fill -->
+    <color name="day_toggle_bg_unchecked">#323D39</color>
+    <color name="day_toggle_bg_checked">#5CDBC4</color>
+    <color name="day_toggle_stroke_unchecked">#B8C4BE</color>
+    <color name="day_toggle_stroke_checked">#001A16</color>
+    <color name="day_toggle_text_unchecked">#F5FBF8</color>
+    <color name="day_toggle_text_checked">#00140F</color>
+</resources>

@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import androidx.annotation.NonNull;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -32,6 +33,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.TimePicker;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -102,6 +105,16 @@ public class MainActivity extends AppCompatActivity {
         if (selectedTab > 0) {
             viewPager.setCurrentItem(selectedTab, false);
         }
+
+        // Re-arm alarms on launch (covers upgrades from inexact setRepeating).
+        for (Scheduler s : schedulers) {
+            try {
+                s.setAlarm(appContext);
+            } catch (Exception e) {
+                Log.e("MainActivity", "Failed to re-arm scheduler id=" + s.id, e);
+            }
+        }
+        maybePromptExactAlarmPermission();
 
         String rsyncBinaryPath = getApplicationInfo().nativeLibraryDir + "/librsync.so";
         getSharedPreferences("Install", MODE_PRIVATE).edit()
@@ -168,21 +181,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (id == R.id.me_settings) {
-            Intent i = new Intent(this, Settings.class);
+            // Fully qualified: android.provider.Settings is also imported in this file.
+            Intent i = new Intent(this, com.linminitools.myrsync.Settings.class);
             startActivity(i);
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public void createConfig(View v){
-        Intent i = new Intent(this, addConfig.class);
-        startActivityForResult(i, 1);
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Context app = getApplicationContext();
+        if (app instanceof myRsyncApplication) {
+            ((myRsyncApplication) app).getBillingManager().queryPurchases();
+        }
     }
 
-    public void createScheduler(View v){
-        Intent i = new Intent(this, addScheduler.class);
-        startActivityForResult(i, 2);
+    public void createConfig(View v){
+        if (!ProEntitlement.canCreateConfig(this)) {
+            ProUpgradeUi.showFeatureLocked(this, R.string.pro_limit_configs);
+            return;
+        }
+        Intent i = new Intent(this, addConfig.class);
+        startActivityForResult(i, 1);
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -222,7 +244,9 @@ public class MainActivity extends AppCompatActivity {
                     (tab, position) -> tab.setText(ViewPagerAdapter.getTabTitle(position))
             ).attach();
 
-            viewPager.setCurrentItem(requestCode, false);
+            if (requestCode == 1) {
+                viewPager.setCurrentItem(1, false);
+            }
         }
     }
 
@@ -318,9 +342,17 @@ public class MainActivity extends AppCompatActivity {
     private void requestRequiredPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
-                Intent intent = new Intent(android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.setData(Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.storage_access_title)
+                        .setMessage(R.string.storage_access_message)
+                        .setPositiveButton(R.string.storage_access_continue, (dialog, which) -> {
+                            Intent intent = new Intent(
+                                    android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
+                        })
+                        .setNegativeButton(R.string.storage_access_not_now, null)
+                        .show();
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -383,6 +415,10 @@ public class MainActivity extends AppCompatActivity {
             configs.get(pos).executeConfig(this,null);
         }
         else if (v.getTag(R.id.bt_clone) != null) {
+            if (!ProEntitlement.canCreateConfig(this)) {
+                ProUpgradeUi.showFeatureLocked(this, R.string.pro_limit_configs);
+                return;
+            }
             final int pos = (int) v.getTag(R.id.bt_clone);
             RS_Configuration original = configs.get(pos);
 
@@ -401,32 +437,71 @@ public class MainActivity extends AppCompatActivity {
             clone.rs_mode = original.rs_mode;
             clone.local_path = original.local_path;
             clone.adv_options = original.adv_options;
+            clone.rs_transport_type = original.rs_transport_type;
+            clone.rs_ssh_private_key_path = original.rs_ssh_private_key_path;
+            clone.rs_ssh_remote_path = original.rs_ssh_remote_path;
             clone.saveToDisk();
+            SharedPreferences cfg = getSharedPreferences("configs", MODE_PRIVATE);
+            cfg.edit().putString("path_uri_" + clone.id, cfg.getString("path_uri_" + original.id, "")).apply();
+
+            if (ProEntitlement.canUseSchedules(this)) {
+                ArrayList<Scheduler> toCopy = Scheduler.schedulersForConfig(original.id);
+                int slot = 0;
+                for (Scheduler oldS : toCopy) {
+                    TimePicker tp = new TimePicker(this);
+                    tp.setIs24HourView(true);
+                    tp.setHour(oldS.hour);
+                    tp.setMinute(oldS.min);
+                    int sid = SchedulerIds.makeId(clone.id, slot);
+                    Scheduler neu = new Scheduler(oldS.days, tp, sid);
+                    neu.name = SchedulerIds.internalLabel(clone.id, slot);
+                    neu.config_id = clone.id;
+                    neu.wifi_sw = oldS.wifi_sw;
+                    neu.wifi_ssid = oldS.wifi_ssid != null ? oldS.wifi_ssid : "";
+                    neu.saveToDisk();
+                    neu.setAlarm(appContext);
+                    schedulers.add(neu);
+                    slot++;
+                }
+                Collections.sort(schedulers);
+            }
+
             configs.add(clone);
             onActivityResult(1, RESULT_OK, null);
         }
     }
 
-    public void sched_clickHandler(@NonNull View v) {
-        if (v.getTag(R.id.bt_edit_sched) != null) {
-            int pos = (int) v.getTag(R.id.bt_edit_sched);
-            Intent intent = new Intent(this, editSched.class);
-            intent.putExtra("pos", pos);
-            startActivityForResult(intent, 2);
-        } else if (v.getTag(R.id.bt_delete_sched) != null) {
-            final int pos = (int) v.getTag(R.id.bt_delete_sched);
-
-            new MaterialAlertDialogBuilder(this)
-                    .setTitle("Delete Scheduler")
-                    .setMessage("Are you sure?")
-                    .setPositiveButton("Delete", (dialog, which) -> {
-                        schedulers.get(pos).deleteFromDisk();
-                        schedulers.get(pos).cancelAlarm(appContext);
-                        schedulers.remove(pos);
-                        onActivityResult(2, RESULT_OK, null);
-                    })
-                    .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
-                    .show();
+    /**
+     * On Android 12+, exact alarms require a user-grantable app-op. Without it, schedules
+     * fall back to inexact delivery and can miss the configured minute.
+     */
+    private void maybePromptExactAlarmPermission() {
+        if (schedulers.isEmpty()) {
+            return;
         }
+        if (Scheduler.canScheduleExactAlarms(this)) {
+            return;
+        }
+        SharedPreferences prefs = getSharedPreferences("Install", MODE_PRIVATE);
+        if (prefs.getBoolean("exact_alarm_prompt_shown", false)) {
+            return;
+        }
+        prefs.edit().putBoolean("exact_alarm_prompt_shown", true).apply();
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Allow exact alarms")
+                .setMessage("myRSync needs the \"Alarms & reminders\" permission so scheduled "
+                        + "syncs run at the time you set. Without it, Android may delay them.")
+                .setPositiveButton("Open settings", (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setData(Uri.parse("package:" + getPackageName()));
+                    try {
+                        startActivity(intent);
+                    } catch (Exception e) {
+                        Log.e("MainActivity", "Could not open exact-alarm settings", e);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 }

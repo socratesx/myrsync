@@ -14,8 +14,11 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import android.content.SharedPreferences;
+
 import java.util.Map;
 
+import static android.content.Context.MODE_PRIVATE;
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
 
@@ -133,6 +136,9 @@ public class editConfig extends addConfig {
         final int id = config.id;
         save.setOnClickListener(v -> actionConfig(id, 1));
         bt_exec.setOnClickListener(v -> actionConfig(id, 2));
+
+        initScheduleEditorControls();
+        loadSchedulerEditorsForConfig(id);
     }
 
     private void actionConfig(int id, int request) {
@@ -143,6 +149,9 @@ public class editConfig extends addConfig {
             !configMap.get("rs_module").isEmpty();
 
         if (!configMap.get("rs_ip").isEmpty() && remote_complete && !configMap.get("local_path").isEmpty()) {
+            if (request == 1 && !validateScheduleRows()) {
+                return;
+            }
             for (RS_Configuration c : configs) {
                 if (c.id == id) {
                     c.rs_ip = configMap.get("rs_ip");
@@ -160,6 +169,10 @@ public class editConfig extends addConfig {
 
                     if (request == 1) {
                         c.saveToDisk();
+                        getSharedPreferences("configs", MODE_PRIVATE).edit()
+                                .putString("path_uri_" + c.id, configMap.get("path_uri"))
+                                .apply();
+                        syncSchedulersFromContainer(id);
                         Toast.makeText(appContext, "Configuration saved", Toast.LENGTH_SHORT).show();
                     } else if (request == 2) {
                         c.executeConfig(getApplication().getBaseContext(), null);

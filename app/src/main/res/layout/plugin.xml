@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="@dimen/screen_margin_horizontal">
+    android:padding="16dp">
 
     <TextView
-        android:id="@+id/textView6"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_md"
         android:text="@string/select_configuration"
-        android:textAppearance="?attr/textAppearanceLabelLarge" />
+        android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <androidx.appcompat.widget.AppCompatSpinner
         android:id="@+id/plugin_sp_configs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/spacing_sm"
-        android:layout_marginBottom="@dimen/spacing_md"
-        android:minHeight="48dp"
-        android:padding="@dimen/spacing_sm" />
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp"
+        android:minHeight="48dp" />
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/editConfigsButton"
-        style="?attr/materialButtonOutlinedStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="editConfigs"
         android:text="@string/edit_configurations" />
+
+    <Button
+        android:id="@+id/plugin_bt_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:onClick="savePluginConfig"
+        android:text="@string/save" />
 
 </LinearLayout>

@@ -11,7 +11,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.chip.Chip;
+
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import static android.content.Context.MODE_PRIVATE;
@@ -83,42 +86,51 @@ class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void bindStatus(StatusViewHolder vh, int position) {
-        Scheduler sched = (Scheduler) data.get(position);
+        RS_Configuration conf = (RS_Configuration) data.get(position);
         vh.warningIcon.setVisibility(View.INVISIBLE);
         vh.successIcon.setVisibility(View.INVISIBLE);
         vh.errorIcon.setVisibility(View.INVISIBLE);
 
-        try {
-            RS_Configuration conf = configs.get(0);
-            for (RS_Configuration c : configs) if (c.id == sched.config_id) conf = c;
+        List<Scheduler> forConf = Scheduler.schedulersForConfig(conf.id);
 
-            vh.configName.setText(conf.name);
-            vh.schedName.setText(sched.name);
+        vh.configName.setText(conf.name);
 
-            if (context.getSharedPreferences("CMD_" + conf.id, MODE_PRIVATE).getBoolean("is_running", false)
-                    && context.getSharedPreferences("schedulers", MODE_PRIVATE).getBoolean("is_running_" + sched.id, false)) {
-                vh.nextRun.setText(R.string.running);
-            } else {
-                vh.nextRun.setText(sched.getNextAlarm(context));
-            }
+        boolean isSsh = "SSH".equals(conf.rs_transport_type);
+        vh.chipTransport.setText(isSsh ? R.string.transport_ssh : R.string.transport_daemon);
 
-            SharedPreferences result_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
-            String result = result_prefs.getString("last_result_" + conf.id, "Never Run");
-            String last_run = result_prefs.getString("last_run_" + conf.id, "Never Run");
+        int n = forConf.size();
+        if (n == 0) {
+            vh.chipSchedule.setText(R.string.no_schedule);
+            vh.schedName.setText(R.string.no_schedule);
+        } else {
+            vh.chipSchedule.setText(context.getString(R.string.schedule_count, n));
+            vh.schedName.setText(context.getString(R.string.schedule_count, n));
+        }
 
-            vh.lastRun.setText(last_run);
-            vh.result.setText(result);
+        boolean cmdRunning = context.getSharedPreferences("CMD_" + conf.id, MODE_PRIVATE)
+                .getBoolean("is_running", false);
 
-            if (result.equals("OK")) {
-                vh.successIcon.setVisibility(View.VISIBLE);
-            } else if (result.equals("Warning! Check Log!") || result.contains("Aborted")) {
-                vh.warningIcon.setVisibility(View.VISIBLE);
-            } else if (result.startsWith("Error")) {
-                vh.errorIcon.setVisibility(View.VISIBLE);
-            }
-        } catch (IndexOutOfBoundsException e) {
-            schedulers.remove(sched);
-            sched.deleteFromDisk();
+        if (cmdRunning) {
+            vh.nextRun.setText(R.string.running);
+        } else if (n == 0) {
+            vh.nextRun.setText(R.string.no_schedule);
+        } else {
+            vh.nextRun.setText(Scheduler.earliestNextRunLabel(context, forConf));
+        }
+
+        SharedPreferences result_prefs = context.getSharedPreferences("configs", MODE_PRIVATE);
+        String result = result_prefs.getString("last_result_" + conf.id, "Never Run");
+        String last_run = result_prefs.getString("last_run_" + conf.id, "Never Run");
+
+        vh.lastRun.setText(last_run);
+        vh.result.setText(result);
+
+        if (result.equals("OK")) {
+            vh.successIcon.setVisibility(View.VISIBLE);
+        } else if (result.equals("Warning! Check Log!") || result.contains("Aborted")) {
+            vh.warningIcon.setVisibility(View.VISIBLE);
+        } else if (result.startsWith("Error")) {
+            vh.errorIcon.setVisibility(View.VISIBLE);
         }
     }
 
@@ -163,6 +175,7 @@ class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     static class StatusViewHolder extends RecyclerView.ViewHolder {
         final TextView configName, schedName, nextRun, lastRun, result;
         final ImageView errorIcon, warningIcon, successIcon;
+        final Chip chipTransport, chipSchedule;
 
         StatusViewHolder(View v) {
             super(v);
@@ -174,6 +187,8 @@ class customAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             errorIcon = v.findViewById(R.id.img_error_status);
             warningIcon = v.findViewById(R.id.img_warning_status);
             successIcon = v.findViewById(R.id.img_success_status);
+            chipTransport = v.findViewById(R.id.chip_transport);
+            chipSchedule = v.findViewById(R.id.chip_schedule);
         }
     }
 

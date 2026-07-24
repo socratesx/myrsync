@@ -14,8 +14,6 @@ import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -45,7 +43,7 @@ import java.util.Random;
 import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 
-public class RS_Configuration extends MainActivity implements Comparable<RS_Configuration>{
+public class RS_Configuration implements Comparable<RS_Configuration>{
 
     String rs_ip, rs_port, rs_user, rs_module, rs_options, local_path, name, rs_mode, adv_options;
     String rs_transport_type, rs_ssh_private_key_path, rs_ssh_remote_path;
@@ -66,7 +64,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     void saveToDisk(){
         
-        SharedPreferences prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
+        SharedPreferences prefs = myRsyncApplication.appContext.getSharedPreferences("configs", Context.MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
         this.addedOn= Calendar.getInstance().getTimeInMillis();
 
@@ -79,8 +77,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putString("rs_port_"+String.valueOf(this.id),rs_port);
         prefseditor.putString("rs_mode_"+String.valueOf(this.id),rs_mode);
         prefseditor.putString("local_path_"+String.valueOf(this.id),local_path);
-        prefseditor.putString("last_result_"+String.valueOf(this.id),"Never Run");
-        prefseditor.putString("last_run_"+String.valueOf(this.id),"Never Run");
+        // Only initialize run history for a brand-new configuration; edits / schedule changes must keep it.
+        if (!prefs.contains("rs_id_" + String.valueOf(this.id))) {
+            prefseditor.putString("last_result_" + String.valueOf(this.id), "Never Run");
+            prefseditor.putString("last_run_" + String.valueOf(this.id), "Never Run");
+        }
         prefseditor.putString("rs_adv_options_"+String.valueOf(this.id),this.adv_options);
         prefseditor.putLong("rs_addedon_"+String.valueOf(this.id),addedOn);
         prefseditor.putString("rs_transport_type_"+String.valueOf(this.id), rs_transport_type);
@@ -88,10 +89,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.putString("rs_ssh_remote_path_"+String.valueOf(this.id), rs_ssh_remote_path);
 
         prefseditor.apply();
-        Locale current_locale = appContext.getResources().getConfiguration().locale;
+        Locale current_locale = myRsyncApplication.appContext.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
         try {
-            FileWriter debug_writer = new FileWriter(debug_log, true);
+            File debugLogFile = new File(myRsyncApplication.appContext.getApplicationInfo().dataDir + "/debug.log");
+            FileWriter debug_writer = new FileWriter(debugLogFile, true);
             CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION SAVED: " +this.name;
             debug_writer.append(message);
             debug_writer.close();
@@ -106,7 +108,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     void deleteFromDisk(){
-        SharedPreferences prefs = appContext.getSharedPreferences("configs", MODE_PRIVATE);
+        SharedPreferences prefs = myRsyncApplication.appContext.getSharedPreferences("configs", Context.MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
 
         prefseditor.remove("rs_name_"+String.valueOf(this.id));
@@ -127,13 +129,14 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         prefseditor.remove("rs_ssh_remote_path_"+String.valueOf(this.id));
         prefseditor.apply();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
-        else (new File(appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+String.valueOf(id)+".xml")).delete();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) myRsyncApplication.appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
+        else (new File(myRsyncApplication.appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+String.valueOf(id)+".xml")).delete();
 
-        Locale current_locale = appContext.getResources().getConfiguration().locale;
+        Locale current_locale = myRsyncApplication.appContext.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
         try {
-            FileWriter debug_writer = new FileWriter(debug_log, true);
+            File debugLogFile = new File(myRsyncApplication.appContext.getApplicationInfo().dataDir + "/debug.log");
+            FileWriter debug_writer = new FileWriter(debugLogFile, true);
             CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION DELETED: " +this.name;
             debug_writer.append(message);
             debug_writer.close();
@@ -148,25 +151,27 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         return Long.compare(this.addedOn,c.addedOn);
     }
 
-    void executeConfig(final Context context, final Integer scheduler_id){
+    /**
+     * Starts an rsync run on a background thread.
+     *
+     * @return the worker thread, or {@code null} if the run was aborted before starting
+     *         (e.g. no usable network).
+     */
+    Thread executeConfig(final Context context, final Integer scheduler_id){
 
-        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
-        boolean sw_wifi = sched_prefs.getBoolean("wifi_switch_"+ String.valueOf(scheduler_id),false);
-        String wifi_ssid = sched_prefs.getString("ssid_"+ String.valueOf(scheduler_id),"");
+        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
         int sched;
 
-        boolean is_connected_to_wifi = isConnectedToWifi(context);
-        if (scheduler_id == null) sched =-1;
+        if (scheduler_id == null) sched = -1;
         else sched = scheduler_id;
 
-        if (!is_connected_to_wifi) {
-            send_notification(context,0);
-            update_result(context,"Aborted",sched);
+        if (!shouldRunNow(context, sched_prefs, scheduler_id)) {
+            return null;
         }
-        else {
-            send_notification(context,3);
-            final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
-            final SharedPreferences prefs2 =  context.getSharedPreferences("configs", MODE_PRIVATE);
+
+        send_notification(context, 3);
+            final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", Context.MODE_PRIVATE);
+            final SharedPreferences prefs2 =  context.getSharedPreferences("configs", Context.MODE_PRIVATE);
             final int id = this.id;
 
             final String options = this.rs_options;
@@ -177,7 +182,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
             if(this.rs_user.isEmpty()) rsync_user_string="";
 
             String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
-            debug_log = new File(Debug_log_path);
+            final File debugLogFile = new File(Debug_log_path);
             final String mode= this.rs_mode;
 
 
@@ -196,9 +201,9 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                 @Override
                 public void run() {
                     try {
-                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
+                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),Context.MODE_PRIVATE);
                         SharedPreferences.Editor pref_Edit= pref.edit();
-                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+                        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
                         Locale current_locale = context.getResources().getConfiguration().locale;
                         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
@@ -209,7 +214,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         pref_Edit.commit();
 
                         try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            FileWriter debug_writer = new FileWriter(debugLogFile, true);
                             CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " STARTED";
                             debug_writer.append(message);
                             debug_writer.close();
@@ -253,16 +258,16 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                     if (exitCode == 0 && convertedKey.exists() && convertedKey.length() > 0) {
                                         workingKeyPath = convertedKey.getAbsolutePath();
                                         Runtime.getRuntime().exec("chmod 600 " + workingKeyPath).waitFor();
-                                        try (FileWriter debug_writer = new FileWriter(debug_log, true)) {
+                                        try (FileWriter debug_writer = new FileWriter(debugLogFile, true)) {
                                             debug_writer.append("\nDEBUG: Key converted successfully to Dropbear format.");
                                         }
                                     } else {
-                                        try (FileWriter debug_writer = new FileWriter(debug_log, true)) {
+                                        try (FileWriter debug_writer = new FileWriter(debugLogFile, true)) {
                                             debug_writer.append("\nDEBUG: Key conversion skipped or failed (exit code: " + exitCode + "). Using original key.");
                                         }
                                     }
                                 } catch (Exception e) {
-                                    try (FileWriter debug_writer = new FileWriter(debug_log, true)) {
+                                    try (FileWriter debug_writer = new FileWriter(debugLogFile, true)) {
                                         debug_writer.append("\nDEBUG: Key conversion exception: " + e.getMessage());
                                     }
                                 }
@@ -328,7 +333,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                         // Logging the command to debug.log as requested
                         try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            FileWriter debug_writer = new FileWriter(debugLogFile, true);
                             String cmdLog = "\nRSYNC_COMMAND=" + cmdList.toString();
                             debug_writer.append(cmdLog);
                             debug_writer.close();
@@ -356,7 +361,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                         String stdout = builder.toString();
 
                         try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            FileWriter debug_writer = new FileWriter(debugLogFile, true);
                             CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+stdout;
                             debug_writer.append(message);
                             debug_writer.close();
@@ -369,12 +374,12 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                         String result = process.waitFor() == 0 ? "OK" : "Warning! Check Log!";
 
-                        if (scheduler_id!=null) {
+                        if (scheduler_id != null) {
                             sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
-                            update_result(context,result,scheduler_id);
                         }
+                        update_result(context, result, scheduler_id != null ? scheduler_id : -1);
                         try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            FileWriter debug_writer = new FileWriter(debugLogFile, true);
                             CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "CONFIGURATION RUN "+name+ " FINISHED";
                             debug_writer.append(message);
                             debug_writer.close();
@@ -385,15 +390,15 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                     }
                     catch (Exception e) {
                         try {
-                            FileWriter debug_writer = new FileWriter(debug_log, true);
+                            FileWriter debug_writer = new FileWriter(debugLogFile, true);
                             String message = "CONFIGURATION RUN EXCEPTION CAUGHT: \n" + e.getMessage();
                             debug_writer.append(message);
                             debug_writer.close();
                             e.printStackTrace();
-                            if (scheduler_id!=null) {
+                            if (scheduler_id != null) {
                                 sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
-                                update_result(context, "Error", scheduler_id);
                             }
+                            update_result(context, "Error", scheduler_id != null ? scheduler_id : -1);
                         }
                         catch (IOException ioe){
                             ioe.printStackTrace();
@@ -404,7 +409,34 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                 };
 
                 t.start();
-            }
+                return t;
+    }
+
+    /** Manual / Tasker: any network. Scheduled: optional Wi‑Fi-only via {@code wifi_switch_}. */
+    private boolean shouldRunNow(Context context, SharedPreferences sched_prefs, Integer scheduler_id) {
+        int sched = scheduler_id == null ? -1 : scheduler_id;
+        boolean requireWifi = false;
+        if (scheduler_id != null) {
+            requireWifi = sched_prefs.getBoolean("wifi_switch_" + scheduler_id, false);
+        }
+        boolean ok = requireWifi ? isConnectedToWifi(context) : isNetworkAvailable(context);
+        if (!ok) {
+            send_notification(context, requireWifi ? 1 : 0);
+            update_result(context, "Aborted", sched);
+        }
+        return ok;
+    }
+
+    private boolean isNetworkAvailable(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) return false;
+        android.net.Network activeNetwork = cm.getActiveNetwork();
+        if (activeNetwork == null) return false;
+        android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+        if (caps == null) return false;
+        return caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)
+                || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)
+                || caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET);
     }
 
     private void copyFile(File sourceFile, File destFile) throws IOException {
@@ -423,11 +455,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         Calendar cal = Calendar.getInstance();
         long time = cal.getTimeInMillis();
 
-        SharedPreferences cmdpref = context.getSharedPreferences("CMD_"+String.valueOf(id),MODE_PRIVATE);
+        SharedPreferences cmdpref = context.getSharedPreferences("CMD_"+String.valueOf(id),Context.MODE_PRIVATE);
         SharedPreferences.Editor cmd_pref_Edit= cmdpref.edit();
-        SharedPreferences config_prefs =  context.getSharedPreferences("configs", MODE_PRIVATE);
+        SharedPreferences config_prefs =  context.getSharedPreferences("configs", Context.MODE_PRIVATE);
         SharedPreferences.Editor configs_prefseditor = config_prefs.edit();
-        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", MODE_PRIVATE);
+        SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
 
         Locale current_locale = context.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
@@ -436,7 +468,10 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
         cmd_pref_Edit.commit();
 
         configs_prefseditor.putString("last_result_"+String.valueOf(this.id),result);
-        if (scheduler_id >= 0) sched_prefs.edit().putLong("last_run_"+String.valueOf(scheduler_id),time).commit();
+        if (scheduler_id >= 0) {
+            sched_prefs.edit().putLong("last_run_"+String.valueOf(scheduler_id),time).commit();
+            Scheduler.refreshInMemoryAlarmCache(scheduler_id);
+        }
         configs_prefseditor.putString("last_run_"+String.valueOf(id),formatter.format(time));
         configs_prefseditor.commit();
 
@@ -483,20 +518,11 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
     private boolean isConnectedToWifi(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
         if (cm == null) return false;
-
         android.net.Network activeNetwork = cm.getActiveNetwork();
         if (activeNetwork == null) return false;
-
         android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
-        if (caps == null) return false;
-
-        // This check does NOT require Location permissions
-
-        boolean is_connected_to_wifi = caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI);
-        Log.d("WIFI_STATE", Boolean.toString(is_connected_to_wifi));
-        return is_connected_to_wifi;
+        return caps != null && caps.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI);
     }
 
     private void send_notification(Context ctx, int type) {

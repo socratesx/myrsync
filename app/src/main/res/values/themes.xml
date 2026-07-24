@@ -26,9 +26,16 @@
         <item name="colorSurfaceContainerLow">@color/md_theme_light_surfaceContainerLow</item>
         <item name="colorSurfaceContainer">@color/md_theme_light_surfaceContainer</item>
         <item name="colorSurfaceContainerHigh">@color/md_theme_light_surfaceContainerHigh</item>
+        <!-- Revert to pre-change: same bar treatment as before (not light surface) -->
         <item name="android:statusBarColor">@color/md_theme_dark_surfaceContainerHigh</item>
     </style>
-    <style name="Widget.App.DayToggleButton" parent="Widget.Material3.Button.TextButton.Dialog.Flush">
+    <!-- Tasker/Locale plugin editor needs an ActionBar (Locale SDK sets subtitle on it). -->
+    <style name="AppTheme.WithActionBar" parent="AppTheme">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+    </style>
+    <!-- High-contrast day chips: custom tints (values + values-night) so checked state doesn’t blend -->
+    <style name="Widget.App.DayToggleButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">44dp</item>
         <item name="android:layout_weight">1</item>
@@ -41,6 +48,9 @@
         <item name="android:includeFontPadding">false</item>
         <item name="android:gravity">center</item>
         <item name="shapeAppearance">@style/ShapeAppearance.Material3.Corner.Full</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="backgroundTint">@color/day_toggle_background_tint</item>
+        <item name="strokeColor">@color/day_toggle_stroke_tint</item>
+        <item name="android:textColor">@color/day_toggle_text_tint</item>
     </style>
 </resources>

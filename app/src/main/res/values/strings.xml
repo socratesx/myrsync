@@ -33,11 +33,21 @@
     <string name="error">Error</string>
     <string name="success">Success</string>
     <string name="overview">Overview</string>
-    <string name="create_a_configuration_and_add_a_scheduler">Create a Configuration and Add a Scheduler</string>
+    <string name="create_a_configuration_and_add_a_scheduler">Create a configuration to see it here.</string>
     <string name="export">Export</string>
     <string name="clear_log">Clear Log</string>
     <string name="change_path">Change Path</string>
     <string name="running">Running</string>
+    <string name="about_to_start">About to start</string>
+    <string name="manual">Manual</string>
+    <string name="no_schedule">No schedule</string>
+    <string name="schedules_section">Schedules</string>
+    <string name="add_schedule">Add schedule</string>
+    <string name="schedule_number">Schedule %1$d</string>
+    <string name="schedule_needs_day">Each schedule needs at least one weekday.</string>
+    <string name="schedule_count">%1$d schedule(s)</string>
+    <string name="transport_ssh">SSH</string>
+    <string name="transport_daemon">Daemon</string>
     <string name="rs_opt">Rsync Options</string>
     <string name="save_and_view_command">Save and View Command</string>
     <string name="generated_rsync_command">Generated Rsync Command:</string>
@@ -62,8 +72,7 @@
         Thank you for downloading and using this application, I hope that it will help you with your project.\n\n
         My name is Socrates Chouridis and I developed this app with painstaking effort as I had no previous knowledge of Java or Android development \n\n
 
-        However, I offer this application completely free and with no ads. If by any means you found this application useful and helped you to achieve your goal, then please consider leaving a positive rating
-        or donating any amount you believe fair by using the link https://paypal.me/myrsync .\n\n
+        The app is free to try with one configuration (manual runs). Unlock Pro for unlimited configs, schedules, and Tasker. There are no ads. If you find it useful, a Play rating helps a lot; optional tips: https://paypal.me/myrsync .\n\n
 
         If you need to contact me for bug reporting or anything related to this application then please send an email to myrsync@protonmail.com\n\n
 
@@ -141,6 +150,9 @@
     <string name="mode">Mode:</string>
     <string name="selected_log">Selected Log:</string>
     <string name="edit_configurations">Edit Configurations</string>
+    <string name="tasker_plugin_no_config">No configuration selected</string>
+    <string name="tasker_plugin_blurb_format">Run \"%1$s\" (%2$s)</string>
+    <string name="tasker_plugin_pick_config">Please select a configuration</string>
     <string name="select_a_path">Local Path</string>
     <string name="advanced">Advanced:</string>
     <string name="type_rsync_options_manually">Type rsync Options manually</string>
@@ -153,5 +165,31 @@
         This is a potentially dangerous feature that may result in data loss. Take caution when using options that delete files.
     </string>
     <string name="M">M</string>
+    <string name="privacy_policy">Privacy policy</string>
+    <string name="privacy_policy_summary">How myRSync handles data on your device</string>
+    <!-- Host docs/privacy-policy.html (GitHub Pages from /docs) before Play submission. -->
+    <string name="privacy_policy_url">https://socratesx.github.io/myrsync/privacy-policy.html</string>
+    <string name="storage_access_title">Allow file access</string>
+    <string name="storage_access_message">myRSync needs All files access so scheduled and manual rsync jobs can read and write the folders you configure. On the next screen, enable access for this app.</string>
+    <string name="storage_access_continue">Continue</string>
+    <string name="storage_access_not_now">Not now</string>
+
+    <string name="pro_upgrade_title">Unlock myRSync Pro</string>
+    <string name="pro_upgrade_buy">Unlock Pro</string>
+    <string name="pro_restore">Restore purchase</string>
+    <string name="pro_status_free">Free — tap to unlock Pro</string>
+    <string name="pro_status_pro">Pro unlocked</string>
+    <string name="pro_unlocked_toast">Pro unlocked. Thank you!</string>
+    <string name="pro_billing_unavailable">Google Play Billing is not available right now. Try again later.</string>
+    <string name="pro_product_unavailable">The Pro upgrade is not available yet. Ensure the app is installed from Play and the product is active.</string>
+    <string name="pro_restore_success">Purchase restored. Pro is unlocked.</string>
+    <string name="pro_restore_none">No Pro purchase found for this Google account.</string>
+    <string name="pro_restore_failed">Could not restore purchases. Check your Play Store connection.</string>
+    <string name="pro_limit_configs">Free includes one configuration. Unlock Pro for unlimited configs, schedules, and Tasker.</string>
+    <string name="pro_limit_schedules">Scheduling is a Pro feature. Unlock Pro to run syncs automatically.</string>
+    <string name="pro_limit_tasker">Tasker / Locale automation is a Pro feature.</string>
+    <string name="pro_schedules_teaser">Schedules require Pro. Tap here to unlock automatic syncs, extra configs, and Tasker.</string>
+    <string name="pro_upgrade_pref_title">myRSync Pro</string>
+    <string name="pro_debug_unlock">Debug: unlock Pro</string>
 
 </resources>

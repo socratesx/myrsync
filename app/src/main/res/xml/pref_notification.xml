@@ -8,7 +8,7 @@
         android:summary="Follow system default"
         android:entries="@array/theme_entries"
         android:entryValues="@array/theme_values"
-        android:defaultValue="-1" />
+        android:defaultValue="follow_system" />
     <SwitchPreference
         android:defaultValue="true"
         android:key="notifications"
@@ -36,5 +36,24 @@
         android:key="root_access"
         android:title="Root Access" />
 
+    <Preference
+        android:key="pro_upgrade"
+        android:title="@string/pro_upgrade_pref_title"
+        android:summary="@string/pro_status_free" />
+
+    <Preference
+        android:key="pro_restore"
+        android:title="@string/pro_restore"
+        android:summary="" />
+
+    <SwitchPreference
+        android:key="pro_debug_unlock"
+        android:title="@string/pro_debug_unlock"
+        android:defaultValue="false" />
+
+    <Preference
+        android:key="privacy_policy"
+        android:title="@string/privacy_policy"
+        android:summary="@string/privacy_policy_summary" />
 
 </PreferenceScreen>

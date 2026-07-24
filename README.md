@@ -1,23 +1,40 @@
 # myRSync
 
-This simple Application is intended to be a convenient way to create and schedule an rsync command in order to synchronize local folders with a server that is running an rsync daemon.
+Android rsync client for creating configurations and running them on demand or on a schedule. Aimed at people who want backups under their own control (rsync daemon or SSH).
 
-It is an ideal solution for people that need to implement a custom cloud file backup in their network so to have total control over where their files are stored.
+Google Play (beta): [com.linminitools.myrsync](https://play.google.com/store/apps/details?id=com.linminitools.myrsync)
 
-<h3>Description</h3>
+## App tabs
 
-This application consists of four tabs:
-1. Overview - As long as there are active Schedulers, In Overview tab the user can get quick information about the Configurations that are Scheduled to run, the next running time, the last result etc.
-2. Configurations - This tab shows a list with the Users Configurations. There is also a Floating Button that is used to add create and save a configuration.
-3. Schedulers - As long as there is at least one saved configuration, the user can create Schedulers and attach them to the configurations. These will ensure that the configuration will run according to the Scheduler.
-4. Log - A tab that is showing log entries of the rsync command. 
+1. **Overview** — Next/last run status for scheduled jobs  
+2. **Configurations** — Create and edit rsync jobs; attach a schedule when saving  
+3. **Log** — rsync output for recent runs  
 
+Automation: Tasker / Locale plugin action can fire a saved configuration.
 
-<h3>How to use this app:</h3>
+## How to use
 
-1. Create Rsync Configurations.
-2. Run them on demand, or create Schedulers attached to them.
-3. Check the Overview for details regarding each scheduler/configuration pair.
-4. Check the Log for the rsync log entries.
+1. Create an rsync configuration (daemon or SSH).  
+2. Run it manually, or enable a schedule on the config.  
+3. Grant **All files access** (Android 11+) and **Alarms & reminders** when prompted so paths and schedules work.  
+4. Check Overview and Log for status.
 
-Google Playstore Beta Download: <a href="https://play.google.com/store/apps/details?id=com.linminitools.myrsync">https://play.google.com/store/apps/details?id=com.linminitools.myrsync</a>
+## Free vs Pro
+
+One Play listing (`com.linminitools.myrsync`), free to install:
+
+| Free | Pro (one-time IAP `myrsync_pro`) |
+| --- | --- |
+| 1 configuration | Unlimited configurations |
+| Manual run | Schedules + Tasker / Locale |
+
+See [docs/PLAY_STORE_CHECKLIST.md](docs/PLAY_STORE_CHECKLIST.md) for Play Console product setup.
+
+## Privacy
+
+Privacy policy (host via GitHub Pages from `docs/`):  
+[docs/privacy-policy.html](docs/privacy-policy.html)
+
+## License
+
+GPLv3 — see [LICENSE](LICENSE).
