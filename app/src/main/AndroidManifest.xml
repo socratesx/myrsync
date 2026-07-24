@@ -62,7 +62,7 @@
             android:name=".editConfig"
             android:label="Edit Configuration"
             android:windowSoftInputMode="stateHidden"
-            android:parentActivityName=".FragmentInitializer">
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
@@ -71,7 +71,7 @@
             android:name=".addConfig"
             android:label="@string/title_activity_add_config"
             android:windowSoftInputMode="stateHidden"
-            android:parentActivityName=".FragmentInitializer">
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
@@ -84,7 +84,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity android:name=".FragmentInitializer" />
         <activity
             android:name=".TaskerPluginEditActivity"
             android:exported="true"
