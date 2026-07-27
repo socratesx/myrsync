@@ -49,7 +49,9 @@ public class addConfig extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SystemBars.setup(this);
         setContentView(R.layout.add_config);
+        SystemBars.applyTopInsets(findViewById(R.id.config_app_bar));
 
         MaterialToolbar toolbar = findViewById(R.id.config_toolbar);
         toolbar.setTitle(getTitle());
@@ -75,6 +77,7 @@ public class addConfig extends AppCompatActivity {
         ((TextInputEditText)findViewById(R.id.ed_remote_path)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_rsync_mod)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_ssh_key_path)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_ssh_password)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_srv_ip)).addTextChangedListener(commonWatcher);
 
         RadioGroup transport_type = findViewById(R.id.rg_transport_type);
@@ -95,11 +98,45 @@ public class addConfig extends AppCompatActivity {
                     lt_rsync_user.setHint(getString(R.string.ssh_user));
 
                 }
+                updateSshAuthUi();
                 updateButtons();
             }
         });
 
+        initSshAuthControls();
         initScheduleEditorControls();
+    }
+
+    protected void initSshAuthControls() {
+        RadioGroup authGroup = findViewById(R.id.rg_ssh_auth);
+        if (authGroup == null) {
+            return;
+        }
+        authGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            updateSshAuthUi();
+            updateButtons();
+        });
+        updateSshAuthUi();
+    }
+
+    protected boolean isSshPasswordAuthSelected() {
+        RadioGroup authGroup = findViewById(R.id.rg_ssh_auth);
+        return authGroup != null && authGroup.getCheckedRadioButtonId() == R.id.rb_ssh_auth_password;
+    }
+
+    protected void updateSshAuthUi() {
+        View keyRow = findViewById(R.id.lt_ssh_key_row);
+        View passwordLayout = findViewById(R.id.lt_ssh_password);
+        View passwordHint = findViewById(R.id.tv_ssh_password_hint);
+        if (keyRow == null || passwordLayout == null) {
+            return;
+        }
+        boolean password = isSshPasswordAuthSelected();
+        keyRow.setVisibility(password ? View.GONE : View.VISIBLE);
+        passwordLayout.setVisibility(password ? View.VISIBLE : View.GONE);
+        if (passwordHint != null) {
+            passwordHint.setVisibility(password ? View.VISIBLE : View.GONE);
+        }
     }
 
     /** Call after {@code setContentView} whenever the hierarchy is (re)inflated (e.g. edit screen). */
@@ -154,8 +191,14 @@ public class addConfig extends AppCompatActivity {
 
         if (transport_type.getCheckedRadioButtonId() == R.id.rb_ssh) {
             boolean hasRemotePath = remote_path.getText() != null && remote_path.getText().length() > 0;
-            boolean hasKeyPath = ssh_key_path.getText() != null && ssh_key_path.getText().length() > 0;
-            hasRemote = hasRemotePath && hasKeyPath;
+            TextInputEditText ssh_password = findViewById(R.id.ed_ssh_password);
+            if (isSshPasswordAuthSelected()) {
+                boolean hasPassword = ssh_password.getText() != null && ssh_password.getText().length() > 0;
+                hasRemote = hasRemotePath && hasPassword;
+            } else {
+                boolean hasKeyPath = ssh_key_path.getText() != null && ssh_key_path.getText().length() > 0;
+                hasRemote = hasRemotePath && hasKeyPath;
+            }
         } else {
             hasRemote = rsync_mod.getText() != null && rsync_mod.getText().length() > 0;
         }
@@ -275,6 +318,7 @@ public class addConfig extends AppCompatActivity {
         TextInputEditText et_path = findViewById(R.id.ed_path);
         TextInputEditText et_remote_path = findViewById(R.id.ed_remote_path);
         TextInputEditText et_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
+        TextInputEditText et_ssh_password = findViewById(R.id.ed_ssh_password);
 
         String rs_transport_type = String.valueOf(rb_transport_type.getText()).trim();
         String rs_user = String.valueOf(et_rs_user.getText()).trim();
@@ -286,6 +330,16 @@ public class addConfig extends AppCompatActivity {
         String local_path = String.valueOf(et_path.getText());
         String ssh_remote_path = String.valueOf(et_remote_path.getText());
         String ssh_private_key_path = String.valueOf(et_ssh_key_path.getText());
+        String ssh_password = et_ssh_password.getText() != null
+                ? et_ssh_password.getText().toString() : "";
+        boolean passwordAuth = "SSH".equals(rs_transport_type) && isSshPasswordAuthSelected();
+        String ssh_auth_type = passwordAuth
+                ? RS_Configuration.SSH_AUTH_PASSWORD : RS_Configuration.SSH_AUTH_KEY;
+        if (passwordAuth) {
+            ssh_private_key_path = "";
+        } else {
+            ssh_password = "";
+        }
 
         String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri", "");
         if (rs_port.isEmpty()) {
@@ -304,6 +358,8 @@ public class addConfig extends AppCompatActivity {
         configMap.put("adv_options", adv_options);
         configMap.put("rs_ssh_remote_path", ssh_remote_path);
         configMap.put("rs_ssh_private_key_path", ssh_private_key_path);
+        configMap.put("rs_ssh_auth_type", ssh_auth_type);
+        configMap.put("rs_ssh_password", ssh_password);
         configMap.put("rs_transport_type", rs_transport_type);
 
         return configMap;
@@ -330,9 +386,12 @@ public class addConfig extends AppCompatActivity {
         String daemon_destination = "rsync://" + rs_user + "@" + rs_ip + ":" + rs_port + "/" + rs_module;
 
         if (rs_transport_type.equals("SSH")) {
+            String authNote = RS_Configuration.SSH_AUTH_PASSWORD.equals(configMap.get("rs_ssh_auth_type"))
+                    ? " (" + getString(R.string.ssh_view_password_auth) + ")"
+                    : " (-i key)";
             Rsync_command = rs_mode.equals("Push") ?
-                    "rsync " + options + " " + local_path + " " + ssh_destination :
-                    "rsync " + options + " " + ssh_destination + " " + local_path;
+                    "rsync " + options + " " + local_path + " " + ssh_destination + authNote :
+                    "rsync " + options + " " + ssh_destination + " " + local_path + authNote;
         }
         else {
             Rsync_command = rs_mode.equals("Push") ?
@@ -359,11 +418,16 @@ public class addConfig extends AppCompatActivity {
         String rs_transport_type = configMap.get("rs_transport_type");
         String rs_ssh_private_key_path = configMap.get("rs_ssh_private_key_path");
         String rs_ssh_remote_path = configMap.get("rs_ssh_remote_path");
+        String rs_ssh_auth_type = configMap.get("rs_ssh_auth_type");
+        String rs_ssh_password = configMap.get("rs_ssh_password");
 
         boolean is_ssh = rs_transport_type.equals("SSH");
         boolean remote_complete = false;
         if (is_ssh) {
-            remote_complete = !rs_ssh_remote_path.isEmpty() && !rs_ssh_private_key_path.isEmpty();
+            boolean authOk = RS_Configuration.SSH_AUTH_PASSWORD.equals(rs_ssh_auth_type)
+                    ? (rs_ssh_password != null && !rs_ssh_password.isEmpty())
+                    : (rs_ssh_private_key_path != null && !rs_ssh_private_key_path.isEmpty());
+            remote_complete = rs_ssh_remote_path != null && !rs_ssh_remote_path.isEmpty() && authOk;
         } else {
             remote_complete = !rs_module.isEmpty();
         }
@@ -397,6 +461,8 @@ public class addConfig extends AppCompatActivity {
             config.rs_transport_type = rs_transport_type;
             config.rs_ssh_private_key_path = rs_ssh_private_key_path;
             config.rs_ssh_remote_path = rs_ssh_remote_path;
+            config.rs_ssh_auth_type = rs_ssh_auth_type;
+            config.rs_ssh_password = rs_ssh_password;
 
             config.saveToDisk();
             config_prefs.edit().putString("path_uri_" + config.id, path_uri).apply();

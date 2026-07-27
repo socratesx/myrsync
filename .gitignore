@@ -6,9 +6,29 @@
 /build
 /captures
 .externalNativeBuild
+.cxx/
+
+# Signing / secrets — never commit
 *.jks
 *.keystore
 keystore.properties
+*.credentials.txt
+
+# Built packages (Gradle outputs already under app/build; keep copies out of repo root too)
+*.apk
+*.aab
+*.ap_
 app/release/
+
 *.deb
 app/src/main/assets/rsync_binary/
+
+# Native rebuild workspaces (keep scripts / options; ignore sources & build trees)
+native/dropbear/dropbear-*/
+native/dropbear/build-*/
+native/dropbear/*.tar.bz2
+native/dropbear/*.tar.gz
+native/rsync/rsync-*/
+native/rsync/build-*/
+native/rsync/*.tar.gz
+native/rsync/*.tar.bz2

@@ -8,6 +8,7 @@
     tools:context=".addConfig">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/config_app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -272,7 +273,38 @@
                         android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:text="@string/ssh_auth_method"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorPrimary" />
+
+                <RadioGroup
+                    android:id="@+id/rg_ssh_auth"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/rb_ssh_auth_key"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/spacing_md"
+                        android:checked="true"
+                        android:text="@string/ssh_auth_key" />
+
+                    <RadioButton
+                        android:id="@+id/rb_ssh_auth_password"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/ssh_auth_password" />
+                </RadioGroup>
+
                 <LinearLayout
+                    android:id="@+id/lt_ssh_key_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacing_md"
@@ -303,6 +335,33 @@
                         android:onClick="addSshKeyPath"
                         android:text="@string/add_path" />
                 </LinearLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/lt_ssh_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_md"
+                    android:visibility="gone"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:hint="@string/ssh_password"
+                    app:endIconMode="password_toggle">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/ed_ssh_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textPassword"
+                        android:importantForAutofill="no" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <TextView
+                    android:id="@+id/tv_ssh_password_hint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_sm"
+                    android:visibility="gone"
+                    android:text="@string/ssh_password_hint"
+                    android:textAppearance="?attr/textAppearanceBodySmall" />
             </LinearLayout>
 
             <!-- Rsync Options Section -->

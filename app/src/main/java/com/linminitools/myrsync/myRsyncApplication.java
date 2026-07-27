@@ -37,6 +37,9 @@ public class myRsyncApplication extends Application {
 
         appContext = getApplicationContext();
 
+        // Move any plaintext SSH passwords out of configs.xml before loading configs.
+        SshSecretStore.migrateAllLegacy(appContext);
+
         // initialise configs and schedulers so they can be accessed by all activities independently
         configs.clear();
         schedulers.clear();
@@ -58,6 +61,7 @@ public class myRsyncApplication extends Application {
 
     /** Reload in-memory configs from disk (e.g. Tasker plugin editor after app was already running). */
     public static void reloadConfigsFromDisk(@NonNull Context ctx) {
+        SshSecretStore.migrateAllLegacy(ctx);
         configs.clear();
         loadConfigsFromDisk(ctx, configs);
         Collections.sort(configs);
@@ -93,6 +97,8 @@ public class myRsyncApplication extends Application {
         config.rs_transport_type = config_prefs.getString("rs_transport_type_" + id, "Rsync Daemon");
         config.rs_ssh_private_key_path = config_prefs.getString("rs_ssh_private_key_path_" + id, "");
         config.rs_ssh_remote_path = config_prefs.getString("rs_ssh_remote_path_" + id, "");
+        config.rs_ssh_auth_type = config_prefs.getString("rs_ssh_auth_type_" + id, RS_Configuration.SSH_AUTH_KEY);
+        config.rs_ssh_password = SshSecretStore.getPassword(ctx, configId);
         return config;
     }
 

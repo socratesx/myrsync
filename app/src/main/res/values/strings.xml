@@ -67,6 +67,12 @@
     <string name="remote_path">Remote Path</string>
     <string name="ssh_key_path">SSH Private Key Path</string>
     <string name="ssh_user">SSH User</string>
+    <string name="ssh_auth_method">SSH authentication</string>
+    <string name="ssh_auth_key">Private key</string>
+    <string name="ssh_auth_password">Password</string>
+    <string name="ssh_password">SSH password</string>
+    <string name="ssh_password_hint">Stored on this device with the configuration so schedules can run. Prefer a key when possible.</string>
+    <string name="ssh_view_password_auth">password auth</string>
     <string name="about">
         Dear User,\n
         Thank you for downloading and using this application, I hope that it will help you with your project.\n\n

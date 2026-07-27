@@ -21,6 +21,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.documentfile.provider.DocumentFile;
 
@@ -45,11 +46,22 @@ import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class RS_Configuration implements Comparable<RS_Configuration>{
 
+    /** SSH auth: private key file (default). */
+    public static final String SSH_AUTH_KEY = "key";
+    /** SSH auth: password via Dropbear DROPBEAR_PASSWORD. */
+    public static final String SSH_AUTH_PASSWORD = "password";
+
     String rs_ip, rs_port, rs_user, rs_module, rs_options, local_path, name, rs_mode, adv_options;
     String rs_transport_type, rs_ssh_private_key_path, rs_ssh_remote_path;
+    String rs_ssh_auth_type = SSH_AUTH_KEY;
+    String rs_ssh_password = "";
 
     Long addedOn;
     final int id;
+
+    boolean isSshPasswordAuth() {
+        return "SSH".equals(rs_transport_type) && SSH_AUTH_PASSWORD.equals(rs_ssh_auth_type);
+    }
 
 
     public RS_Configuration(){
@@ -87,8 +99,20 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         prefseditor.putString("rs_transport_type_"+String.valueOf(this.id), rs_transport_type);
         prefseditor.putString("rs_ssh_private_key_path_"+String.valueOf(this.id), rs_ssh_private_key_path);
         prefseditor.putString("rs_ssh_remote_path_"+String.valueOf(this.id), rs_ssh_remote_path);
+        prefseditor.putString("rs_ssh_auth_type_"+String.valueOf(this.id),
+                rs_ssh_auth_type != null ? rs_ssh_auth_type : SSH_AUTH_KEY);
+        // Never persist SSH passwords in plaintext configs.xml.
+        prefseditor.remove("rs_ssh_password_"+String.valueOf(this.id));
 
         prefseditor.apply();
+
+        if (isSshPasswordAuth() && rs_ssh_password != null && !rs_ssh_password.isEmpty()) {
+            SshSecretStore.putPassword(myRsyncApplication.appContext, this.id, rs_ssh_password);
+        } else {
+            SshSecretStore.removePassword(myRsyncApplication.appContext, this.id);
+            secureDeleteSshTempFiles(myRsyncApplication.appContext, this.id);
+        }
+
         Locale current_locale = myRsyncApplication.appContext.getResources().getConfiguration().locale;
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
         try {
@@ -127,7 +151,12 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         prefseditor.remove("rs_transport_type_"+String.valueOf(this.id));
         prefseditor.remove("rs_ssh_private_key_path_"+String.valueOf(this.id));
         prefseditor.remove("rs_ssh_remote_path_"+String.valueOf(this.id));
+        prefseditor.remove("rs_ssh_auth_type_"+String.valueOf(this.id));
+        prefseditor.remove("rs_ssh_password_"+String.valueOf(this.id));
         prefseditor.apply();
+
+        SshSecretStore.removePassword(myRsyncApplication.appContext, this.id);
+        secureDeleteSshTempFiles(myRsyncApplication.appContext, this.id);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) myRsyncApplication.appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
         else (new File(myRsyncApplication.appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+String.valueOf(id)+".xml")).delete();
@@ -236,143 +265,179 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                         String destination;
                         String transport_options = "";
                         String workingKeyPath = "";
+                        boolean passwordAuth = isSshPasswordAuth();
+                        String sshPassword = rs_ssh_password != null ? rs_ssh_password : "";
+                        File sshPassFile = null;
+                        File sshWrapFile = null;
 
                         if ("SSH".equals(rs_transport_type)) {
-                            File keyFile = new File(rs_ssh_private_key_path);
-                            workingKeyPath = rs_ssh_private_key_path;
-
-                            // SSH keys must have 600 permissions. On Android, files on SD card usually have 777 or similar
-                            // and chmod doesn't work. We copy it to the app's internal storage and chmod it there.
-                            File internalKey = new File(context.getFilesDir(), "ssh_key_" + id);
-                            try {
-                                copyFile(keyFile, internalKey);
-                                Runtime.getRuntime().exec("chmod 600 " + internalKey.getAbsolutePath()).waitFor();
-                                workingKeyPath = internalKey.getAbsolutePath();
-
-                                // Try to convert key if it's OpenSSH format
-                                File convertedKey = new File(context.getFilesDir(), "ssh_key_db_" + id);
-                                String[] convertCmd = {convert_bin, "openssh", "dropbear", internalKey.getAbsolutePath(), convertedKey.getAbsolutePath()};
-                                try {
-                                    Process convertProc = Runtime.getRuntime().exec(convertCmd);
-                                    int exitCode = convertProc.waitFor();
-                                    if (exitCode == 0 && convertedKey.exists() && convertedKey.length() > 0) {
-                                        workingKeyPath = convertedKey.getAbsolutePath();
-                                        Runtime.getRuntime().exec("chmod 600 " + workingKeyPath).waitFor();
-                                        try (FileWriter debug_writer = new FileWriter(debugLogFile, true)) {
-                                            debug_writer.append("\nDEBUG: Key converted successfully to Dropbear format.");
-                                        }
-                                    } else {
-                                        try (FileWriter debug_writer = new FileWriter(debugLogFile, true)) {
-                                            debug_writer.append("\nDEBUG: Key conversion skipped or failed (exit code: " + exitCode + "). Using original key.");
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    try (FileWriter debug_writer = new FileWriter(debugLogFile, true)) {
-                                        debug_writer.append("\nDEBUG: Key conversion exception: " + e.getMessage());
-                                    }
-                                }
-                            } catch (IOException | InterruptedException e) {
-                                Log.e("SSH_KEY", "Failed to prepare key file", e);
-                            }
-
-                            transport_options = "-e '" + ssh_bin + " -p " + rs_port + " -i " + workingKeyPath + " -o StrictHostKeyChecking=no'";
                             destination = rs_user + "@" + rs_ip + ":" + rs_ssh_remote_path;
+
+                            if (passwordAuth) {
+                                // rsync does not reliably inherit ProcessBuilder env into the -e child.
+                                // Use a small wrapper that exports DROPBEAR_PASSWORD then execs dbclient.
+                                try {
+                                    File[] wrapFiles = prepareSshPasswordWrapper(context, ssh_bin, sshPassword);
+                                    sshPassFile = wrapFiles[0];
+                                    sshWrapFile = wrapFiles[1];
+                                } catch (Exception e) {
+                                    Log.e("SSH_PASS", "Failed to prepare password wrapper", e);
+                                    secureDeleteSshTempFiles(context, id);
+                                }
+                            } else {
+                                File keyFile = new File(rs_ssh_private_key_path);
+                                workingKeyPath = rs_ssh_private_key_path;
+
+                                // SSH keys must have 600 permissions. On Android, files on SD card usually have 777 or similar
+                                // and chmod doesn't work. We copy it to the app's internal storage and chmod it there.
+                                File internalKey = new File(context.getFilesDir(), "ssh_key_" + id);
+                                try {
+                                    copyFile(keyFile, internalKey);
+                                    Runtime.getRuntime().exec("chmod 600 " + internalKey.getAbsolutePath()).waitFor();
+                                    workingKeyPath = internalKey.getAbsolutePath();
+
+                                    // Try to convert key if it's OpenSSH format
+                                    File convertedKey = new File(context.getFilesDir(), "ssh_key_db_" + id);
+                                    String[] convertCmd = {convert_bin, "openssh", "dropbear", internalKey.getAbsolutePath(), convertedKey.getAbsolutePath()};
+                                    try {
+                                        Process convertProc = Runtime.getRuntime().exec(convertCmd);
+                                        int exitCode = convertProc.waitFor();
+                                        if (exitCode == 0 && convertedKey.exists() && convertedKey.length() > 0) {
+                                            workingKeyPath = convertedKey.getAbsolutePath();
+                                            Runtime.getRuntime().exec("chmod 600 " + workingKeyPath).waitFor();
+                                        } else {
+                                            Log.w("SSH_KEY", "Key conversion skipped or failed (exit code: " + exitCode + ")");
+                                        }
+                                    } catch (Exception e) {
+                                        Log.w("SSH_KEY", "Key conversion exception", e);
+                                    }
+                                } catch (IOException | InterruptedException e) {
+                                    Log.e("SSH_KEY", "Failed to prepare key file", e);
+                                }
+
+                                transport_options = "-e '" + ssh_bin + " -p " + rs_port
+                                        + " -i " + workingKeyPath + " -y -y'";
+                            }
                         } else {
                             destination = "rsync://" + rs_user + "@" + rs_ip + ":" + rs_port + "/" + rs_module;
                         }
 
-                        if (isRoot) {
-                            StringBuilder rootCmd = new StringBuilder(rsync_bin);
-
-                            String cleanOptions = options.strip();
-                            if (!cleanOptions.isEmpty()) {
-                                rootCmd.append(" ").append(cleanOptions);
-                            }
-
-                            if (!transport_options.isEmpty()) {
-                                rootCmd.append(" ").append(transport_options);
-                            }
-
-                            rootCmd.append(" --log-file=").append(log);
-
-                            if (mode.equals("Push")) {
-                                rootCmd.append(" ").append(local_path).append(" ").append(destination);
-                            } else {
-                                rootCmd.append(" ").append(destination).append(" ").append(local_path);
-                            }
-
-                            cmdList.add("su");
-                            cmdList.add("-c");
-                            cmdList.add(rootCmd.toString());
-
+                        String sshRemoteCmd;
+                        if (passwordAuth && sshWrapFile != null) {
+                            // Invoke via sh so the script does not need the executable bit
+                            // (Android app-private files often cannot be chmod +x reliably).
+                            // -y -y: skip hostkey checks (Dropbear still may emit a caution we filter from logs).
+                            sshRemoteCmd = "/system/bin/sh " + sshWrapFile.getAbsolutePath()
+                                    + " -p " + rs_port + " -y -y";
+                            transport_options = "-e '" + sshRemoteCmd + "'";
                         } else {
-                            cmdList.add(rsync_bin);
+                            sshRemoteCmd = ssh_bin + " -p " + rs_port + " -i " + workingKeyPath
+                                    + " -y -y";
+                        }
 
-                            String cleanOptions = options.strip();
-                            if (!cleanOptions.isEmpty()) {
-                                String[] splitOptions = cleanOptions.split("\\s+");
-                                cmdList.addAll(Arrays.asList(splitOptions));
-                            }
+                        String result = "Error";
+                        try {
+                            if (isRoot) {
+                                StringBuilder rootCmd = new StringBuilder(rsync_bin);
 
-                            if (!transport_options.isEmpty()) {
-                                cmdList.add("-e");
-                                cmdList.add(ssh_bin + " -p " + rs_port + " -i " + workingKeyPath + " -o StrictHostKeyChecking=no");
-                            }
+                                String cleanOptions = options.strip();
+                                if (!cleanOptions.isEmpty()) {
+                                    rootCmd.append(" ").append(cleanOptions);
+                                }
 
-                            cmdList.add("--log-file");
-                            cmdList.add(log);
+                                if (!transport_options.isEmpty()) {
+                                    rootCmd.append(" ").append(transport_options);
+                                }
 
-                            if (mode.equals("Push")) {
-                                cmdList.add(local_path);
-                                cmdList.add(destination);
+                                rootCmd.append(" --log-file=").append(log);
+
+                                if (mode.equals("Push")) {
+                                    rootCmd.append(" ").append(local_path).append(" ").append(destination);
+                                } else {
+                                    rootCmd.append(" ").append(destination).append(" ").append(local_path);
+                                }
+
+                                cmdList.add("su");
+                                cmdList.add("-c");
+                                cmdList.add(rootCmd.toString());
+
                             } else {
-                                cmdList.add(destination);
-                                cmdList.add(local_path);
+                                cmdList.add(rsync_bin);
+
+                                String cleanOptions = options.strip();
+                                if (!cleanOptions.isEmpty()) {
+                                    String[] splitOptions = cleanOptions.split("\\s+");
+                                    cmdList.addAll(Arrays.asList(splitOptions));
+                                }
+
+                                if ("SSH".equals(rs_transport_type)) {
+                                    cmdList.add("-e");
+                                    cmdList.add(sshRemoteCmd);
+                                }
+
+                                cmdList.add("--log-file");
+                                cmdList.add(log);
+
+                                if (mode.equals("Push")) {
+                                    cmdList.add(local_path);
+                                    cmdList.add(destination);
+                                } else {
+                                    cmdList.add(destination);
+                                    cmdList.add(local_path);
+                                }
                             }
+
+                            // Logging the command to debug.log (never include the password).
+                            try {
+                                FileWriter debug_writer = new FileWriter(debugLogFile, true);
+                                String cmdLog = "\nRSYNC_COMMAND=" + redactSecrets(cmdList.toString(), sshPassword);
+                                debug_writer.append(cmdLog);
+                                debug_writer.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+
+                            Log.d("CMD_STRING", redactSecrets(cmdList.toString(), sshPassword));
+
+                            p.command(cmdList);
+
+                            Log.d("FILES_FOLDER", app_folder);
+                            p.environment().put("PATH", app_folder + ":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
+                            p.redirectErrorStream(true);
+                            Process process = p.start();
+
+                            BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                            StringBuilder builder = new StringBuilder();
+                            String line;
+
+                            while ((line = std_out.readLine()) != null) {
+                                builder.append(line);
+                                builder.append(System.getProperty("line.separator"));
+                            }
+                            String stdout = builder.toString();
+
+                            String filteredOut = filterSshClientNoise(
+                                    redactSecrets(stdout, sshPassword));
+                            if (!filteredOut.isEmpty()) {
+                                try {
+                                    FileWriter debug_writer = new FileWriter(debugLogFile, true);
+                                    CharSequence message = "\n\n[ "
+                                            + formatter.format(Calendar.getInstance().getTime())
+                                            + " ] OUT_STREAM = "
+                                            + filteredOut;
+                                    debug_writer.append(message);
+                                    debug_writer.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            result = process.waitFor() == 0 ? "OK" : "Warning! Check Log!";
+                        } finally {
+                            secureDeleteSshTempFiles(context, id);
+                            sshPassFile = null;
+                            sshWrapFile = null;
                         }
-
-                        // Logging the command to debug.log as requested
-                        try {
-                            FileWriter debug_writer = new FileWriter(debugLogFile, true);
-                            String cmdLog = "\nRSYNC_COMMAND=" + cmdList.toString();
-                            debug_writer.append(cmdLog);
-                            debug_writer.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                        Log.d("CMD_STRING", cmdList.toString());
-
-                        p.command(cmdList);
-
-                        Log.d("FILES_FOLDER",app_folder);
-                        p.environment().put("PATH", app_folder+":/su/bin:/sbin:/vendor/bin:/system/sbin:/system/bin:/su/xbin:/system/xbin");
-                        p.redirectErrorStream(true);
-                        Process process=p.start();
-
-                        BufferedReader std_out = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                        StringBuilder builder = new StringBuilder();
-                        String line;
-
-                        while ( (line = std_out.readLine()) != null) {
-                            builder.append(line);
-                            builder.append(System.getProperty("line.separator"));
-                        }
-                        String stdout = builder.toString();
-
-                        try {
-                            FileWriter debug_writer = new FileWriter(debugLogFile, true);
-                            CharSequence message = "\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "OUT_STREAM = "+stdout;
-                            debug_writer.append(message);
-                            debug_writer.close();
-                        }
-                        catch (IOException e){
-                            e.printStackTrace();
-                        }
-
-
-
-                        String result = process.waitFor() == 0 ? "OK" : "Warning! Check Log!";
 
                         if (scheduler_id != null) {
                             sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
@@ -615,5 +680,162 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
             }
             return "";
         }
+
+    private static final String SSH_SECURE_DIR = "ssh_secure";
+
+    @NonNull
+    private static File sshSecureDir(@NonNull Context context) {
+        File dir = new File(context.getFilesDir(), SSH_SECURE_DIR);
+        //noinspection ResultOfMethodCallIgnored
+        dir.mkdirs();
+        return dir;
+    }
+
+    @NonNull
+    private static File sshPassFileFor(@NonNull Context context, int configId) {
+        return new File(sshSecureDir(context), "pass_" + configId + ".tmp");
+    }
+
+    @NonNull
+    private static File sshWrapFileFor(@NonNull Context context, int configId) {
+        return new File(sshSecureDir(context), "wrap_" + configId + ".sh");
+    }
+
+    @NonNull
+    private static File sshAskPassFileFor(@NonNull Context context, int configId) {
+        return new File(sshSecureDir(context), "askpass_" + configId + ".sh");
+    }
+
+    /** Overwrite then delete password/wrapper temp files for a config. */
+    static void secureDeleteSshTempFiles(@NonNull Context context, int configId) {
+        secureWipeDelete(sshPassFileFor(context, configId));
+        secureWipeDelete(sshWrapFileFor(context, configId));
+        secureWipeDelete(sshAskPassFileFor(context, configId));
+        secureWipeDelete(new File(sshSecureDir(context), "auth_probe_" + configId + ".txt"));
+        // Legacy paths from the first wrapper revision (before ssh_secure/).
+        secureWipeDelete(new File(context.getFilesDir(), "ssh_pass_" + configId + ".tmp"));
+        secureWipeDelete(new File(context.getFilesDir(), "ssh_wrap_" + configId + ".sh"));
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static void secureWipeDelete(@Nullable File file) {
+        if (file == null || !file.exists()) {
+            return;
+        }
+        try {
+            long len = file.length();
+            if (len > 0 && len < 1_000_000L) {
+                char[] wipe = new char[(int) len];
+                java.util.Arrays.fill(wipe, '\0');
+                try (FileWriter fw = new FileWriter(file, false)) {
+                    fw.write(wipe);
+                }
+            }
+        } catch (IOException ignored) {
+        }
+        file.delete();
+    }
+
+    /**
+     * Creates a password file + wrapper so Dropbear can authenticate when spawned by rsync {@code -e}.
+     * <p>
+     * The password is never interpolated into the script text (avoids mangling special characters).
+     * The wrapper reads the file into {@code DROPBEAR_PASSWORD} via assignment (literal bytes) and
+     * execs dbclient. Invoked as {@code /system/bin/sh wrap.sh ...} so the script need not be +x.
+     *
+     * @return [passwordFile, wrapperScript]
+     */
+    @NonNull
+    private File[] prepareSshPasswordWrapper(@NonNull Context context,
+                                             @NonNull String sshBin,
+                                             @NonNull String password)
+            throws IOException {
+        File passFile = sshPassFileFor(context, id);
+        File wrapFile = sshWrapFileFor(context, id);
+        try {
+            // UTF-8 bytes, no trailing newline added (EditText content as-is).
+            byte[] passBytes = password.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            try (FileOutputStream fos = new FileOutputStream(passFile, false)) {
+                fos.write(passBytes);
+            }
+            //noinspection ResultOfMethodCallIgnored
+            passFile.setReadable(true, true);
+            //noinspection ResultOfMethodCallIgnored
+            passFile.setWritable(true, true);
+
+            String passPath = shellSingleQuote(passFile.getAbsolutePath());
+            String sshPath = shellSingleQuote(sshBin);
+
+            // Assignment keeps password bytes literal (spaces, $, !, @, quotes, etc.).
+            // Trailing newlines are stripped by $(...); we never write a trailing newline.
+            // Use absolute /system/bin/* — rsync's -e child may inherit a minimal PATH.
+            String wrapScript = "#!/system/bin/sh\n"
+                    + "PASS_FILE=" + passPath + "\n"
+                    + "SSH_BIN=" + sshPath + "\n"
+                    + "DROPBEAR_PASSWORD=$(/system/bin/cat \"$PASS_FILE\" 2>/dev/null)\n"
+                    + "export DROPBEAR_PASSWORD\n"
+                    + "exec \"$SSH_BIN\" \"$@\"\n";
+            try (FileWriter fw = new FileWriter(wrapFile, false)) {
+                fw.write(wrapScript);
+            }
+            //noinspection ResultOfMethodCallIgnored
+            wrapFile.setReadable(true, true);
+            //noinspection ResultOfMethodCallIgnored
+            wrapFile.setWritable(true, true);
+
+            return new File[]{passFile, wrapFile};
+        } catch (IOException e) {
+            secureDeleteSshTempFiles(context, id);
+            throw e;
+        }
+    }
+
+    /** Single-quote a value for embedding in a shell script. */
+    private static String shellSingleQuote(String value) {
+        if (value == null) {
+            return "''";
+        }
+        return "'" + value.replace("'", "'\\''") + "'";
+    }
+
+    /** Remove a password from log lines if present. */
+    private static String redactSecrets(String text, String password) {
+        if (text == null) {
+            return "";
+        }
+        if (password == null || password.isEmpty()) {
+            return text;
+        }
+        return text.replace(password, "********");
+    }
+
+    /** Strip routine Dropbear/rsync chatter that adds no diagnostic value. */
+    @NonNull
+    private static String filterSshClientNoise(@Nullable String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        StringBuilder out = new StringBuilder();
+        for (String line : text.split("\n", -1)) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            if (trimmed.contains("Caution, skipping hostkey check")) {
+                continue;
+            }
+            if (trimmed.contains("skipping hostkey check for")) {
+                continue;
+            }
+            if (trimmed.contains("Ignoring unknown configuration option")) {
+                continue;
+            }
+            if (out.length() > 0) {
+                out.append('\n');
+            }
+            out.append(line);
+        }
+        return out.toString();
+    }
 
     }

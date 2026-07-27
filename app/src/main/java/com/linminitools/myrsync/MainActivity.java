@@ -67,8 +67,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SystemBars.setup(this);
         setContentView(R.layout.activity_main);
         appContext = getApplicationContext();
+
+        SystemBars.applyTopInsets(findViewById(R.id.app_bar));
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -440,6 +443,8 @@ public class MainActivity extends AppCompatActivity {
             clone.rs_transport_type = original.rs_transport_type;
             clone.rs_ssh_private_key_path = original.rs_ssh_private_key_path;
             clone.rs_ssh_remote_path = original.rs_ssh_remote_path;
+            clone.rs_ssh_auth_type = original.rs_ssh_auth_type;
+            clone.rs_ssh_password = original.rs_ssh_password;
             clone.saveToDisk();
             SharedPreferences cfg = getSharedPreferences("configs", MODE_PRIVATE);
             cfg.edit().putString("path_uri_" + clone.id, cfg.getString("path_uri_" + original.id, "")).apply();

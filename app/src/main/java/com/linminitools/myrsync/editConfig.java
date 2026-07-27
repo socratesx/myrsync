@@ -3,6 +3,7 @@ package com.linminitools.myrsync;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.CheckBox;
@@ -28,6 +29,7 @@ public class editConfig extends addConfig {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_config);
+        SystemBars.applyTopInsets(findViewById(R.id.config_app_bar));
 
         MaterialToolbar toolbar = findViewById(R.id.config_toolbar);
         toolbar.setTitle("Edit Configuration");
@@ -85,6 +87,7 @@ public class editConfig extends addConfig {
                 findViewById(R.id.lt_rsync_srv_mod).setVisibility(View.GONE);
                 ((TextInputLayout)findViewById(R.id.lt_rsync_user)).setHint(getString(R.string.ssh_user));
             }
+            updateSshAuthUi();
             updateButtons();
         });
 
@@ -101,6 +104,18 @@ public class editConfig extends addConfig {
         TextInputEditText tv_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
         tv_ssh_key_path.setText(config.rs_ssh_private_key_path);
 
+        TextInputEditText tv_ssh_password = findViewById(R.id.ed_ssh_password);
+        tv_ssh_password.setText(config.rs_ssh_password != null ? config.rs_ssh_password : "");
+
+        RadioGroup sshAuth = findViewById(R.id.rg_ssh_auth);
+        if (RS_Configuration.SSH_AUTH_PASSWORD.equals(config.rs_ssh_auth_type)) {
+            sshAuth.check(R.id.rb_ssh_auth_password);
+        } else {
+            sshAuth.check(R.id.rb_ssh_auth_key);
+        }
+        initSshAuthControls();
+        updateSshAuthUi();
+
         TextWatcher commonWatcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -116,6 +131,7 @@ public class editConfig extends addConfig {
         ((TextInputEditText)findViewById(R.id.ed_remote_path)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_rsync_mod)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_ssh_key_path)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_ssh_password)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_srv_ip)).addTextChangedListener(commonWatcher);
 
         String rs_options = config.rs_options;
@@ -144,9 +160,15 @@ public class editConfig extends addConfig {
     private void actionConfig(int id, int request) {
         Map<String, String> configMap = processForm();
         boolean is_ssh = "SSH".equals(configMap.get("rs_transport_type"));
-        boolean remote_complete = is_ssh ? 
-            (!configMap.get("rs_ssh_remote_path").isEmpty() && !configMap.get("rs_ssh_private_key_path").isEmpty()) : 
-            !configMap.get("rs_module").isEmpty();
+        boolean remote_complete;
+        if (is_ssh) {
+            boolean authOk = RS_Configuration.SSH_AUTH_PASSWORD.equals(configMap.get("rs_ssh_auth_type"))
+                    ? !TextUtils.isEmpty(configMap.get("rs_ssh_password"))
+                    : !TextUtils.isEmpty(configMap.get("rs_ssh_private_key_path"));
+            remote_complete = !TextUtils.isEmpty(configMap.get("rs_ssh_remote_path")) && authOk;
+        } else {
+            remote_complete = !TextUtils.isEmpty(configMap.get("rs_module"));
+        }
 
         if (!configMap.get("rs_ip").isEmpty() && remote_complete && !configMap.get("local_path").isEmpty()) {
             if (request == 1 && !validateScheduleRows()) {
@@ -166,6 +188,8 @@ public class editConfig extends addConfig {
                     c.rs_transport_type = configMap.get("rs_transport_type");
                     c.rs_ssh_private_key_path = configMap.get("rs_ssh_private_key_path");
                     c.rs_ssh_remote_path = configMap.get("rs_ssh_remote_path");
+                    c.rs_ssh_auth_type = configMap.get("rs_ssh_auth_type");
+                    c.rs_ssh_password = configMap.get("rs_ssh_password");
 
                     if (request == 1) {
                         c.saveToDisk();
