@@ -50,7 +50,7 @@
     <string name="transport_daemon">Daemon</string>
     <string name="rs_opt">Rsync Options</string>
     <string name="save_and_view_command">Save and View Command</string>
-    <string name="generated_rsync_command">Generated Rsync Command:</string>
+    <string name="view_command_note">Preview only: verifies order, paths, and options.</string>
     <string name="title_activity_add_config">Add Rsync Configuration</string>
     <string name="save">Save</string>
     <string name="view_command">View Command</string>
@@ -171,7 +171,8 @@
         You can add options manually by using this textbox. \n\n
         Any options string you add here will be added as it is and after any selected checkbox options.\n\n
         You are completely responsible for the correct syntax of the options string of the rsync command. \n\n
-        The app cannot validate that the options string is correct. Use the view command button to see the actual command that will run.\n\n
+        The app cannot validate that the options string is correct. Use the view command button to see the path/option preview.\n\n
+        Flags that duplicate a checked option above (for example -n / --dry-run when -n is checked) are ignored.\n\n
         This is a potentially dangerous feature that may result in data loss. Take caution when using options that delete files.
     </string>
     <string name="M">M</string>

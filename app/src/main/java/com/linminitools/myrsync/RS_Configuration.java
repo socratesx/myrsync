@@ -15,7 +15,6 @@ import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -23,7 +22,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import androidx.documentfile.provider.DocumentFile;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -200,29 +198,17 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
 
         send_notification(context, 3);
             final SharedPreferences prefs =  context.getSharedPreferences("Rsync_Command_build", Context.MODE_PRIVATE);
-            final SharedPreferences prefs2 =  context.getSharedPreferences("configs", Context.MODE_PRIVATE);
             final int id = this.id;
 
-            final String options = this.rs_options;
+            final String options = this.rs_options != null ? this.rs_options : "";
             final String log = prefs.getString("log",context.getApplicationInfo().dataDir+"/logfile.log");
-            final String local_path=this.local_path;
-
-            String rsync_user_string=this.rs_user+"@";
-            if(this.rs_user.isEmpty()) rsync_user_string="";
+            final String local_path = this.local_path != null ? this.local_path.trim() : "";
+            final String remote_path = this.rs_ssh_remote_path != null ? this.rs_ssh_remote_path.trim() : "";
+            final String module = this.rs_module != null ? this.rs_module.trim() : "";
 
             String Debug_log_path = context.getApplicationInfo().dataDir + "/debug.log";
             final File debugLogFile = new File(Debug_log_path);
             final String mode= this.rs_mode;
-
-
-            final Uri dirUri= Uri.parse(prefs2.getString("path_uri_"+this.id,""));
-            final File f = new File(local_path);
-            final DocumentFile df = DocumentFile.fromFile(f);
-
-
-            File[] ext_dir = context.getExternalFilesDirs(Environment.DIRECTORY_DOCUMENTS);
-
-            Log.d( "EXTERNAL_SD_STATE",Arrays.toString(ext_dir));
 
 
             Thread t = new Thread(){
@@ -265,13 +251,14 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                         String destination;
                         String transport_options = "";
                         String workingKeyPath = "";
+                        String sshRemoteCmd = "";
                         boolean passwordAuth = isSshPasswordAuth();
                         String sshPassword = rs_ssh_password != null ? rs_ssh_password : "";
                         File sshPassFile = null;
                         File sshWrapFile = null;
 
                         if ("SSH".equals(rs_transport_type)) {
-                            destination = rs_user + "@" + rs_ip + ":" + rs_ssh_remote_path;
+                            destination = rs_user + "@" + rs_ip + ":" + remote_path;
 
                             if (passwordAuth) {
                                 // rsync does not reliably inherit ProcessBuilder env into the -e child.
@@ -283,7 +270,23 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                                 } catch (Exception e) {
                                     Log.e("SSH_PASS", "Failed to prepare password wrapper", e);
                                     secureDeleteSshTempFiles(context, id);
+                                    sshWrapFile = null;
                                 }
+                                if (sshWrapFile == null) {
+                                    try {
+                                        FileWriter debug_writer = new FileWriter(debugLogFile, true);
+                                        debug_writer.append("\nSSH password auth aborted: could not prepare wrapper.");
+                                        debug_writer.close();
+                                    } catch (IOException ignored) {}
+                                    if (scheduler_id != null) {
+                                        sched_prefs.edit().putBoolean("is_running_" + scheduler_id, false).commit();
+                                    }
+                                    update_result(context, "Error", scheduler_id != null ? scheduler_id : -1);
+                                    return;
+                                }
+                                sshRemoteCmd = "/system/bin/sh " + sshWrapFile.getAbsolutePath()
+                                        + " -p " + rs_port + " -y -y";
+                                transport_options = "-e '" + sshRemoteCmd + "'";
                             } else {
                                 File keyFile = new File(rs_ssh_private_key_path);
                                 workingKeyPath = rs_ssh_private_key_path;
@@ -315,24 +318,13 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                                     Log.e("SSH_KEY", "Failed to prepare key file", e);
                                 }
 
-                                transport_options = "-e '" + ssh_bin + " -p " + rs_port
-                                        + " -i " + workingKeyPath + " -y -y'";
+                                sshRemoteCmd = ssh_bin + " -p " + rs_port + " -i " + workingKeyPath
+                                        + " -y -y";
+                                transport_options = "-e '" + sshRemoteCmd + "'";
                             }
                         } else {
-                            destination = "rsync://" + rs_user + "@" + rs_ip + ":" + rs_port + "/" + rs_module;
-                        }
-
-                        String sshRemoteCmd;
-                        if (passwordAuth && sshWrapFile != null) {
-                            // Invoke via sh so the script does not need the executable bit
-                            // (Android app-private files often cannot be chmod +x reliably).
-                            // -y -y: skip hostkey checks (Dropbear still may emit a caution we filter from logs).
-                            sshRemoteCmd = "/system/bin/sh " + sshWrapFile.getAbsolutePath()
-                                    + " -p " + rs_port + " -y -y";
-                            transport_options = "-e '" + sshRemoteCmd + "'";
-                        } else {
-                            sshRemoteCmd = ssh_bin + " -p " + rs_port + " -i " + workingKeyPath
-                                    + " -y -y";
+                            destination = "rsync://" + rs_user + "@" + rs_ip + ":" + rs_port + "/" + module;
+                            sshRemoteCmd = "";
                         }
 
                         String result = "Error";

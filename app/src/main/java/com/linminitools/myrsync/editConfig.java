@@ -96,13 +96,19 @@ public class editConfig extends addConfig {
         else rg_mode.check(R.id.rb_push);
 
         TextInputEditText tv_local_path = findViewById(R.id.ed_path);
-        tv_local_path.setText(config.local_path);
+        String local = config.local_path != null ? config.local_path.trim() : "";
+        tv_local_path.setText(local);
+        selectedPathUri = getSharedPreferences("configs", MODE_PRIVATE)
+                .getString("path_uri_" + config.id, "");
+        pathForSelectedUri = local;
 
         TextInputEditText tv_remote_path = findViewById(R.id.ed_remote_path);
-        tv_remote_path.setText(config.rs_ssh_remote_path);
+        tv_remote_path.setText(config.rs_ssh_remote_path != null
+                ? config.rs_ssh_remote_path.trim() : "");
 
         TextInputEditText tv_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
-        tv_ssh_key_path.setText(config.rs_ssh_private_key_path);
+        tv_ssh_key_path.setText(config.rs_ssh_private_key_path != null
+                ? config.rs_ssh_private_key_path.trim() : "");
 
         TextInputEditText tv_ssh_password = findViewById(R.id.ed_ssh_password);
         tv_ssh_password.setText(config.rs_ssh_password != null ? config.rs_ssh_password : "");
@@ -126,8 +132,23 @@ public class editConfig extends addConfig {
             @Override
             public void afterTextChanged(Editable s) {}
         };
+        TextWatcher pathWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String typed = s != null ? s.toString().trim() : "";
+                if (selectedPathUri.length() > 0 && !typed.equals(pathForSelectedUri)) {
+                    selectedPathUri = "";
+                    pathForSelectedUri = "";
+                }
+                updateButtons();
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
 
-        ((TextInputEditText)findViewById(R.id.ed_path)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_path)).addTextChangedListener(pathWatcher);
         ((TextInputEditText)findViewById(R.id.ed_remote_path)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_rsync_mod)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_ssh_key_path)).addTextChangedListener(commonWatcher);
@@ -199,6 +220,11 @@ public class editConfig extends addConfig {
                         syncSchedulersFromContainer(id);
                         Toast.makeText(appContext, "Configuration saved", Toast.LENGTH_SHORT).show();
                     } else if (request == 2) {
+                        // Persist form first so Execute runs the same config that is saved.
+                        c.saveToDisk();
+                        getSharedPreferences("configs", MODE_PRIVATE).edit()
+                                .putString("path_uri_" + c.id, configMap.get("path_uri"))
+                                .apply();
                         c.executeConfig(getApplication().getBaseContext(), null);
                         Toast.makeText(appContext, "Rsync Job Started", Toast.LENGTH_SHORT).show();
                     }

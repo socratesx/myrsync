@@ -545,12 +545,13 @@
                 android:text="@string/view_command" />
 
             <TextView
-                android:id="@+id/tv_rsync_command"
-                android:layout_width="wrap_content"
+                android:id="@+id/tv_view_command_note"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_md"
-                android:text="@string/generated_rsync_command"
-                android:textAppearance="?attr/textAppearanceLabelLarge" />
+                android:layout_marginTop="@dimen/spacing_sm"
+                android:text="@string/view_command_note"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?android:attr/textColorSecondary" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
