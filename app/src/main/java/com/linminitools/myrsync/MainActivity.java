@@ -53,6 +53,8 @@ import static com.linminitools.myrsync.myRsyncApplication.configs;
 
 public class MainActivity extends AppCompatActivity {
     public static final String SELECTED_TAB = "selected_tab";
+    /** Bump suffix if the legal text changes and users must re-accept. */
+    private static final String DISCLAIMER_ACCEPTED_KEY = "disclaimer_accepted_v1";
 
     private static final int PERMISSION_REQUEST_CODE = 1;
     private static final int MANAGE_STORAGE_REQUEST_CODE = 100;
@@ -138,6 +140,26 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        maybeShowUsageDisclaimer();
+    }
+
+    /**
+     * Blocking accept/decline gate. Decline closes the app; Accept is remembered until clear data / uninstall.
+     */
+    private void maybeShowUsageDisclaimer() {
+        SharedPreferences install = getSharedPreferences("Install", MODE_PRIVATE);
+        if (install.getBoolean(DISCLAIMER_ACCEPTED_KEY, false)) {
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.disclaimer_title)
+                .setMessage(R.string.disclaimer_message)
+                .setCancelable(false)
+                .setPositiveButton(R.string.disclaimer_accept, (dialog, which) ->
+                        install.edit().putBoolean(DISCLAIMER_ACCEPTED_KEY, true).apply())
+                .setNegativeButton(R.string.disclaimer_decline, (dialog, which) -> finishAffinity())
+                .show();
     }
 
     @Override

@@ -88,9 +88,13 @@
         myRSync is free, open source and it is distributed under the GPLv3. If you want to contribute you can find it here:\n\n
         https://github.com/socratesx/myrsync \n\n
 
-        Disclaimer: The author of this application may not be help responsible for any improper usage of this application, resulting in any kind of data loss.
-        If you are not familiar with the rsync, it is strongly advised to read its documentation before using it.
+        Disclaimer: You are solely responsible for your rsync configurations and options. Improper use (for example wrong paths, overwrite/delete options, or push/pull direction) can permanently delete or overwrite data. The author is not liable for any data loss. If you are not familiar with rsync, read its documentation before using this app.
     </string>
+
+    <string name="disclaimer_title">Important — please read</string>
+    <string name="disclaimer_message">myRSync runs rsync using the servers, paths, and options you configure.\n\nIncorrect settings can permanently delete, overwrite, or move files on this device or on remote servers.\n\nBy tapping Accept, you agree that:\n\n• You alone are responsible for your configurations and for verifying them (for example with a dry run) before relying on them.\n• The developer is not liable for any data loss or damage from use or misuse of this app.\n\nIf you do not accept these terms, the app will close.</string>
+    <string name="disclaimer_accept">Accept</string>
+    <string name="disclaimer_decline">Decline</string>
     <string name="help">
         This simple Application is intended to be a convenient way to create and schedule an rsync command in order to synchronize local folders with a server that is running an rsync daemon.
         It is an ideal solution for people that need to implement a custom cloud file backup in their network so to have total control over where their files are stored. \n\n
