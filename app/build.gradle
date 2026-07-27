@@ -9,15 +9,15 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.linminitools.myrsync"
-    compileSdk 36
+    namespace = "com.linminitools.myrsync"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "com.linminitools.myrsync"
-        minSdk 23
-        targetSdk 36
-        versionCode 17
-        versionName "1.0.0"
+        applicationId = "com.linminitools.myrsync"
+        minSdk = 23
+        targetSdk = 36
+        versionCode = 17
+        versionName = "1.0.0"
         // Keep in sync with the one-time product id created in Play Console.
         buildConfigField "String", "PRO_PRODUCT_ID", "\"myrsync_pro\""
     }
@@ -25,21 +25,18 @@ android {
     signingConfigs {
         release {
             if (keystorePropertiesFile.exists()) {
-                storeFile file(keystoreProperties['storeFile'])
-                storePassword keystoreProperties['storePassword']
-                keyAlias keystoreProperties['keyAlias']
-                keyPassword keystoreProperties['keyPassword']
+                storeFile = file(keystoreProperties['storeFile'])
+                storePassword = keystoreProperties['storePassword']
+                keyAlias = keystoreProperties['keyAlias']
+                keyPassword = keystoreProperties['keyPassword']
             }
         }
     }
 
-    android.applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "myRSync-${variant.name}-${variant.versionName}.apk"
-        }
-    }
+    // APK filename is left as the AGP default (myRSync uses AAB for Play).
+    // Custom outputFileName required the legacy Variant API (android.newDsl=false).
 
-    packagingOptions {
+    packaging {
         jniLibs {
             useLegacyPackaging = true
         }
@@ -47,33 +44,33 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             if (keystorePropertiesFile.exists()) {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
             }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         beta {
-            minifyEnabled false
-            debuggable false
+            minifyEnabled = false
+            debuggable = false
             if (keystorePropertiesFile.exists()) {
-                signingConfig signingConfigs.release
+                signingConfig = signingConfigs.release
             }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
-        buildConfig true
+        buildConfig = true
     }
 
     lint {
-        abortOnError false
+        abortOnError = false
     }
 }
 
