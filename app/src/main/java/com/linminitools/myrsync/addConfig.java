@@ -40,7 +40,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
@@ -59,6 +58,7 @@ public class addConfig extends AppCompatActivity {
         SystemBars.setup(this);
         setContentView(R.layout.add_config);
         SystemBars.applyTopInsets(findViewById(R.id.config_app_bar));
+        SystemBars.applyBottomInsets(findViewById(R.id.config_scroll));
 
         MaterialToolbar toolbar = findViewById(R.id.config_toolbar);
         toolbar.setTitle(getTitle());
@@ -587,13 +587,12 @@ public class addConfig extends AppCompatActivity {
 
     public void rsync_daemon_info(View v) {
         SpannableString s = new SpannableString(getResources().getString(R.string.rsync_daemon_info));
-        Pattern p = Pattern.compile("https://download.samba.org/pub/rsync/rsyncd.conf.html");
-        Linkify.addLinks(s, p, null);
+        Linkify.addLinks(s, Linkify.WEB_URLS);
 
         new MaterialAlertDialogBuilder(v.getContext())
-                .setTitle("Build Rsync Configuration")
+                .setTitle(R.string.config_form_info_title)
                 .setMessage(s)
-                .setPositiveButton("Close", (dialog, which) -> {})
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {})
                 .show();
     }
 

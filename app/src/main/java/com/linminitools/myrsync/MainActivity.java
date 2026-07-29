@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         appContext = getApplicationContext();
 
         SystemBars.applyTopInsets(findViewById(R.id.app_bar));
+        SystemBars.applyBottomInsets(findViewById(R.id.pager));
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -187,21 +188,21 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            s = SpannableString.valueOf(s+"\n\n myRsync Version: Beta-"+version);
+            s = SpannableString.valueOf(s + "\n\n" + getString(R.string.about_version_format, version));
             Linkify.addLinks(s, Linkify.ALL);
 
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("About")
+                    .setTitle(R.string.app_about)
                     .setMessage(s)
-                    .setPositiveButton("Close", (dialog, which) -> {})
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {})
                     .show();
         }
 
         if (id == R.id.me_help) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Help")
+                    .setTitle(R.string.app_help)
                     .setMessage(getResources().getString(R.string.help))
-                    .setPositiveButton("Close", (dialog, which) -> {})
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {})
                     .show();
         }
 

@@ -30,6 +30,7 @@ public class editConfig extends addConfig {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_config);
         SystemBars.applyTopInsets(findViewById(R.id.config_app_bar));
+        SystemBars.applyBottomInsets(findViewById(R.id.config_scroll));
 
         MaterialToolbar toolbar = findViewById(R.id.config_toolbar);
         toolbar.setTitle("Edit Configuration");

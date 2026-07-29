@@ -7,7 +7,6 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.core.view.WindowCompat;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,8 +24,6 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
         getDelegate().installViewFactory();
         getDelegate().onCreate(savedInstanceState);
         super.onCreate(savedInstanceState);
-        // PreferenceActivity ActionBar + edge-to-edge: keep chrome below the status bar.
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
     }
 
     @Override
@@ -69,35 +66,30 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
     protected void onPostResume() {
         super.onPostResume();
         getDelegate().onPostResume();
-
     }
 
     @Override
     protected void onTitleChanged(CharSequence title, int color) {
         super.onTitleChanged(title, color);
         getDelegate().setTitle(title);
-
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         getDelegate().onConfigurationChanged(newConfig);
-
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         getDelegate().onStop();
-
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         getDelegate().onDestroy();
-
     }
 
     public void invalidateOptionsMenu() {
