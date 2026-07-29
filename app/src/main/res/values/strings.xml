@@ -5,8 +5,8 @@
     <string name="loc_settings">Local Settings</string>
     <string name="opt">Rsync Options</string>
     <string name="srv_ip">Server IP Address</string>
-    <string name="srv_mod">Rsync Server Mod</string>
-    <string name="rsync_user">Rsync User</string>
+    <string name="srv_mod">Rsync module</string>
+    <string name="rsync_user">Username</string>
     <string name="srv_port">Port</string>
     <string name="add_path">Add Path</string>
     <string name="pref_title_ringtone">Ringtone</string>
@@ -50,7 +50,7 @@
     <string name="transport_daemon">Daemon</string>
     <string name="rs_opt">Rsync Options</string>
     <string name="save_and_view_command">Save and View Command</string>
-    <string name="generated_rsync_command">Generated Rsync Command:</string>
+    <string name="view_command_note">Preview only: verifies order, paths, and options.</string>
     <string name="title_activity_add_config">Add Rsync Configuration</string>
     <string name="save">Save</string>
     <string name="view_command">View Command</string>
@@ -67,75 +67,78 @@
     <string name="remote_path">Remote Path</string>
     <string name="ssh_key_path">SSH Private Key Path</string>
     <string name="ssh_user">SSH User</string>
+    <string name="ssh_auth_method">SSH authentication</string>
+    <string name="ssh_auth_key">Private key</string>
+    <string name="ssh_auth_password">Password</string>
+    <string name="ssh_password">SSH password</string>
+    <string name="ssh_password_hint">Stored on this device with the configuration so schedules can run. Prefer a key when possible.</string>
+    <string name="ssh_view_password_auth">password auth</string>
     <string name="about">
-        Dear User,\n
-        Thank you for downloading and using this application, I hope that it will help you with your project.\n\n
-        My name is Socrates Chouridis and I developed this app with painstaking effort as I had no previous knowledge of Java or Android development \n\n
-
-        The app is free to try with one configuration (manual runs). Unlock Pro for unlimited configs, schedules, and Tasker. There are no ads. If you find it useful, a Play rating helps a lot; optional tips: https://paypal.me/myrsync .\n\n
-
-        If you need to contact me for bug reporting or anything related to this application then please send an email to myrsync@protonmail.com\n\n
-
-        The rsync binary was compiled by using its original unmodified source code, version 3.1.3. More information regarding the rsync application can be found here:
-        https://rsync.samba.org\n\n
-
-        myRSync is free, open source and it is distributed under the GPLv3. If you want to contribute you can find it here:\n\n
-        https://github.com/socratesx/myrsync \n\n
-
-        Disclaimer: The author of this application may not be help responsible for any improper usage of this application, resulting in any kind of data loss.
-        If you are not familiar with the rsync, it is strongly advised to read its documentation before using it.
+        Thank you for using myRSync.\n\n
+        myRSync is an Android rsync client for backing up and syncing folders to a server you control — over SSH (key or password) or an rsync daemon.\n\n
+        Free to try: one configuration with manual runs. Unlock Pro (one-time) for unlimited configs, schedules, and Tasker / Locale. No ads.\n\n
+        Open source (GPLv3): https://github.com/socratesx/myrsync\n
+        Bundled rsync 3.4.1 — https://rsync.samba.org\n\n
+        Contact / bugs: myrsync@protonmail.com\n
+        Tips (optional): https://paypal.me/myrsync\n\n
+        Disclaimer: You are solely responsible for your configurations and options. Wrong paths, push/pull direction, or delete options can permanently overwrite or remove data. Prefer a dry run (-n) first if you are unsure. The author is not liable for data loss.
     </string>
+
+    <string name="disclaimer_title">Important — please read</string>
+    <string name="disclaimer_message">myRSync runs rsync using the servers, paths, and options you configure.\n\nIncorrect settings can permanently delete, overwrite, or move files on this device or on remote servers.\n\nBy tapping Accept, you agree that:\n\n• You alone are responsible for your configurations and for verifying them (for example with a dry run) before relying on them.\n• The developer is not liable for any data loss or damage from use or misuse of this app.\n\nIf you do not accept these terms, the app will close.</string>
+    <string name="disclaimer_accept">Accept</string>
+    <string name="disclaimer_decline">Decline</string>
+    <string name="about_version_format">myRSync version: %1$s</string>
     <string name="help">
-        This simple Application is intended to be a convenient way to create and schedule an rsync command in order to synchronize local folders with a server that is running an rsync daemon.
-        It is an ideal solution for people that need to implement a custom cloud file backup in their network so to have total control over where their files are stored. \n\n
-        <h3>How to use this app:</h3>\n\n
-         1. Create Rsync Configurations.\n
-         2. Run them on demand, or create Schedulers attached to them.\n
-         3. Check the Overview for details regarding each scheduler/configuration pair.\n
-         4. Check the Log for the rsync log entries.\n\n\n
+        myRSync builds and runs rsync jobs on your phone — sync with a remote host over SSH or an rsync daemon, on demand or on a schedule.\n\n
+        Ideal for NAS / VPS / homelab backups under your control (not a proprietary cloud).\n\n
+        How to use:\n\n
+        1. Create a configuration (Transport: SSH or Rsync Daemon; Push or Pull).\n
+        2. For SSH: set host, user, remote path, and a private key or password. Default port is 22 if left blank.\n
+        3. For Daemon: set host, user, module, and port (default 873).\n
+        4. Choose the local path and rsync options (use -n dry-run to test safely).\n
+        5. Save, then Run Now from Configurations — or add schedules (Pro).\n
+        6. Check Overview for next/last run status and Log for rsync output.\n
+        7. Optional (Pro): fire a saved config from Tasker / Locale.\n\n
+        Free: one config, manual runs. Pro unlocks unlimited configs, schedules, and Tasker.\n\n
+        Grant All files access (and Alarms &amp; reminders for schedules) when prompted so jobs can reach your folders and run on time.
     </string>
     <string name="rsync_options">\n\t -v, increase verbosity \n\t -q, suppress non-error messages \n\t -a, archive mode; equals -rlptgoD  \n\t  -z, compress file data during the transfer \n\t
         -r, recurse into directories \n\t -u, skip files that are newer on the receiver \n\t -p, preserve permissions \n\t -o, preserve owner (super-user only) \n\t -g, preserve group \n\t -t,
         preserve modification times \n\t -n, perform a trial run with no changes made (dry run) \n\t -m, prune empty directory chains from file-list \n\t -O, omit directories from —times
     </string>
+    <string name="config_form_info_title">Build rsync configuration</string>
     <string name="rsync_daemon_info">
-        Use this form to build an rsync configuration. Before creating any configuration, you must ensure that an rsync daemon is up and running.
-        For more details on how to setup and configure the rsync daemon please visit https://download.samba.org/pub/rsync/rsyncd.conf.html \n
-
-        \nThis tool uses the following format of the rsync command:\n
-        \nPush:
-        \nrsync [OPTIONS] SRC rsync://[USER@]HOST[:PORT]/DEST\n
-        \nPull:
-        \nrsync [OPTIONS] rsync://[USER@]HOST[:PORT]/SRC DEST\n
-
-        \nWith this form you actually build the rsync command by defining the OPTIONS, SRC, USER, HOST, PORT, and DEST Variables \n\n
-        OPTIONS = This is the options string that is formed from the OPTIONS checkboxes. \n
-        SRC = Local Directory Path to be Synced \n
-        USER = Authorized Username to connect to the rsync daemon module. \n
-        HOST = The IP Address of the server running the rsync Daemon. \n
-        PORT = The default port is 873 but may be overriden here if it is different. \n
-        DEST = The module name as it is configured in rsync daemon configuration file. \n\n
-
-        <h3>How to Use this Form:</h3>\n\n
-         1. Enter the IPv4 address of the server where the rsync daemon is running on. \n\n
-         2. Enter the port where the daemon is accepting connections. If the field is left blank then the default port(TCP:873) will be used.\n\n
-         3. Type the username that is allowed to connect to the configured module that is described in the confd.conf file of the rsync daemon.\n\n
-         4. Type the name of the configured module.\n\n
-         5. Click the \'Add Path\' button to select the local directory that will be synced with the daemon.\n\n
-         6. Tick the options that will be used with the rsync command. For more info regarding the options and how they are used you can click on the \'?\' button.\n\n
-         7. Tap on the \'View Command\' to check the final command that will be run. This step is optional.\n\n
-         8. Click on the \'Save\' button to save the configuration. Following this step the configuration will appear on the second tab where you can click on it to edit it or run it.
-        Also it will be available to select it in the Scheduler creation form. \n\n\n
+        Use this form to build an rsync job. Pick a transport first:\n\n
+        • SSH — connect with a private key or password (default port 22). Remote Path is the path on the server (for example /home/user/backup).\n
+        • Rsync Daemon — connect to rsyncd (default port 873). Module is the name from rsyncd.conf.\n\n
+        Daemon setup docs: https://download.samba.org/pub/rsync/rsyncd.conf.html\n\n
+        Command shapes:\n\n
+        Push (SSH):\n
+        rsync [OPTIONS] LOCAL_PATH user@host:REMOTE_PATH\n\n
+        Pull (SSH):\n
+        rsync [OPTIONS] user@host:REMOTE_PATH LOCAL_PATH\n\n
+        Push (Daemon):\n
+        rsync [OPTIONS] LOCAL_PATH rsync://[USER@]HOST[:PORT]/MODULE\n\n
+        Pull (Daemon):\n
+        rsync [OPTIONS] rsync://[USER@]HOST[:PORT]/MODULE LOCAL_PATH\n\n
+        How to fill the form:\n\n
+        1. Choose SSH or Rsync Daemon, and Push or Pull.\n
+        2. Enter host / IP. Leave port blank for defaults (22 / 873).\n
+        3. Enter username. For daemon, use the user allowed on that module; for SSH, the shell account.\n
+        4. Daemon: enter the module name. SSH: enter remote path and key or password.\n
+        5. Select the local path (Add Path or type it).\n
+        6. Tick options (see ?). Use -n for a dry run before real syncs.\n
+        7. Optionally add schedules (Pro), then View Command to preview paths/options.\n
+        8. Save. Run from Configurations, Overview, or Tasker (Pro).
     </string>
     <string name="scheduler_info">
-        Create a Scheduler that will run repeatedly at the selected time and days. \n\n\
-        1. Give a Name to your Scheduler\n\n\
-        2. Use the drop-down list to select the rsync Configuration that will be executed with this Scheduler. \n\n\
-        If the list is empty then you need to create a configuration first before creating the scheduler.\n\n\
-        3. Use the clock to select the time that the rsync command will run. Note: Due to android\'s battery optimizations the timer is not exact and may have a few minutes delay.\n\n\
-        4. Select the days of the week that the rsync command will run. By default all days are selected.\n\n\
-        5. Save the Scheduler. Following this step the Scheduler will be listed on the \'Schedulers\' Tab, where you can click on it to edit it, and in \'Overview\' Tab
-        where you can get quick information of the task.\n\n\
+        Schedules are attached to a configuration (Pro).\n\n
+        1. Open a configuration and use the Schedules section.\n
+        2. Add one or more schedules: time, weekdays, and optional Wi‑Fi-only.\n
+        3. Each schedule needs at least one weekday.\n
+        4. Save the configuration. Overview shows next/last run.\n\n
+        Note: Android battery optimizations can delay alarms by a few minutes. Allow Alarms &amp; reminders when prompted for more reliable timing.
     </string>
     <string name="select_folder">
         The folder you selected is not writable by this application \n\n
@@ -161,7 +164,8 @@
         You can add options manually by using this textbox. \n\n
         Any options string you add here will be added as it is and after any selected checkbox options.\n\n
         You are completely responsible for the correct syntax of the options string of the rsync command. \n\n
-        The app cannot validate that the options string is correct. Use the view command button to see the actual command that will run.\n\n
+        The app cannot validate that the options string is correct. Use the view command button to see the path/option preview.\n\n
+        Flags that duplicate a checked option above (for example -n / --dry-run when -n is checked) are ignored.\n\n
         This is a potentially dangerous feature that may result in data loss. Take caution when using options that delete files.
     </string>
     <string name="M">M</string>

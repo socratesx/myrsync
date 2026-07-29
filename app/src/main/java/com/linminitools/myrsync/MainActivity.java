@@ -53,6 +53,8 @@ import static com.linminitools.myrsync.myRsyncApplication.configs;
 
 public class MainActivity extends AppCompatActivity {
     public static final String SELECTED_TAB = "selected_tab";
+    /** Bump suffix if the legal text changes and users must re-accept. */
+    private static final String DISCLAIMER_ACCEPTED_KEY = "disclaimer_accepted_v1";
 
     private static final int PERMISSION_REQUEST_CODE = 1;
     private static final int MANAGE_STORAGE_REQUEST_CODE = 100;
@@ -67,8 +69,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SystemBars.setup(this);
         setContentView(R.layout.activity_main);
         appContext = getApplicationContext();
+
+        SystemBars.applyTopInsets(findViewById(R.id.app_bar));
+        SystemBars.applyBottomInsets(findViewById(R.id.pager));
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -135,6 +141,26 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        maybeShowUsageDisclaimer();
+    }
+
+    /**
+     * Blocking accept/decline gate. Decline closes the app; Accept is remembered until clear data / uninstall.
+     */
+    private void maybeShowUsageDisclaimer() {
+        SharedPreferences install = getSharedPreferences("Install", MODE_PRIVATE);
+        if (install.getBoolean(DISCLAIMER_ACCEPTED_KEY, false)) {
+            return;
+        }
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.disclaimer_title)
+                .setMessage(R.string.disclaimer_message)
+                .setCancelable(false)
+                .setPositiveButton(R.string.disclaimer_accept, (dialog, which) ->
+                        install.edit().putBoolean(DISCLAIMER_ACCEPTED_KEY, true).apply())
+                .setNegativeButton(R.string.disclaimer_decline, (dialog, which) -> finishAffinity())
+                .show();
     }
 
     @Override
@@ -162,21 +188,21 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            s = SpannableString.valueOf(s+"\n\n myRsync Version: Beta-"+version);
+            s = SpannableString.valueOf(s + "\n\n" + getString(R.string.about_version_format, version));
             Linkify.addLinks(s, Linkify.ALL);
 
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("About")
+                    .setTitle(R.string.app_about)
                     .setMessage(s)
-                    .setPositiveButton("Close", (dialog, which) -> {})
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {})
                     .show();
         }
 
         if (id == R.id.me_help) {
             new MaterialAlertDialogBuilder(this)
-                    .setTitle("Help")
+                    .setTitle(R.string.app_help)
                     .setMessage(getResources().getString(R.string.help))
-                    .setPositiveButton("Close", (dialog, which) -> {})
+                    .setPositiveButton(android.R.string.ok, (dialog, which) -> {})
                     .show();
         }
 
@@ -440,6 +466,8 @@ public class MainActivity extends AppCompatActivity {
             clone.rs_transport_type = original.rs_transport_type;
             clone.rs_ssh_private_key_path = original.rs_ssh_private_key_path;
             clone.rs_ssh_remote_path = original.rs_ssh_remote_path;
+            clone.rs_ssh_auth_type = original.rs_ssh_auth_type;
+            clone.rs_ssh_password = original.rs_ssh_password;
             clone.saveToDisk();
             SharedPreferences cfg = getSharedPreferences("configs", MODE_PRIVATE);
             cfg.edit().putString("path_uri_" + clone.id, cfg.getString("path_uri_" + original.id, "")).apply();

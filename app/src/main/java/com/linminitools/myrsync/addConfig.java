@@ -7,10 +7,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
-import androidx.documentfile.provider.DocumentFile;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.text.util.Linkify;
 import android.view.LayoutInflater;
@@ -34,9 +35,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Pattern;
+import java.util.Set;
 
 import static com.linminitools.myrsync.MainActivity.appContext;
 import static com.linminitools.myrsync.myRsyncApplication.configs;
@@ -45,11 +48,17 @@ import static com.linminitools.myrsync.MainActivity.getPath;
 
 public class addConfig extends AppCompatActivity {
     boolean path_is_not_writable;
+    /** Tree URI from the folder picker for the current local path; cleared if the path is edited. */
+    protected String selectedPathUri = "";
+    protected String pathForSelectedUri = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SystemBars.setup(this);
         setContentView(R.layout.add_config);
+        SystemBars.applyTopInsets(findViewById(R.id.config_app_bar));
+        SystemBars.applyBottomInsets(findViewById(R.id.config_scroll));
 
         MaterialToolbar toolbar = findViewById(R.id.config_toolbar);
         toolbar.setTitle(getTitle());
@@ -71,10 +80,26 @@ public class addConfig extends AppCompatActivity {
             public void afterTextChanged(Editable s) {}
         };
 
-        ((TextInputEditText)findViewById(R.id.ed_path)).addTextChangedListener(commonWatcher);
+        TextWatcher pathWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String typed = s != null ? s.toString().trim() : "";
+                if (selectedPathUri.length() > 0 && !typed.equals(pathForSelectedUri)) {
+                    selectedPathUri = "";
+                    pathForSelectedUri = "";
+                }
+                updateButtons();
+            }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        };
+        ((TextInputEditText)findViewById(R.id.ed_path)).addTextChangedListener(pathWatcher);
         ((TextInputEditText)findViewById(R.id.ed_remote_path)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_rsync_mod)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_ssh_key_path)).addTextChangedListener(commonWatcher);
+        ((TextInputEditText)findViewById(R.id.ed_ssh_password)).addTextChangedListener(commonWatcher);
         ((TextInputEditText)findViewById(R.id.ed_srv_ip)).addTextChangedListener(commonWatcher);
 
         RadioGroup transport_type = findViewById(R.id.rg_transport_type);
@@ -95,11 +120,45 @@ public class addConfig extends AppCompatActivity {
                     lt_rsync_user.setHint(getString(R.string.ssh_user));
 
                 }
+                updateSshAuthUi();
                 updateButtons();
             }
         });
 
+        initSshAuthControls();
         initScheduleEditorControls();
+    }
+
+    protected void initSshAuthControls() {
+        RadioGroup authGroup = findViewById(R.id.rg_ssh_auth);
+        if (authGroup == null) {
+            return;
+        }
+        authGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            updateSshAuthUi();
+            updateButtons();
+        });
+        updateSshAuthUi();
+    }
+
+    protected boolean isSshPasswordAuthSelected() {
+        RadioGroup authGroup = findViewById(R.id.rg_ssh_auth);
+        return authGroup != null && authGroup.getCheckedRadioButtonId() == R.id.rb_ssh_auth_password;
+    }
+
+    protected void updateSshAuthUi() {
+        View keyRow = findViewById(R.id.lt_ssh_key_row);
+        View passwordLayout = findViewById(R.id.lt_ssh_password);
+        View passwordHint = findViewById(R.id.tv_ssh_password_hint);
+        if (keyRow == null || passwordLayout == null) {
+            return;
+        }
+        boolean password = isSshPasswordAuthSelected();
+        keyRow.setVisibility(password ? View.GONE : View.VISIBLE);
+        passwordLayout.setVisibility(password ? View.VISIBLE : View.GONE);
+        if (passwordHint != null) {
+            passwordHint.setVisibility(password ? View.VISIBLE : View.GONE);
+        }
     }
 
     /** Call after {@code setContentView} whenever the hierarchy is (re)inflated (e.g. edit screen). */
@@ -154,8 +213,14 @@ public class addConfig extends AppCompatActivity {
 
         if (transport_type.getCheckedRadioButtonId() == R.id.rb_ssh) {
             boolean hasRemotePath = remote_path.getText() != null && remote_path.getText().length() > 0;
-            boolean hasKeyPath = ssh_key_path.getText() != null && ssh_key_path.getText().length() > 0;
-            hasRemote = hasRemotePath && hasKeyPath;
+            TextInputEditText ssh_password = findViewById(R.id.ed_ssh_password);
+            if (isSshPasswordAuthSelected()) {
+                boolean hasPassword = ssh_password.getText() != null && ssh_password.getText().length() > 0;
+                hasRemote = hasRemotePath && hasPassword;
+            } else {
+                boolean hasKeyPath = ssh_key_path.getText() != null && ssh_key_path.getText().length() > 0;
+                hasRemote = hasRemotePath && hasKeyPath;
+            }
         } else {
             hasRemote = rsync_mod.getText() != null && rsync_mod.getText().length() > 0;
         }
@@ -202,15 +267,12 @@ public class addConfig extends AppCompatActivity {
                     File f = new File(path);
                     f.setWritable(true, false);
 
-                    SharedPreferences path_prefs = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE);
-                    SharedPreferences.Editor path_prefseditor = path_prefs.edit();
-                    path_prefseditor.putString("local_path", path);
-                    path_prefseditor.putString("path_uri", dirUri.toString());
-                    path_prefseditor.commit();
-
                     TextInputEditText tv_path = findViewById(R.id.ed_path);
                     if (!Objects.requireNonNull(path).isEmpty()) {
-                        tv_path.setText(path);
+                        String trimmed = path.trim();
+                        selectedPathUri = dirUri.toString();
+                        pathForSelectedUri = trimmed;
+                        tv_path.setText(trimmed);
                         MaterialButton tv_addpath = findViewById(R.id.bt_add);
                         tv_addpath.setText(R.string.change_path);
                     }
@@ -255,12 +317,14 @@ public class addConfig extends AppCompatActivity {
 
         String options = "-";
         String[] availableOptions = {"a", "r", "z", "v", "n", "p", "t", "O", "q", "m", "u", "g"};
+        Set<Character> checkedFlags = new HashSet<>();
 
         for (String check_box : availableOptions) {
             int resID = getResources().getIdentifier("cb_" + check_box, "id", getPackageName());
             CheckBox cb = findViewById(resID);
             if (cb.isChecked()) {
                 options = options.concat(check_box);
+                checkedFlags.add(check_box.charAt(0));
             }
         }
 
@@ -269,12 +333,17 @@ public class addConfig extends AppCompatActivity {
         }
 
         TextInputEditText ed_adv_opts = findViewById(R.id.ed_advanced_options);
-        String adv_options = ed_adv_opts.getText().toString();
-        options = options.concat(" " + adv_options);
+        String adv_options_raw = ed_adv_opts.getText() != null
+                ? ed_adv_opts.getText().toString().trim() : "";
+        String adv_options = stripDuplicateAdvancedOptions(adv_options_raw, checkedFlags);
+        if (!adv_options.isEmpty()) {
+            options = options.isEmpty() ? adv_options : (options + " " + adv_options);
+        }
 
         TextInputEditText et_path = findViewById(R.id.ed_path);
         TextInputEditText et_remote_path = findViewById(R.id.ed_remote_path);
         TextInputEditText et_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
+        TextInputEditText et_ssh_password = findViewById(R.id.ed_ssh_password);
 
         String rs_transport_type = String.valueOf(rb_transport_type.getText()).trim();
         String rs_user = String.valueOf(et_rs_user.getText()).trim();
@@ -283,11 +352,27 @@ public class addConfig extends AppCompatActivity {
         String rs_module = String.valueOf(et_rs_mod.getText()).trim();
         String rs_name = String.valueOf(et_config_name.getText()).trim();
         String rs_mode = String.valueOf(rb_mode.getText()).trim();
-        String local_path = String.valueOf(et_path.getText());
-        String ssh_remote_path = String.valueOf(et_remote_path.getText());
-        String ssh_private_key_path = String.valueOf(et_ssh_key_path.getText());
+        String local_path = et_path.getText() != null ? et_path.getText().toString().trim() : "";
+        String ssh_remote_path = et_remote_path.getText() != null
+                ? et_remote_path.getText().toString().trim() : "";
+        String ssh_private_key_path = et_ssh_key_path.getText() != null
+                ? et_ssh_key_path.getText().toString().trim() : "";
+        String ssh_password = et_ssh_password.getText() != null
+                ? et_ssh_password.getText().toString() : "";
+        boolean passwordAuth = "SSH".equals(rs_transport_type) && isSshPasswordAuthSelected();
+        String ssh_auth_type = passwordAuth
+                ? RS_Configuration.SSH_AUTH_PASSWORD : RS_Configuration.SSH_AUTH_KEY;
+        if (passwordAuth) {
+            ssh_private_key_path = "";
+        } else {
+            ssh_password = "";
+        }
 
-        String path_uri = appContext.getSharedPreferences("Rsync_Config_path", MODE_PRIVATE).getString("path_uri", "");
+        String path_uri = "";
+        if (!selectedPathUri.isEmpty() && local_path.equals(pathForSelectedUri)) {
+            path_uri = selectedPathUri;
+        }
+
         if (rs_port.isEmpty()) {
             rs_port = rs_transport_type.equals("SSH") ? "22" : "873";
         }
@@ -304,9 +389,67 @@ public class addConfig extends AppCompatActivity {
         configMap.put("adv_options", adv_options);
         configMap.put("rs_ssh_remote_path", ssh_remote_path);
         configMap.put("rs_ssh_private_key_path", ssh_private_key_path);
+        configMap.put("rs_ssh_auth_type", ssh_auth_type);
+        configMap.put("rs_ssh_password", ssh_password);
         configMap.put("rs_transport_type", rs_transport_type);
 
         return configMap;
+    }
+
+    /**
+     * Drop advanced-option tokens that duplicate enabled checkboxes (short and common long forms).
+     */
+    static String stripDuplicateAdvancedOptions(String advanced, Set<Character> checkedFlags) {
+        if (advanced == null || advanced.isEmpty() || checkedFlags == null || checkedFlags.isEmpty()) {
+            return advanced == null ? "" : advanced.trim();
+        }
+        String[] tokens = advanced.trim().split("\\s+");
+        ArrayList<String> kept = new ArrayList<>();
+        for (String token : tokens) {
+            if (token.isEmpty()) {
+                continue;
+            }
+            String filtered = filterAdvancedToken(token, checkedFlags);
+            if (filtered != null && !filtered.isEmpty()) {
+                kept.add(filtered);
+            }
+        }
+        return TextUtils.join(" ", kept);
+    }
+
+    @Nullable
+    private static String filterAdvancedToken(String token, Set<Character> checkedFlags) {
+        String lower = token.toLowerCase(Locale.US);
+        // Long options that mirror checkboxes
+        if (lower.equals("--archive") && checkedFlags.contains('a')) return null;
+        if (lower.equals("--recursive") && checkedFlags.contains('r')) return null;
+        if ((lower.equals("--compress") || lower.startsWith("--compress=")) && checkedFlags.contains('z')) return null;
+        if (lower.equals("--verbose") && checkedFlags.contains('v')) return null;
+        if (lower.equals("--dry-run") && checkedFlags.contains('n')) return null;
+        if (lower.equals("--perms") && checkedFlags.contains('p')) return null;
+        if (lower.equals("--times") && checkedFlags.contains('t')) return null;
+        if (lower.equals("--omit-dir-times") && checkedFlags.contains('O')) return null;
+        if (lower.equals("--quiet") && checkedFlags.contains('q')) return null;
+        if ((lower.equals("--prune-empty-dirs") || lower.equals("--prune-empty-directories"))
+                && checkedFlags.contains('m')) return null;
+        if (lower.equals("--update") && checkedFlags.contains('u')) return null;
+        if (lower.equals("--group") && checkedFlags.contains('g')) return null;
+
+        if (token.startsWith("--")) {
+            return token;
+        }
+        if (token.startsWith("-") && token.length() > 1 && !token.startsWith("--")) {
+            StringBuilder remaining = new StringBuilder("-");
+            for (int i = 1; i < token.length(); i++) {
+                char c = token.charAt(i);
+                if (checkedFlags.contains(c)) {
+                    continue;
+                }
+                remaining.append(c);
+            }
+            return remaining.length() > 1 ? remaining.toString() : null;
+        }
+        return token;
     }
 
     public void viewCommand(View v) {
@@ -330,9 +473,12 @@ public class addConfig extends AppCompatActivity {
         String daemon_destination = "rsync://" + rs_user + "@" + rs_ip + ":" + rs_port + "/" + rs_module;
 
         if (rs_transport_type.equals("SSH")) {
+            String authNote = RS_Configuration.SSH_AUTH_PASSWORD.equals(configMap.get("rs_ssh_auth_type"))
+                    ? " (" + getString(R.string.ssh_view_password_auth) + ")"
+                    : " (-i key)";
             Rsync_command = rs_mode.equals("Push") ?
-                    "rsync " + options + " " + local_path + " " + ssh_destination :
-                    "rsync " + options + " " + ssh_destination + " " + local_path;
+                    "rsync " + options + " " + local_path + " " + ssh_destination + authNote :
+                    "rsync " + options + " " + ssh_destination + " " + local_path + authNote;
         }
         else {
             Rsync_command = rs_mode.equals("Push") ?
@@ -359,11 +505,16 @@ public class addConfig extends AppCompatActivity {
         String rs_transport_type = configMap.get("rs_transport_type");
         String rs_ssh_private_key_path = configMap.get("rs_ssh_private_key_path");
         String rs_ssh_remote_path = configMap.get("rs_ssh_remote_path");
+        String rs_ssh_auth_type = configMap.get("rs_ssh_auth_type");
+        String rs_ssh_password = configMap.get("rs_ssh_password");
 
         boolean is_ssh = rs_transport_type.equals("SSH");
         boolean remote_complete = false;
         if (is_ssh) {
-            remote_complete = !rs_ssh_remote_path.isEmpty() && !rs_ssh_private_key_path.isEmpty();
+            boolean authOk = RS_Configuration.SSH_AUTH_PASSWORD.equals(rs_ssh_auth_type)
+                    ? (rs_ssh_password != null && !rs_ssh_password.isEmpty())
+                    : (rs_ssh_private_key_path != null && !rs_ssh_private_key_path.isEmpty());
+            remote_complete = rs_ssh_remote_path != null && !rs_ssh_remote_path.isEmpty() && authOk;
         } else {
             remote_complete = !rs_module.isEmpty();
         }
@@ -397,6 +548,8 @@ public class addConfig extends AppCompatActivity {
             config.rs_transport_type = rs_transport_type;
             config.rs_ssh_private_key_path = rs_ssh_private_key_path;
             config.rs_ssh_remote_path = rs_ssh_remote_path;
+            config.rs_ssh_auth_type = rs_ssh_auth_type;
+            config.rs_ssh_password = rs_ssh_password;
 
             config.saveToDisk();
             config_prefs.edit().putString("path_uri_" + config.id, path_uri).apply();
@@ -434,13 +587,12 @@ public class addConfig extends AppCompatActivity {
 
     public void rsync_daemon_info(View v) {
         SpannableString s = new SpannableString(getResources().getString(R.string.rsync_daemon_info));
-        Pattern p = Pattern.compile("https://download.samba.org/pub/rsync/rsyncd.conf.html");
-        Linkify.addLinks(s, p, null);
+        Linkify.addLinks(s, Linkify.WEB_URLS);
 
         new MaterialAlertDialogBuilder(v.getContext())
-                .setTitle("Build Rsync Configuration")
+                .setTitle(R.string.config_form_info_title)
                 .setMessage(s)
-                .setPositiveButton("Close", (dialog, which) -> {})
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {})
                 .show();
     }
 

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="CMD.xml" />
+        <exclude domain="sharedpref" path="configs.xml" />
+        <exclude domain="sharedpref" path="alarm_times.xml" />
+        <exclude domain="sharedpref" path="settings.xml" />
+        <exclude domain="sharedpref" path="Rsync_Command_build.xml" />
+        <exclude domain="sharedpref" path="Rsync_Config_path.xml" />
+        <exclude domain="sharedpref" path="schedulers.xml" />
+        <exclude domain="sharedpref" path="Install.xml" />
+        <exclude domain="file" path="ssh_secure" />
+        <exclude domain="sharedpref" path="ssh_secrets.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="CMD.xml" />
+        <exclude domain="sharedpref" path="configs.xml" />
+        <exclude domain="sharedpref" path="alarm_times.xml" />
+        <exclude domain="sharedpref" path="settings.xml" />
+        <exclude domain="sharedpref" path="Rsync_Command_build.xml" />
+        <exclude domain="sharedpref" path="Rsync_Config_path.xml" />
+        <exclude domain="sharedpref" path="schedulers.xml" />
+        <exclude domain="sharedpref" path="Install.xml" />
+        <exclude domain="file" path="ssh_secure" />
+        <exclude domain="sharedpref" path="ssh_secrets.xml" />
+    </device-transfer>
+</data-extraction-rules>
