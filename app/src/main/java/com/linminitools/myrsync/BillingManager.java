@@ -20,7 +20,9 @@ import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryProductDetailsResult;
 import com.android.billingclient.api.QueryPurchasesParams;
+import com.android.billingclient.api.UnfetchedProduct;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +46,8 @@ public final class BillingManager implements PurchasesUpdatedListener {
     private BillingClient billingClient;
     @Nullable
     private ProductDetails proProductDetails;
+    @Nullable
+    private String proOfferToken;
     private boolean connecting;
 
     public BillingManager(@NonNull Context context) {
@@ -62,13 +66,19 @@ public final class BillingManager implements PurchasesUpdatedListener {
 
     public void start() {
         if (billingClient != null) {
-            queryPurchases();
+            if (billingClient.isReady()) {
+                queryProductDetails();
+                queryPurchases();
+            } else {
+                startConnection();
+            }
             return;
         }
         billingClient = BillingClient.newBuilder(appContext)
                 .setListener(this)
                 .enablePendingPurchases(
                         PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
+                .enableAutoServiceReconnection()
                 .build();
         startConnection();
     }
@@ -108,7 +118,7 @@ public final class BillingManager implements PurchasesUpdatedListener {
             toast(activity, R.string.pro_billing_unavailable);
             return;
         }
-        if (proProductDetails == null) {
+        if (proProductDetails == null || proOfferToken == null) {
             queryProductDetails();
             toast(activity, R.string.pro_product_unavailable);
             return;
@@ -116,6 +126,7 @@ public final class BillingManager implements PurchasesUpdatedListener {
         BillingFlowParams.ProductDetailsParams productParams =
                 BillingFlowParams.ProductDetailsParams.newBuilder()
                         .setProductDetails(proProductDetails)
+                        .setOfferToken(proOfferToken)
                         .build();
         BillingFlowParams flowParams = BillingFlowParams.newBuilder()
                 .setProductDetailsParamsList(Collections.singletonList(productParams))
@@ -150,22 +161,58 @@ public final class BillingManager implements PurchasesUpdatedListener {
         QueryProductDetailsParams params = QueryProductDetailsParams.newBuilder()
                 .setProductList(products)
                 .build();
-        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
-            if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-                Log.w(TAG, "queryProductDetails failed: " + billingResult.getDebugMessage());
-                return;
+        Log.i(TAG, "Querying INAPP product id=" + BuildConfig.PRO_PRODUCT_ID);
+        billingClient.queryProductDetailsAsync(params, this::onProductDetailsResponse);
+    }
+
+    private void onProductDetailsResponse(@NonNull BillingResult billingResult,
+                                          @NonNull QueryProductDetailsResult detailsResult) {
+        if (billingResult.getResponseCode() != BillingClient.BillingResponseCode.OK) {
+            Log.w(TAG, "queryProductDetails failed code=" + billingResult.getResponseCode()
+                    + " msg=" + billingResult.getDebugMessage());
+            return;
+        }
+
+        proProductDetails = null;
+        proOfferToken = null;
+
+        List<ProductDetails> productDetailsList = detailsResult.getProductDetailsList();
+        for (ProductDetails details : productDetailsList) {
+            String offerToken = firstOneTimeOfferToken(details);
+            Log.i(TAG, "Play returned product id=" + details.getProductId()
+                    + " name=" + details.getName()
+                    + " offerToken=" + (offerToken != null));
+            if (BuildConfig.PRO_PRODUCT_ID.equals(details.getProductId()) && offerToken != null) {
+                proProductDetails = details;
+                proOfferToken = offerToken;
             }
-            proProductDetails = null;
-            if (productDetailsList != null) {
-                for (ProductDetails details : productDetailsList) {
-                    if (BuildConfig.PRO_PRODUCT_ID.equals(details.getProductId())) {
-                        proProductDetails = details;
-                        break;
-                    }
+        }
+
+        List<UnfetchedProduct> unfetched = detailsResult.getUnfetchedProductList();
+        for (UnfetchedProduct product : unfetched) {
+            Log.w(TAG, "Unfetched product id=" + product.getProductId()
+                    + " status=" + product.getStatusCode());
+        }
+
+        Log.i(TAG, "Pro product details loaded=" + (proProductDetails != null)
+                + " returnedCount=" + productDetailsList.size()
+                + " unfetchedCount=" + unfetched.size()
+                + " lookingFor=" + BuildConfig.PRO_PRODUCT_ID);
+    }
+
+    @Nullable
+    private static String firstOneTimeOfferToken(@NonNull ProductDetails details) {
+        List<ProductDetails.OneTimePurchaseOfferDetails> offers =
+                details.getOneTimePurchaseOfferDetailsList();
+        if (offers != null) {
+            for (ProductDetails.OneTimePurchaseOfferDetails offer : offers) {
+                if (offer != null && offer.getOfferToken() != null) {
+                    return offer.getOfferToken();
                 }
             }
-            Log.i(TAG, "Pro product details loaded=" + (proProductDetails != null));
-        });
+        }
+        ProductDetails.OneTimePurchaseOfferDetails legacy = details.getOneTimePurchaseOfferDetails();
+        return legacy != null ? legacy.getOfferToken() : null;
     }
 
     public void queryPurchases() {
