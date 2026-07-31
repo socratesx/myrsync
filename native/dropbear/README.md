@@ -19,3 +19,6 @@ Writes `libdbclient.so` / `libdbconvert.so` into `app/src/main/jniLibs/{arm64-v8
 Options live in `localoptions.h` (`DROPBEAR_CLI_PASSWORD_AUTH`, `DROPBEAR_USE_PASSWORD_ENV`).
 
 Binaries are linked with `-Wl,-z,max-page-size=16384` for Google Play 16 KB page-size compatibility.
+
+Libraries are installed **with** debug/symbol info so Play can symbolicate native crashes.
+AGP release builds set `ndk.debugSymbolLevel = SYMBOL_TABLE` and strip what ships to devices.

@@ -26,10 +26,9 @@
         <item name="colorSurfaceContainerLow">@color/md_theme_dark_surfaceContainerLow</item>
         <item name="colorSurfaceContainer">@color/md_theme_dark_surfaceContainer</item>
         <item name="colorSurfaceContainerHigh">@color/md_theme_dark_surfaceContainerHigh</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
     </style>
 
     <style name="AppTheme.WithActionBar" parent="Theme.Material3.DayNight">
@@ -58,10 +57,9 @@
         <item name="colorSurfaceContainerLow">@color/md_theme_dark_surfaceContainerLow</item>
         <item name="colorSurfaceContainer">@color/md_theme_dark_surfaceContainer</item>
         <item name="colorSurfaceContainerHigh">@color/md_theme_dark_surfaceContainerHigh</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
+        <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>
         <item name="actionBarTheme">@style/ThemeOverlay.Material3.Dark.ActionBar</item>
         <item name="actionBarStyle">@style/Widget.Material3.ActionBar.Solid</item>
     </style>

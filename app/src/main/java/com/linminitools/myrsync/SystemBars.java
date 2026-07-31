@@ -1,48 +1,32 @@
 package com.linminitools.myrsync;
 
-import android.app.Activity;
-import android.content.res.Configuration;
-import android.graphics.Color;
-import android.os.Build;
 import android.view.View;
-import android.view.Window;
 
+import androidx.activity.ComponentActivity;
+import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
-import androidx.core.view.WindowInsetsControllerCompat;
 
 /**
- * Pads chrome / content around system bars when edge-to-edge is enforced
- * (Android 15+ / targetSdk 35+).
+ * Enables edge-to-edge (including pre-Android 15) and pads chrome / content
+ * around system bars and display cutouts.
  */
 final class SystemBars {
 
     private SystemBars() {}
 
-    static void setup(@NonNull Activity activity) {
-        Window window = activity.getWindow();
-        WindowCompat.setDecorFitsSystemWindows(window, false);
-        // Edge-to-edge: draw under transparent system bars; contrast comes from icon appearance.
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.TRANSPARENT);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            window.setNavigationBarContrastEnforced(false);
-        }
-
-        boolean lightUi = (activity.getResources().getConfiguration().uiMode
-                & Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES;
-        WindowInsetsControllerCompat controller =
-                WindowCompat.getInsetsController(window, window.getDecorView());
-        // Light theme → dark status/nav icons; dark theme → light icons.
-        controller.setAppearanceLightStatusBars(lightUi);
-        controller.setAppearanceLightNavigationBars(lightUi);
+    /**
+     * Call after {@code super.onCreate()} and before or right after {@code setContentView}.
+     * Uses {@link EdgeToEdge#enable} instead of deprecated bar-color APIs.
+     */
+    static void setup(@NonNull ComponentActivity activity) {
+        EdgeToEdge.enable(activity);
     }
 
-    /** Top padding = status bar; keeps AppBar / toolbar clear of the clock and icons. */
+    /** Top padding = status bar / cutout; keeps AppBar / toolbar clear of the clock and icons. */
     static void applyTopInsets(@Nullable View appBar) {
         if (appBar == null) {
             return;
@@ -52,7 +36,8 @@ final class SystemBars {
         final int initialRight = appBar.getPaddingRight();
         final int initialBottom = appBar.getPaddingBottom();
         ViewCompat.setOnApplyWindowInsetsListener(appBar, (v, windowInsets) -> {
-            Insets bars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets bars = windowInsets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             v.setPadding(initialLeft + bars.left, initialTop + bars.top,
                     initialRight + bars.right, initialBottom);
             return windowInsets;

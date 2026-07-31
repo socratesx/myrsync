@@ -1,37 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <TextView
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/plugin_app_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/select_configuration"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
+        android:layout_height="wrap_content">
 
-    <androidx.appcompat.widget.AppCompatSpinner
-        android:id="@+id/plugin_sp_configs"
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/plugin_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="?attr/homeAsUpIndicator"
+            app:title="@string/app_name" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:id="@+id/plugin_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="16dp"
-        android:minHeight="48dp" />
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <Button
-        android:id="@+id/editConfigsButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:onClick="editConfigs"
-        android:text="@string/edit_configurations" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/select_configuration"
+            android:textAppearance="?attr/textAppearanceTitleMedium" />
 
-    <Button
-        android:id="@+id/plugin_bt_save"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:onClick="savePluginConfig"
-        android:text="@string/save" />
+        <androidx.appcompat.widget.AppCompatSpinner
+            android:id="@+id/plugin_sp_configs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:minHeight="48dp" />
 
-</LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/editConfigsButton"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="editConfigs"
+            android:text="@string/edit_configurations" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/plugin_bt_save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:onClick="savePluginConfig"
+            android:text="@string/save" />
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -16,8 +16,8 @@ android {
         applicationId = "com.linminitools.myrsync"
         minSdk = 23
         targetSdk = 36
-        versionCode = 18
-        versionName = "1.0.1"
+        versionCode = 19
+        versionName = "1.0.2"
         // Keep in sync with the one-time product id created in Play Console.
         buildConfigField "String", "PRO_PRODUCT_ID", "\"myrsync_pro\""
     }
@@ -44,19 +44,29 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled = false
+            minifyEnabled = true
+            shrinkResources = true
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.release
             }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            // Package native debug symbols into the AAB for Play crash symbolication.
+            // Prefers function names without the larger FULL DWARF payload.
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
         beta {
-            minifyEnabled = false
+            minifyEnabled = true
+            shrinkResources = true
             debuggable = false
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.release
             }
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
         }
     }
 
@@ -74,17 +84,10 @@ android {
     }
 }
 
-configurations.all {
-    resolutionStrategy {
-        force 'com.twofortyfouram:android-annotation:3.0.0'
-        force 'com.twofortyfouram:android-assertion:2.0.0'
-        force 'com.twofortyfouram:android-spackle:2.0.3'
-    }
-}
-
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.activity:activity:1.10.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.core:core:1.13.1'
     implementation 'androidx.fragment:fragment:1.8.2'
@@ -97,14 +100,7 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.annotation:annotation:1.8.1'
     implementation 'androidx.security:security-crypto:1.0.0'
-    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'com.google.android.material:material:1.13.0'
     implementation 'org.jetbrains:annotations:23.0.0'
     implementation 'com.android.billingclient:billing:9.1.0'
-
-    //tasker plugin dependencies
-    implementation 'com.twofortyfouram:android-annotation:3.0.0'
-    implementation 'com.twofortyfouram:android-assertion:2.0.0'
-    implementation 'com.twofortyfouram:android-plugin-api-for-locale:1.0.4'
-    implementation 'com.twofortyfouram:android-plugin-client-sdk-for-locale:4.0.3'
-    implementation 'com.twofortyfouram:android-spackle:2.0.3'
 }

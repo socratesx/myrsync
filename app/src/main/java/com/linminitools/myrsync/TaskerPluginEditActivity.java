@@ -15,8 +15,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,13 +65,17 @@ public final class TaskerPluginEditActivity extends AppCompatActivity {
 
         appContext = getApplicationContext();
         loadPluginConfigs();
+        SystemBars.setup(this);
         setContentView(R.layout.plugin);
+        SystemBars.applyTopInsets(findViewById(R.id.plugin_app_bar));
+        SystemBars.applyBottomInsets(findViewById(R.id.plugin_content));
 
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setTitle(R.string.app_name);
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        MaterialToolbar toolbar = findViewById(R.id.plugin_toolbar);
+        setSupportActionBar(toolbar);
+        toolbar.setNavigationOnClickListener(v -> {
+            setResult(Activity.RESULT_CANCELED);
+            finish();
+        });
 
         configSpinner = findViewById(R.id.plugin_sp_configs);
         configSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -179,6 +184,7 @@ public final class TaskerPluginEditActivity extends AppCompatActivity {
         return blurb;
     }
 
+    @SuppressWarnings("deprecation")
     private int readVersionCode() {
         try {
             if (Build.VERSION.SDK_INT >= 28) {
@@ -186,7 +192,6 @@ public final class TaskerPluginEditActivity extends AppCompatActivity {
                         .getPackageInfo(getPackageName(), 0)
                         .getLongVersionCode();
             }
-            //noinspection deprecation
             return getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
         } catch (PackageManager.NameNotFoundException e) {
             return 0;

@@ -213,7 +213,7 @@ public class Scheduler implements Comparable<Scheduler> {
         try {
             File debugLog = new File(appContext.getApplicationInfo().dataDir + "/debug.log");
             FileWriter debug_writer = new FileWriter(debugLog, true);
-            Locale current_locale = appContext.getResources().getConfiguration().locale;
+            Locale current_locale = AppLocales.of(appContext);
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
             CharSequence message = "\n\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "SCHEDULER SAVED: " + this.name + "{" +
                     "\nID: " + this.id + "\nTIME: " + this.hour + ":" + this.min + "\nDAYS: " + this.days + "\n}";
@@ -249,7 +249,7 @@ public class Scheduler implements Comparable<Scheduler> {
         try {
             File debugLog = new File(appContext.getApplicationInfo().dataDir + "/debug.log");
             FileWriter debug_writer = new FileWriter(debugLog, true);
-            Locale current_locale = appContext.getResources().getConfiguration().locale;
+            Locale current_locale = AppLocales.of(appContext);
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
             CharSequence message = "\n\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "SCHEDULER DELETED: " + this.name;
             debug_writer.append(message);
@@ -347,7 +347,7 @@ public class Scheduler implements Comparable<Scheduler> {
 
         try {
             FileWriter debug_writer = new FileWriter(debugLog, true);
-            Locale current_locale = ctx.getResources().getConfiguration().locale;
+            Locale current_locale = AppLocales.of(ctx);
             SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
             CharSequence message = "\n\n\n[ " + formatter.format(Calendar.getInstance().getTime()) + " ] " + "Scheduler::setAlarm { ";
             debug_writer.append(message);

@@ -69,7 +69,7 @@ build_abi() {
     CC="$cc" \
     RANLIB="$ranlib" \
     STRIP="$strip" \
-    CFLAGS="-O2 -fPIC" \
+    CFLAGS="-O2 -g -fPIC" \
     LDFLAGS="-O2 -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
 
   # Ensure our getpass is linked into client programs.
@@ -85,7 +85,8 @@ build_abi() {
 
   make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)" \
     PROGRAMS="dbclient dropbearconvert"
-  "$strip" dbclient dropbearconvert
+  # Keep debug/symbol info for Play native crash symbolication.
+  # AGP release builds package symbols via ndk.debugSymbolLevel and strip the shipped .so.
 
   mkdir -p "$OUT_JNILIBS/$abi"
   cp -f dbclient "$OUT_JNILIBS/$abi/libdbclient.so"

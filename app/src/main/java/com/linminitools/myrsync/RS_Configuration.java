@@ -15,7 +15,7 @@ import android.media.RingtoneManager;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -39,7 +39,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
 
-import static android.preference.PreferenceManager.getDefaultSharedPreferences;
+import static androidx.preference.PreferenceManager.getDefaultSharedPreferences;
 
 
 public class RS_Configuration implements Comparable<RS_Configuration>{
@@ -111,7 +111,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
             secureDeleteSshTempFiles(myRsyncApplication.appContext, this.id);
         }
 
-        Locale current_locale = myRsyncApplication.appContext.getResources().getConfiguration().locale;
+        Locale current_locale = AppLocales.of(myRsyncApplication.appContext);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
         try {
             File debugLogFile = new File(myRsyncApplication.appContext.getApplicationInfo().dataDir + "/debug.log");
@@ -159,7 +159,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) myRsyncApplication.appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
         else (new File(myRsyncApplication.appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+String.valueOf(id)+".xml")).delete();
 
-        Locale current_locale = myRsyncApplication.appContext.getResources().getConfiguration().locale;
+        Locale current_locale = AppLocales.of(myRsyncApplication.appContext);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
         try {
             File debugLogFile = new File(myRsyncApplication.appContext.getApplicationInfo().dataDir + "/debug.log");
@@ -219,7 +219,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                         SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),Context.MODE_PRIVATE);
                         SharedPreferences.Editor pref_Edit= pref.edit();
                         SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
-                        Locale current_locale = context.getResources().getConfiguration().locale;
+                        Locale current_locale = AppLocales.of(context);
                         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
                         if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
@@ -518,7 +518,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         SharedPreferences.Editor configs_prefseditor = config_prefs.edit();
         SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
 
-        Locale current_locale = context.getResources().getConfiguration().locale;
+        Locale current_locale = AppLocales.of(context);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
         cmd_pref_Edit.putBoolean("is_running",false);
@@ -585,7 +585,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
     private void send_notification(Context ctx, int type) {
 
         SharedPreferences set_prefs = getDefaultSharedPreferences(ctx);
-        Locale current_locale = ctx.getResources().getConfiguration().locale;
+        Locale current_locale = AppLocales.of(ctx);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
         String message = "Rsync configuration " + this.name + " started on " + formatter.format(Calendar.getInstance().getTime());

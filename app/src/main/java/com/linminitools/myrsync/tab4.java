@@ -1,9 +1,9 @@
 package com.linminitools.myrsync;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.util.Log;
@@ -33,7 +33,7 @@ import static com.linminitools.myrsync.MainActivity.log_file;
 public class tab4 extends Fragment {
 
     private TextView tv_log;
-    private final Handler h = new Handler();
+    private final Handler h = new Handler(Looper.getMainLooper());
     private Thread log_thread;
     private int selected_item = -1;
     private Spinner sp;
@@ -44,7 +44,7 @@ public class tab4 extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.tab4, container, false);
         rootView.setTag("tab4");
 
-        SharedPreferences prefs = requireContext().getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);(getContext()).getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+        SharedPreferences prefs = requireContext().getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
 
         sp = rootView.findViewById(R.id.sp_selected_logfile);
         List<String> listLoadToSpinner = new ArrayList<>();
@@ -160,12 +160,9 @@ public class tab4 extends Fragment {
     }
 
     private void export_log() {
-        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
         Log.d("selected_log", String.valueOf(this.selected_item));
-        Intent chooserIntent = Intent.createChooser(i, "Choose Directory");
-        if (this.selected_item == 0)
-            requireActivity().startActivityForResult(chooserIntent, 41);
-        else if (this.selected_item == 1)
-            requireActivity().startActivityForResult(chooserIntent, 42);
+        if (requireActivity() instanceof MainActivity) {
+            ((MainActivity) requireActivity()).exportSelectedLog(this.selected_item == 1);
+        }
     }
 }

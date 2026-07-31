@@ -7,7 +7,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import android.widget.TimePicker;
 import androidx.annotation.Nullable;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import com.linminitools.myrsync.RS_Configuration;
 import com.linminitools.myrsync.Scheduler;
 
