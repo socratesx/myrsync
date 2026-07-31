@@ -132,7 +132,7 @@ public final class TaskerPluginReceiver extends BroadcastReceiver {
 
     private static void appendDebug(Context context, String message) {
         File debugLog = new File(context.getApplicationInfo().dataDir + "/debug.log");
-        Locale currentLocale = context.getResources().getConfiguration().locale;
+        Locale currentLocale = AppLocales.of(context);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", currentLocale);
         try (FileWriter debugWriter = new FileWriter(debugLog, true)) {
             debugWriter.append("\n\n[ ")

@@ -1,75 +1,57 @@
 package com.linminitools.myrsync;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.preference.SwitchPreference;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.ListPreference;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
+import androidx.preference.SwitchPreferenceCompat;
 
 import com.google.android.material.appbar.MaterialToolbar;
 
 public class Settings extends AppCompatActivity {
 
     private static final Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener =
-            new Preference.OnPreferenceChangeListener() {
-                public boolean onPreferenceChange(Preference preference, Object value) {
-                    String stringValue = value.toString();
+            (preference, value) -> {
+                String stringValue = String.valueOf(value);
 
-                    if (preference instanceof ListPreference) {
-                        ListPreference listPreference = (ListPreference) preference;
-                        int index = listPreference.findIndexOfValue(stringValue);
-                        preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
-                    } else if (preference instanceof RingtonePreference) {
-                        if (TextUtils.isEmpty(stringValue)) {
-                            preference.setSummary(R.string.pref_ringtone_silent);
-                        } else {
-                            Ringtone ringtone = RingtoneManager.getRingtone(
-                                    preference.getContext(), Uri.parse(stringValue));
-                            if (ringtone == null) {
-                                preference.setSummary(null);
-                            } else {
-                                preference.setSummary(ringtone.getTitle(preference.getContext()));
+                if (preference instanceof ListPreference) {
+                    ListPreference listPreference = (ListPreference) preference;
+                    int index = listPreference.findIndexOfValue(stringValue);
+                    preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
+                } else if (preference instanceof SwitchPreferenceCompat) {
+                    if ("root_access".equals(preference.getKey()) && "true".equals(stringValue)) {
+                        try {
+                            Process p = Runtime.getRuntime().exec("su -c whoami");
+                            p.waitFor();
+                            if (p.exitValue() == 0) {
+                                preference.setSummary(stringValue);
                             }
-                        }
-                    } else if (preference instanceof SwitchPreference) {
-                        Log.d("Preference_value", stringValue);
-                        if (preference.getKey().equals("root_access") && stringValue.equals("true")) {
-                            Runtime root = Runtime.getRuntime();
-                            try {
-                                root.addShutdownHook(Thread.currentThread());
-                            } catch (IllegalArgumentException e) {
-                                e.printStackTrace();
-                            }
-                            try {
-                                Process p = root.exec("su -c whoami");
-                                p.waitFor();
-                                if (p.exitValue() == 0) {
-                                    preference.setSummary(stringValue);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                            root.runFinalization();
-                            root.removeShutdownHook(Thread.currentThread());
-                        } else {
-                            preference.setSummary(stringValue);
+                        } catch (Exception e) {
+                            Log.w("Settings", "Root check failed", e);
                         }
                     } else {
                         preference.setSummary(stringValue);
                     }
-                    return true;
+                } else {
+                    preference.setSummary(stringValue);
                 }
+                return true;
             };
 
     @Override
@@ -85,7 +67,7 @@ public class Settings extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
 
         if (savedInstanceState == null) {
-            getFragmentManager()
+            getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.settings_container, new MainPreferenceFragment())
                     .commit();
@@ -93,6 +75,9 @@ public class Settings extends AppCompatActivity {
     }
 
     private static void bindPreferenceSummaryToValue(Preference preference) {
+        if (preference == null) {
+            return;
+        }
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
         try {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(preference.getContext());
@@ -107,15 +92,31 @@ public class Settings extends AppCompatActivity {
         }
     }
 
-    public static class MainPreferenceFragment extends PreferenceFragment {
+    public static class MainPreferenceFragment extends PreferenceFragmentCompat {
+
+        private final ActivityResultLauncher<Intent> ringtonePicker =
+                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() != Activity.RESULT_OK) {
+                        return;
+                    }
+                    Intent data = result.getData();
+                    Uri uri = null;
+                    if (data != null) {
+                        uri = ringtoneUriFromResult(data);
+                    }
+                    String stored = uri != null ? uri.toString() : "";
+                    SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                    sp.edit().putString("ringtone", stored).apply();
+                    Preference ringtonePref = findPreference("ringtone");
+                    updateRingtoneSummary(ringtonePref, stored);
+                });
 
         @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_notification);
+        public void onCreatePreferences(@Nullable Bundle savedInstanceState, @Nullable String rootKey) {
+            setPreferencesFromResource(R.xml.pref_notification, rootKey);
 
-            ListPreference themePref = (ListPreference) findPreference("theme_mode");
-            android.app.Activity activity = getActivity();
+            ListPreference themePref = findPreference("theme_mode");
+            Activity activity = getActivity();
             if (activity != null && themePref != null) {
                 SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(activity);
                 ThemeModeHelper.migrateLegacyThemePreference(sp);
@@ -137,7 +138,7 @@ public class Settings extends AppCompatActivity {
                     if (idx >= 0) {
                         preference.setSummary(lp.getEntries()[idx]);
                     }
-                    android.app.Activity act = getActivity();
+                    Activity act = getActivity();
                     if (act != null && !act.isFinishing()) {
                         act.getWindow().getDecorView().post(act::recreate);
                     }
@@ -147,13 +148,37 @@ public class Settings extends AppCompatActivity {
 
             bindPreferenceSummaryToValue(findPreference("notifications"));
             bindPreferenceSummaryToValue(findPreference("vibrate"));
-            bindPreferenceSummaryToValue(findPreference("ringtone"));
             bindPreferenceSummaryToValue(findPreference("root_access"));
+
+            Preference ringtonePref = findPreference("ringtone");
+            if (ringtonePref != null) {
+                SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                updateRingtoneSummary(ringtonePref, sp.getString("ringtone", ""));
+                ringtonePref.setOnPreferenceClickListener(preference -> {
+                    Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+                    intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE,
+                            RingtoneManager.TYPE_NOTIFICATION);
+                    intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+                    intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
+                    intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE,
+                            getString(R.string.pref_title_ringtone));
+                    String current = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                            .getString("ringtone", "");
+                    if (!TextUtils.isEmpty(current)) {
+                        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(current));
+                    } else {
+                        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
+                                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+                    }
+                    ringtonePicker.launch(intent);
+                    return true;
+                });
+            }
 
             Preference privacy = findPreference("privacy_policy");
             if (privacy != null) {
                 privacy.setOnPreferenceClickListener(preference -> {
-                    android.app.Activity act = getActivity();
+                    Activity act = getActivity();
                     if (act == null) {
                         return true;
                     }
@@ -170,8 +195,8 @@ public class Settings extends AppCompatActivity {
 
             Preference proUpgrade = findPreference("pro_upgrade");
             Preference proRestore = findPreference("pro_restore");
-            SwitchPreference debugUnlock = (SwitchPreference) findPreference("pro_debug_unlock");
-            android.app.Activity act = getActivity();
+            SwitchPreferenceCompat debugUnlock = findPreference("pro_debug_unlock");
+            Activity act = getActivity();
             if (act != null && proUpgrade != null) {
                 refreshProPreferenceSummaries(proUpgrade, proRestore, act);
                 proUpgrade.setOnPreferenceClickListener(preference -> {
@@ -206,9 +231,35 @@ public class Settings extends AppCompatActivity {
             }
         }
 
+        @Nullable
+        @SuppressWarnings("deprecation")
+        private Uri ringtoneUriFromResult(@NonNull Intent data) {
+            if (Build.VERSION.SDK_INT >= 33) {
+                return data.getParcelableExtra(
+                        RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri.class);
+            }
+            return data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
+        }
+
+        private void updateRingtoneSummary(@Nullable Preference preference, @Nullable String value) {
+            if (preference == null) {
+                return;
+            }
+            if (TextUtils.isEmpty(value)) {
+                preference.setSummary(R.string.pref_ringtone_silent);
+                return;
+            }
+            Ringtone ringtone = RingtoneManager.getRingtone(requireContext(), Uri.parse(value));
+            if (ringtone == null) {
+                preference.setSummary(null);
+            } else {
+                preference.setSummary(ringtone.getTitle(requireContext()));
+            }
+        }
+
         private void refreshProPreferenceSummaries(Preference proUpgrade,
                                                    Preference proRestore,
-                                                   android.app.Activity act) {
+                                                   Activity act) {
             if (act == null) {
                 return;
             }

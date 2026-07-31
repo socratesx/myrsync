@@ -60,11 +60,12 @@ build_abi() {
     CC="$cc" \
     RANLIB="$ranlib" \
     STRIP="$strip" \
-    CFLAGS="-O2 -fPIC" \
+    CFLAGS="-O2 -g -fPIC" \
     LDFLAGS="-O2 $PAGE_LDFLAGS"
 
   make -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)"
-  "$strip" rsync
+  # Keep debug/symbol info for Play native crash symbolication.
+  # AGP release builds package symbols via ndk.debugSymbolLevel and strip the shipped .so.
 
   mkdir -p "$OUT_JNILIBS/$abi"
   cp -f rsync "$OUT_JNILIBS/$abi/librsync.so"

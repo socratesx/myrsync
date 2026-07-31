@@ -15,18 +15,21 @@ import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.text.util.LinkifyCompat;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.viewpager2.widget.ViewPager2;
 import androidx.appcompat.app.AppCompatActivity;
 import android.text.SpannableString;
-import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Menu;
@@ -57,13 +60,29 @@ public class MainActivity extends AppCompatActivity {
     private static final String DISCLAIMER_ACCEPTED_KEY = "disclaimer_accepted_v1";
 
     private static final int PERMISSION_REQUEST_CODE = 1;
-    private static final int MANAGE_STORAGE_REQUEST_CODE = 100;
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 101;
     public static Context appContext;
     static File log_file;
     static File debug_log;
 
     private ViewPager2 viewPager;
+    private boolean pendingExportDebugLog;
+
+    private final ActivityResultLauncher<Intent> configEditorLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> refreshPager(true));
+
+    private final ActivityResultLauncher<Intent> exportLogLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                    return;
+                }
+                exportLogToTree(result.getData().getData(), pendingExportDebugLog);
+            });
+
+    private final ActivityResultLauncher<Intent> manageStorageLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> { /* user returned from All files access settings */ });
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @Override
@@ -81,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
         requestRequiredPermissions();
 
-        Locale current_locale = appContext.getResources().getConfiguration().locale;
+        Locale current_locale = AppLocales.of(appContext);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
         String log_path = appContext.getApplicationInfo().dataDir + "/logfile.log";
@@ -189,7 +208,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             s = SpannableString.valueOf(s + "\n\n" + getString(R.string.about_version_format, version));
-            Linkify.addLinks(s, Linkify.ALL);
+            LinkifyCompat.addLinks(s, Linkify.WEB_URLS | Linkify.EMAIL_ADDRESSES | Linkify.PHONE_NUMBERS);
 
             new MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.app_about)
@@ -230,49 +249,53 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         Intent i = new Intent(this, addConfig.class);
-        startActivityForResult(i, 1);
+        configEditorLauncher.launch(i);
     }
 
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 41 || requestCode == 42) {
-            try {
-                Uri pathUri = data.getData();
-                Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
+    /** Called from Log tab to export rsync or debug log into a user-picked folder. */
+    void exportSelectedLog(boolean debugLog) {
+        pendingExportDebugLog = debugLog;
+        Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        exportLogLauncher.launch(Intent.createChooser(i, "Choose Directory"));
+    }
 
-                DocumentFile pickedDir = DocumentFile.fromTreeUri(appContext, dirUri);
-
-                File selected_logfile = log_file;
-                if (requestCode == 42) selected_logfile = debug_log;
-                DocumentFile previous_log = Objects.requireNonNull(pickedDir).findFile(selected_logfile.getName());
-                if (previous_log != null) previous_log.delete();
-
-                DocumentFile exported_log = pickedDir.createFile("log", selected_logfile.getName());
-
-                FileInputStream inputStream = new FileInputStream(selected_logfile);
-                OutputStream outputStream = getContentResolver().openOutputStream(Objects.requireNonNull(exported_log).getUri());
-
-                byte[] buffer = new byte[inputStream.available()];
-                inputStream.read(buffer);
-                inputStream.close();
-
-                Objects.requireNonNull(outputStream).write(buffer);
-                outputStream.close();
-
-            } catch (Exception e) {
-                e.printStackTrace();
+    private void exportLogToTree(@Nullable Uri pathUri, boolean debugLog) {
+        if (pathUri == null) {
+            return;
+        }
+        try {
+            Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(
+                    pathUri, DocumentsContract.getTreeDocumentId(pathUri));
+            DocumentFile pickedDir = DocumentFile.fromTreeUri(appContext, dirUri);
+            File selected_logfile = debugLog ? debug_log : log_file;
+            DocumentFile previous_log = Objects.requireNonNull(pickedDir).findFile(selected_logfile.getName());
+            if (previous_log != null) {
+                previous_log.delete();
             }
-        } else {
-            ViewPagerAdapter adapter = new ViewPagerAdapter(this);
-            viewPager.setAdapter(adapter);
+            DocumentFile exported_log = pickedDir.createFile("log", selected_logfile.getName());
+            FileInputStream inputStream = new FileInputStream(selected_logfile);
+            OutputStream outputStream = getContentResolver().openOutputStream(
+                    Objects.requireNonNull(exported_log).getUri());
+            byte[] buffer = new byte[inputStream.available()];
+            //noinspection ResultOfMethodCallIgnored
+            inputStream.read(buffer);
+            inputStream.close();
+            Objects.requireNonNull(outputStream).write(buffer);
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-            TabLayout tabLayout = findViewById(R.id.tabs);
-            new TabLayoutMediator(tabLayout, viewPager,
-                    (tab, position) -> tab.setText(ViewPagerAdapter.getTabTitle(position))
-            ).attach();
-
-            if (requestCode == 1) {
-                viewPager.setCurrentItem(1, false);
-            }
+    private void refreshPager(boolean openConfigurationsTab) {
+        ViewPagerAdapter adapter = new ViewPagerAdapter(this);
+        viewPager.setAdapter(adapter);
+        TabLayout tabLayout = findViewById(R.id.tabs);
+        new TabLayoutMediator(tabLayout, viewPager,
+                (tab, position) -> tab.setText(ViewPagerAdapter.getTabTitle(position))
+        ).attach();
+        if (openConfigurationsTab) {
+            viewPager.setCurrentItem(1, false);
         }
     }
 
@@ -375,7 +398,7 @@ public class MainActivity extends AppCompatActivity {
                             Intent intent = new Intent(
                                     android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                             intent.setData(Uri.parse("package:" + getPackageName()));
-                            startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
+                            manageStorageLauncher.launch(intent);
                         })
                         .setNegativeButton(R.string.storage_access_not_now, null)
                         .show();
@@ -412,7 +435,7 @@ public class MainActivity extends AppCompatActivity {
             int pos = (int) v.getTag(R.id.bt_edit);
             Intent intent = new Intent(this, editConfig.class);
             intent.putExtra("pos", pos);
-            this.startActivityForResult(intent, 1);
+            configEditorLauncher.launch(intent);
         } else if (v.getTag(R.id.bt_delete) != null) {
             final int pos = (int) v.getTag(R.id.bt_delete);
 
@@ -432,7 +455,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                         schedulers.removeAll(connected);
-                        onActivityResult(1, RESULT_OK, null);
+                        refreshPager(true);
                     })
                     .setNegativeButton("Cancel", (dialog, which) -> dialog.cancel())
                     .show();
@@ -495,7 +518,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             configs.add(clone);
-            onActivityResult(1, RESULT_OK, null);
+            refreshPager(true);
         }
     }
 

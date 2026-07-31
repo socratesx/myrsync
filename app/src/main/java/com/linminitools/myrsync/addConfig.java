@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -51,6 +53,22 @@ public class addConfig extends AppCompatActivity {
     /** Tree URI from the folder picker for the current local path; cleared if the path is edited. */
     protected String selectedPathUri = "";
     protected String pathForSelectedUri = "";
+
+    private final ActivityResultLauncher<Intent> localPathPicker =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                    return;
+                }
+                onLocalPathPicked(result.getData().getData());
+            });
+
+    private final ActivityResultLauncher<Intent> sshKeyPicker =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+                    return;
+                }
+                onSshKeyPicked(result.getData().getData());
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -232,58 +250,61 @@ public class addConfig extends AppCompatActivity {
 
     public void addPath(View v) {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-        i.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-        i.setFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
-        i.setFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
-        Intent chooser = Intent.createChooser(i, "Choose Directory");
-        startActivityForResult(chooser, 1);
+        i.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        localPathPicker.launch(Intent.createChooser(i, "Choose Directory"));
     }
 
     public void addSshKeyPath(View v) {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.addCategory(Intent.CATEGORY_OPENABLE);
         i.setType("*/*");
-        startActivityForResult(i, 2);
+        sshKeyPicker.launch(i);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && data != null) {
-            Uri pathUri = data.getData();
+    private void onLocalPathPicked(@Nullable Uri pathUri) {
+        if (pathUri == null) {
+            return;
+        }
+        Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(
+                pathUri, DocumentsContract.getTreeDocumentId(pathUri));
+        String path = getPath(appContext, dirUri);
+        File dir = new File(path);
+        boolean has_root_access = PreferenceManager.getDefaultSharedPreferences(getBaseContext())
+                .getBoolean("root_access", false);
+        RadioGroup rg = findViewById(R.id.rg_mode);
+        RadioButton checked = findViewById(rg.getCheckedRadioButtonId());
 
-            if (requestCode == 1) {
-                Uri dirUri = DocumentsContract.buildDocumentUriUsingTree(pathUri, DocumentsContract.getTreeDocumentId(pathUri));
-                String path = getPath(appContext, dirUri);
-                File dir = new File(path);
-                boolean has_root_access = PreferenceManager.getDefaultSharedPreferences(getBaseContext()).getBoolean("root_access", false);
-                RadioGroup rg = findViewById(R.id.rg_mode);
-                RadioButton checked = findViewById(rg.getCheckedRadioButtonId());
+        if (checked.getText().equals("Pull") && (!has_root_access) && (!dir.canWrite())) {
+            path_is_not_writable = true;
+        } else {
+            path_is_not_writable = false;
+            File f = new File(path);
+            //noinspection ResultOfMethodCallIgnored
+            f.setWritable(true, false);
 
-                if (checked.getText().equals("Pull") && (!has_root_access) && (!dir.canWrite())) {
-                    path_is_not_writable = true;
-                } else {
-                    path_is_not_writable = false;
-                    File f = new File(path);
-                    f.setWritable(true, false);
-
-                    TextInputEditText tv_path = findViewById(R.id.ed_path);
-                    if (!Objects.requireNonNull(path).isEmpty()) {
-                        String trimmed = path.trim();
-                        selectedPathUri = dirUri.toString();
-                        pathForSelectedUri = trimmed;
-                        tv_path.setText(trimmed);
-                        MaterialButton tv_addpath = findViewById(R.id.bt_add);
-                        tv_addpath.setText(R.string.change_path);
-                    }
-                }
-            } else if (requestCode == 2) {
-                String path = getPath(appContext, pathUri);
-                TextInputEditText et_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
-                if (path != null && !path.isEmpty()) {
-                    et_ssh_key_path.setText(path);
-                }
+            TextInputEditText tv_path = findViewById(R.id.ed_path);
+            if (!Objects.requireNonNull(path).isEmpty()) {
+                String trimmed = path.trim();
+                selectedPathUri = dirUri.toString();
+                pathForSelectedUri = trimmed;
+                tv_path.setText(trimmed);
+                MaterialButton tv_addpath = findViewById(R.id.bt_add);
+                tv_addpath.setText(R.string.change_path);
             }
+        }
+    }
+
+    private void onSshKeyPicked(@Nullable Uri pathUri) {
+        if (pathUri == null) {
+            return;
+        }
+        String path = getPath(appContext, pathUri);
+        TextInputEditText et_ssh_key_path = findViewById(R.id.ed_ssh_key_path);
+        if (path != null && !path.isEmpty()) {
+            et_ssh_key_path.setText(path);
         }
     }
 

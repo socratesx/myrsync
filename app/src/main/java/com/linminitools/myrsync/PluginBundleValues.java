@@ -1,115 +1,71 @@
 package com.linminitools.myrsync;
 
-import com.twofortyfouram.assertion.Assertions;
-import com.twofortyfouram.assertion.BundleAssertions;
-import com.twofortyfouram.log.Lumberjack;
-import com.twofortyfouram.spackle.AppBuildInfo;
-
-import net.jcip.annotations.ThreadSafe;
-
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import static com.twofortyfouram.assertion.Assertions.assertNotNull;
-
 /**
- * Manages the {@link com.twofortyfouram.locale.api.Intent#EXTRA_BUNDLE EXTRA_BUNDLE} for this
- * plug-in.
+ * Tasker / Locale plug-in bundle extras for firing a saved configuration.
  */
-@ThreadSafe
 public final class PluginBundleValues {
 
-    /**
-     * Type: {@code String}.
-     * <p>
-     * String message to display in a Toast message.
-     */
+    private static final String TAG = "PluginBundleValues";
+
     @NonNull
     public static final String BUNDLE_EXTRA_INT_CONFIG
-            = "com.linminitools.myrsync.INT_CONFIG"; //$NON-NLS-1$
+            = "com.linminitools.myrsync.INT_CONFIG";
 
-    /**
-     * Type: {@code int}.
-     * <p>
-     * versionCode of the plug-in that saved the Bundle.
-     */
-    /*
-     * This extra is not strictly required, however it makes backward and forward compatibility
-     * significantly easier. For example, suppose a bug is found in how some version of the plug-in
-     * stored its Bundle. By having the version, the plug-in can better detect when such bugs occur.
-     */
     @NonNull
     public static final String BUNDLE_EXTRA_INT_VERSION_CODE
-            = "com.linminitools.myrsync.INT_VERSION_CODE"; //$NON-NLS-1$
+            = "com.linminitools.myrsync.INT_VERSION_CODE";
 
-    /**
-     * Method to verify the content of the bundle are correct.
-     * <p>
-     * This method will not mutate {@code bundle}.
-     *
-     * @param bundle bundle to verify. May be null, which will always return false.
-     * @return true if the Bundle is valid, false if the bundle is invalid.
-     */
     public static boolean isBundleValid(@Nullable final Bundle bundle) {
-        if (null == bundle) {
+        if (bundle == null || !bundle.containsKey(BUNDLE_EXTRA_INT_CONFIG)) {
             return false;
         }
-
-        // Tasker may round-trip extras with slightly different typing; only require the config id.
-        if (!bundle.containsKey(BUNDLE_EXTRA_INT_CONFIG)) {
-            Lumberjack.e("Bundle missing %s", BUNDLE_EXTRA_INT_CONFIG); //$NON-NLS-1$
+        // getInt returns 0 for a missing key; key presence was checked above.
+        // Wrong types (e.g. String) typically yield 0 / default, which we reject.
+        int id = bundle.getInt(BUNDLE_EXTRA_INT_CONFIG, -1);
+        if (id < 0) {
+            Log.e(TAG, "Bundle has invalid " + BUNDLE_EXTRA_INT_CONFIG);
             return false;
         }
-
-        // Reject clearly wrong types (e.g. String) without depending on BundleAssertions defaults.
-        Object raw = bundle.get(BUNDLE_EXTRA_INT_CONFIG);
-        if (!(raw instanceof Integer) && !(raw instanceof Long)) {
-            try {
-                BundleAssertions.assertHasInt(bundle, BUNDLE_EXTRA_INT_CONFIG);
-            } catch (final AssertionError e) {
-                Lumberjack.e("Bundle failed verification%s", e); //$NON-NLS-1$
-                return false;
-            }
-        }
-
-        return bundle.getInt(BUNDLE_EXTRA_INT_CONFIG, -1) >= 0;
+        return true;
     }
 
-    /**
-     * @param context Application context.
-     * @param configId The id of the config file selected.
-     * @return A plug-in bundle.
-     */
     @NonNull
-    public static Bundle generateBundle(@NonNull final Context context,
-                                        @NonNull final Integer configId) {
-        assertNotNull(context, "context"); //$NON-NLS-1$
-        assertNotNull(configId, "configId"); //$NON-NLS-1$
-
+    public static Bundle generateBundle(@NonNull final Context context, int configId) {
         final Bundle result = new Bundle();
-        result.putInt(BUNDLE_EXTRA_INT_VERSION_CODE, AppBuildInfo.getVersionCode(context));
+        result.putInt(BUNDLE_EXTRA_INT_VERSION_CODE, readVersionCode(context));
         result.putInt(BUNDLE_EXTRA_INT_CONFIG, configId);
-
         return result;
     }
 
-    /**
-     * @param bundle A valid plug-in bundle.
-     * @return The config id.
-     */
-    @NonNull
-    public static Integer getConfigId(@NonNull final Bundle bundle) {
+    public static int getConfigId(@NonNull final Bundle bundle) {
         return bundle.getInt(BUNDLE_EXTRA_INT_CONFIG);
     }
 
-    /**
-     * Private constructor prevents instantiation
-     *
-     * @throws UnsupportedOperationException because this class cannot be instantiated.
-     */
+    @SuppressWarnings("deprecation")
+    private static int readVersionCode(@NonNull Context context) {
+        try {
+            if (Build.VERSION.SDK_INT >= 28) {
+                return (int) context.getPackageManager()
+                        .getPackageInfo(context.getPackageName(), 0)
+                        .getLongVersionCode();
+            }
+            return context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            return 0;
+        }
+    }
+
     private PluginBundleValues() {
-        throw new UnsupportedOperationException("This class is non-instantiable"); //$NON-NLS-1$
+        throw new UnsupportedOperationException("This class is non-instantiable");
     }
 }

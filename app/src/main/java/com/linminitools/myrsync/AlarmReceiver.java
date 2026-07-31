@@ -34,7 +34,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
         String Debug_log_path = ctx.getApplicationInfo().dataDir + "/debug.log";
         File debug_log = new File(Debug_log_path);
-        Locale current_locale = ctx.getResources().getConfiguration().locale;
+        Locale current_locale = AppLocales.of(ctx);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
 
         Log.i(TAG, "onReceive action=" + i.getAction()

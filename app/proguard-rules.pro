@@ -1,21 +1,36 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# R8 / ProGuard — myRSync
+# Keep rules are intentionally narrow. Broad `-keep class … { *; }` freezes
+# members from obfuscation/shrinking and lowers Play App optimization scores.
+# Manifest components, ViewPager fragments, Billing, and security-crypto are
+# already kept/reachable via the manifest, direct references, or AAR consumer rules.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Readable crash stacks in Play Console (upload mapping.txt with the AAB).
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Layout android:onClick looks up these method names by reflection.
+# Keep only those members — not the entire Activity.
+-keepclassmembers class com.linminitools.myrsync.MainActivity {
+    public void createConfig(android.view.View);
+    public void config_clickHandler(android.view.View);
+}
+-keepclassmembers class com.linminitools.myrsync.addConfig {
+    public void addPath(android.view.View);
+    public void addSshKeyPath(android.view.View);
+    public void viewCommand(android.view.View);
+    public void saveConfig(android.view.View);
+    public void rsync_help(android.view.View);
+    public void rsync_adv_opts_help(android.view.View);
+    public void select_path_help(android.view.View);
+    public void rsync_daemon_info(android.view.View);
+}
+-keepclassmembers class com.linminitools.myrsync.TaskerPluginEditActivity {
+    public void editConfigs(android.view.View);
+    public void savePluginConfig(android.view.View);
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# JNI entry points only (if any).
+-keepclasseswithmembernames,includedescriptorclasses class * {
+    native <methods>;
+}
