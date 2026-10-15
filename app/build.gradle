@@ -68,12 +68,23 @@ tasks.register("prepareRsyncExecutable") {
             throw new GradleException("Unable to locate scripts/build_rsync_android.sh. Cannot build rsync executable automatically.")
         }
 
+        def buildOutput = new ByteArrayOutputStream()
         try {
             project.exec {
                 commandLine("bash", buildRsyncExecutableScript.absolutePath)
+                // IDE-launched Gradle may not inherit Android variables from a shell.
+                // Reuse the SDK resolved from local.properties or the IDE configuration.
+                environment("ANDROID_HOME", android.sdkDirectory.absolutePath)
+                environment("ANDROID_SDK_ROOT", android.sdkDirectory.absolutePath)
+                standardOutput = new org.apache.tools.ant.util.TeeOutputStream(System.out, buildOutput)
+                errorOutput = new org.apache.tools.ant.util.TeeOutputStream(System.err, buildOutput)
             }
         } catch (Exception exception) {
-            throw new GradleException("Failed to build rsync executable automatically. Run scripts/build_rsync_android.sh manually for more details.", exception)
+            def details = buildOutput.toString("UTF-8").readLines().takeRight(60).join("\n")
+            throw new GradleException("Failed to build rsync executable. Native build output:\n${details}\n" +
+                    "Run bash scripts/build_rsync_android.sh for the complete output. " +
+                    "To package an already-built librsync-exec.so, use " +
+                    "./gradlew :app:assembleDebug -x :app:prepareRsyncExecutable.", exception)
         }
     }
 }
