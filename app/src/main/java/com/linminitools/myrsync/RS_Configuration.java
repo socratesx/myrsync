@@ -269,7 +269,7 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
                                 } else {
                                     boolean wantsRoot = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("root_access", false);
                                     if (wantsRoot) {
-                                        String rootWarning = "ROOT EXECUTION REQUESTED BUT NOT SUPPORTED IN SHARED LIBRARY MODE";
+                                        String rootWarning = "ROOT EXECUTION REQUESTED BUT NOT SUPPORTED IN PROCESS MODE";
                                         MainActivity.appendDebugLog(formatter, rootWarning);
                                         MainActivity.appendRsyncLog(formatter, rootWarning);
                                     }
@@ -278,9 +278,16 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
                                 MainActivity.appendDebugLog(formatter, "RSYNC COMMAND LINE: " + commandLine);
                                 Log.i(TAG, "Executing command: " + commandLine);
-                                String[] argv = tokenizeCommand(commandLine);
+                                java.util.List<String> arguments = new java.util.ArrayList<>();
+                                arguments.add("rsync");
+                                arguments.addAll(Arrays.asList(tokenizeCommand(options)));
+                                arguments.add("--log-file");
+                                arguments.add(log);
+                                arguments.add(mode.equals("Push") ? local_path : cmd);
+                                arguments.add(mode.equals("Push") ? cmd : local_path);
+                                String[] argv = arguments.toArray(new String[0]);
 
-                                RsyncResult rsyncResult = RsyncBridge.runRsync(argv);
+                                RsyncResult rsyncResult = RsyncBridge.runRsync(context, argv);
                                 String stdout = rsyncResult.getStdout();
                                 String stderr = rsyncResult.getStderr();
 

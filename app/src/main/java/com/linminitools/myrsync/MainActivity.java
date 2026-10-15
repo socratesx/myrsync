@@ -137,11 +137,11 @@ public class MainActivity extends AppCompatActivity {
         ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
 
         try {
-            RsyncBridge.ensureLoaded();
-            appendDebugLog(formatter, "RSYNC SHARED LIBRARY LOADED SUCCESSFULLY");
+            RsyncBridge.ensureExecutable(appContext);
+            appendDebugLog(formatter, "RSYNC EXECUTABLE AVAILABLE");
             return true;
-        } catch (UnsatisfiedLinkError | SecurityException error) {
-            String message = "FAILED TO LOAD RSYNC SHARED LIBRARY: " + error.getMessage();
+        } catch (IOException | SecurityException error) {
+            String message = "FAILED TO PREPARE RSYNC EXECUTABLE: " + error.getMessage();
             appendDebugLog(formatter, message);
             Log.e("MainActivity", message, error);
             return false;

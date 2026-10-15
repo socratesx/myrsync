@@ -13,12 +13,6 @@ android {
         versionCode 14
         versionName "0.13.1"
 
-        externalNativeBuild {
-            cmake {
-                cppFlags "-std=c++17"
-            }
-        }
-
         ndk {
             abiFilters "arm64-v8a"
         }
@@ -47,9 +41,11 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    externalNativeBuild {
-        cmake {
-            path file('src/main/cpp/CMakeLists.txt')
+    packaging {
+        jniLibs {
+            // Extract the packaged PIE into the installer-owned executable directory.
+            useLegacyPackaging = true
+            excludes += ['**/librsync-android.so', '**/libmyrsync-jni.so']
         }
     }
 
@@ -60,58 +56,51 @@ android {
     }
 }
 
-def rsyncSharedLibrary = file("$projectDir/src/main/jniLibs/arm64-v8a/librsync-android.so")
-def buildRsyncSharedLibraryScript = file("$rootDir/scripts/build_rsync_android.sh")
+def rsyncExecutable = file("$projectDir/src/main/jniLibs/arm64-v8a/librsync-exec.so")
+def buildRsyncExecutableScript = file("$rootDir/scripts/build_rsync_android.sh")
 
-tasks.register("prepareRsyncSharedLibrary") {
-    inputs.file(buildRsyncSharedLibraryScript)
-    outputs.file(rsyncSharedLibrary)
+tasks.register("prepareRsyncExecutable") {
+    inputs.file(buildRsyncExecutableScript)
+    outputs.file(rsyncExecutable)
 
     doLast {
-        if (rsyncSharedLibrary.exists() && rsyncSharedLibrary.length() > 0L) {
-            return
-        }
-
-        if (!buildRsyncSharedLibraryScript.exists()) {
-            throw new GradleException("Unable to locate scripts/build_rsync_android.sh. Cannot build librsync shared library automatically.")
-        }
-
-        if (!buildRsyncSharedLibraryScript.canExecute()) {
-            buildRsyncSharedLibraryScript.setExecutable(true)
+        if (!buildRsyncExecutableScript.exists()) {
+            throw new GradleException("Unable to locate scripts/build_rsync_android.sh. Cannot build rsync executable automatically.")
         }
 
         try {
             project.exec {
-                commandLine("bash", buildRsyncSharedLibraryScript.absolutePath)
+                commandLine("bash", buildRsyncExecutableScript.absolutePath)
             }
         } catch (Exception exception) {
-            throw new GradleException("Failed to build librsync shared library automatically. Run scripts/build_rsync_android.sh manually for more details.", exception)
+            throw new GradleException("Failed to build rsync executable automatically. Run scripts/build_rsync_android.sh manually for more details.", exception)
         }
     }
 }
 
-tasks.register("verifyRsyncSharedLibrary") {
-    inputs.property("rsyncLibraryPath", rsyncSharedLibrary.absolutePath)
+tasks.register("verifyRsyncExecutable") {
+    inputs.property("rsyncExecutablePath", rsyncExecutable.absolutePath)
     doLast {
-        if (!rsyncSharedLibrary.exists()) {
-            throw new GradleException("Missing arm64-v8a librsync shared library. Run scripts/build_rsync_android.sh before building.")
+        if (!rsyncExecutable.exists()) {
+            throw new GradleException("Missing arm64-v8a rsync executable. Run scripts/build_rsync_android.sh before building.")
         }
-        if (rsyncSharedLibrary.length() == 0L) {
-            throw new GradleException("arm64-v8a librsync shared library exists but appears to be empty. Re-run scripts/build_rsync_android.sh.")
+        if (rsyncExecutable.length() == 0L) {
+            throw new GradleException("arm64-v8a rsync executable exists but appears to be empty. Re-run scripts/build_rsync_android.sh.")
         }
     }
 }
 
-tasks.named("verifyRsyncSharedLibrary").configure {
-    mustRunAfter("prepareRsyncSharedLibrary")
+tasks.named("verifyRsyncExecutable").configure {
+    mustRunAfter("prepareRsyncExecutable")
 }
 
 tasks.named("preBuild").configure {
-    dependsOn("prepareRsyncSharedLibrary")
-    dependsOn("verifyRsyncSharedLibrary")
+    dependsOn("prepareRsyncExecutable")
+    dependsOn("verifyRsyncExecutable")
 }
 
 dependencies {
+    testImplementation 'junit:junit:4.13.2'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.annotation:annotation:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'

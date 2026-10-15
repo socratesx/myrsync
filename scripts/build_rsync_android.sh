@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 RSYNC_REPO_URL=${RSYNC_REPO_URL:-"https://github.com/RsyncProject/rsync.git"}
 RSYNC_VERSION=${RSYNC_VERSION:-"v3.4.1"}
-ANDROID_API_LEVEL=${ANDROID_API_LEVEL:-"24"}
+ANDROID_API_LEVEL=${ANDROID_API_LEVEL:-"21"}
 ANDROID_ABI=${ANDROID_ABI:-"arm64-v8a"}
 LIB_OUTPUT_DIR=${LIB_OUTPUT_DIR:-"$ROOT_DIR/app/src/main/jniLibs/$ANDROID_ABI"}
 BUILD_DIR=${BUILD_DIR:-"$ROOT_DIR/build/rsync-android/$ANDROID_ABI"}
@@ -15,10 +15,12 @@ if ! command -v git >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v autoconf >/dev/null 2>&1; then
-  echo "[rsync-android] autoconf is required (install autotools)." >&2
-  exit 1
-fi
+for tool in autoconf autoheader aclocal make flock; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "[rsync-android] $tool is required (install autoconf, automake and make)." >&2
+    exit 1
+  fi
+done
 
 detect_ndk_root() {
   local candidate=""
@@ -95,6 +97,11 @@ AS="$TOOLCHAIN/bin/llvm-as"
 RANLIB="$TOOLCHAIN/bin/llvm-ranlib"
 STRIP="$TOOLCHAIN/bin/llvm-strip"
 
+# Gradle and manual builds must not reset/clean the same dependency concurrently.
+mkdir -p "$ROOT_DIR/build"
+exec 9>"$ROOT_DIR/build/rsync-android.lock"
+flock 9
+
 mkdir -p "$RSYNC_SRC_DIR"
 
 if [[ ! -d "$RSYNC_SRC_DIR/.git" ]]; then
@@ -128,6 +135,13 @@ else
   exit 1
 fi
 
+# Compiler/API changes are not tracked by make's object timestamps.
+if [[ -f Makefile ]]; then
+  make clean
+fi
+
+aclocal -I m4
+autoheader
 autoconf -o configure.sh
 chmod +x configure.sh
 
@@ -136,12 +150,14 @@ rm -rf "$BUILD_DIR"/*
 
 export CC CXX AR AS RANLIB STRIP
 export CFLAGS="--target=${HOST_TAG}${ANDROID_API_LEVEL} -fPIE -fPIC"
-export LDFLAGS="-fPIE -pie"
+export LDFLAGS="-fPIE -pie -Wl,-z,max-page-size=16384"
 export CPPFLAGS="-D__ANDROID_API__=${ANDROID_API_LEVEL}"
+
+BUILD_HOST=$(sh ./config.guess)
 
 ./configure.sh \
   --host=${HOST_TAG} \
-  --build=$(./config.guess) \
+  --build="$BUILD_HOST" \
   --with-included-zlib=yes \
   --with-included-popt=yes \
   --disable-md2man \
@@ -165,39 +181,11 @@ fi
 
 mkdir -p "$LIB_OUTPUT_DIR"
 
-WRAPPER_SRC="$ROOT_DIR/scripts/rsync_android_wrapper.c"
-WRAPPER_OBJ="$BUILD_DIR/rsync_android_wrapper.o"
-
-echo "[rsync-android] Compiling Android wrapper"
-"$CC" -fPIC $CPPFLAGS -c "$WRAPPER_SRC" -o "$WRAPPER_OBJ"
-
-echo "[rsync-android] Collecting build artifacts for shared library"
-mapfile -t OBJECT_FILES < <(find . -type f -name '*.o' \
-  ! -path './support/*' \
-  ! -path './testsuite/*' \
-  ! -path './packaging/*')
-mapfile -t STATIC_LIBS < <(find . -type f -name '*.a' \
-  ! -path './support/*' \
-  ! -path './testsuite/*' \
-  ! -path './packaging/*')
-
-if [[ ${#OBJECT_FILES[@]} -eq 0 ]]; then
-  echo "[rsync-android] Unable to locate compiled object files. Verify that the build succeeded." >&2
-  exit 1
-fi
-
-echo "[rsync-android] Linking shared library"
-"$CC" -shared -Wl,-soname,librsync-android.so \
-  -o "$LIB_OUTPUT_DIR/librsync-android.so" \
-  "${OBJECT_FILES[@]}" \
-  "$WRAPPER_OBJ" \
-  "${STATIC_LIBS[@]}" \
-  -llog
-
-chmod 755 "$LIB_OUTPUT_DIR/librsync-android.so"
-
-${STRIP} --strip-unneeded "$LIB_OUTPUT_DIR/librsync-android.so" || true
-
-echo "[rsync-android] rsync shared library exported to $LIB_OUTPUT_DIR/librsync-android.so"
-
+# rsync is a command-line program: its exit() must terminate only its own process.
+# Android's installer extracts lib*.so entries into nativeLibraryDir. The suffix
+# is a packaging convention; this is a PIE executable, not a dlopen library.
+cp "$RSYNC_BIN" "$LIB_OUTPUT_DIR/librsync-exec.so"
+chmod 755 "$LIB_OUTPUT_DIR/librsync-exec.so"
+"$STRIP" --strip-unneeded "$LIB_OUTPUT_DIR/librsync-exec.so"
+echo "[rsync-android] rsync executable exported to $LIB_OUTPUT_DIR/librsync-exec.so"
 popd >/dev/null
