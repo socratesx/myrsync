@@ -84,6 +84,7 @@ public class addConfig extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         // Check which request it is that we're responding to
         if (requestCode == 1) {
             // Make sure the request was successful

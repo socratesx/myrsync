@@ -265,7 +265,7 @@
                 android:layout_marginEnd="16dp"
                 android:background="@drawable/border"
                 android:backgroundTint="#00221414"
-                android:tint="?attr/colorPrimary"
+                app:tint="?attr/colorPrimary"
                 android:visibility="visible"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"

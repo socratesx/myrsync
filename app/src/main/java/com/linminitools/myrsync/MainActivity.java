@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import androidx.annotation.NonNull;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     public static final String SELECTED_TAB = "selected_tab";
 
     private static final int PERMISSION_REQUEST_CODE = 1;
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 2;
     public static Context appContext;
     static File log_file;
     static File debug_log;
@@ -76,7 +78,15 @@ public class MainActivity extends AppCompatActivity {
         ensureLogFileExists(debug_log, "MainActivity", "Unable to create debug log file");
 
         UiSafety.runOnUiThreadIfAlive(this, () -> {
-            if (Build.VERSION.SDK_INT >= 23 && !checkPermission()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED
+                        && PreferenceManager.getDefaultSharedPreferences(this).getBoolean("notifications", true)) {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                            NOTIFICATION_PERMISSION_REQUEST_CODE);
+                }
+            } else if (Build.VERSION.SDK_INT >= 23 && !checkPermission()) {
                 requestPermission();
             }
 

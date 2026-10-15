@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.app.usage.ExternalStorageStats;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.UriPermission;
@@ -29,6 +30,7 @@ import android.provider.DocumentsContract;
 import android.provider.DocumentsProvider;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.os.EnvironmentCompat;
 import androidx.documentfile.provider.DocumentFile;
 import android.text.TextUtils;
@@ -448,6 +450,12 @@ public class RS_Configuration extends MainActivity implements Comparable<RS_Conf
 
 
         if (Notifications_enabled) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                    && ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "Notification permission denied; skipping job notification");
+                return;
+            }
             String new_id="";
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) new_id= createNotificationChannel(ctx);
 

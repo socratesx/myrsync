@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static android.content.Context.MODE_PRIVATE;
 import static com.linminitools.myrsync.MainActivity.appContext;
@@ -56,7 +55,7 @@ public class tab4 extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.tab4, container, false);
         rootView.setTag("tab4");
 
-        SharedPreferences prefs = Objects.requireNonNull(getContext()).getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
+        SharedPreferences prefs = requireContext().getSharedPreferences("Rsync_Command_build", MODE_PRIVATE);
 
         sp = rootView.findViewById(R.id.sp_selected_logfile);
         List<String> listLoadToSpinner = new ArrayList<>();
@@ -178,10 +177,10 @@ public class tab4 extends Fragment {
         Log.d("selected_log", String.valueOf(this.selected_item));
         Intent chooserIntent = Intent.createChooser(i, "Choose Directory");
         if (this.selected_item == 0) {
-            Objects.requireNonNull(getActivity()).startActivityForResult(chooserIntent, 41);
+            requireActivity().startActivityForResult(chooserIntent, 41);
         }
         else if (this.selected_item == 1) {
-            Objects.requireNonNull(getActivity()).startActivityForResult(chooserIntent, 42);
+            requireActivity().startActivityForResult(chooserIntent, 42);
         }
     }
 }

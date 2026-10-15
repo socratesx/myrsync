@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
 import static com.linminitools.myrsync.myRsyncApplication.schedulers;
@@ -55,7 +54,7 @@ public class tab1 extends Fragment {
     public void onResume() {
         super.onResume();
         try {
-            status.setEmptyView(Objects.requireNonNull(getView()).findViewById(android.R.id.empty));
+            status.setEmptyView(requireView().findViewById(android.R.id.empty));
         }
         catch (Exception e) {
             e.printStackTrace();
