@@ -7,7 +7,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.security.crypto.EncryptedSharedPreferences;
-import androidx.security.crypto.MasterKeys;
+import androidx.security.crypto.MasterKey;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -87,12 +87,11 @@ final class SshSecretStore {
                 continue;
             }
             Object value = all.get(key);
-            if (!(value instanceof String)) {
+            if (!(value instanceof String password)) {
                 legacyEdit.remove(key);
                 changed = true;
                 continue;
             }
-            String password = (String) value;
             String idPart = key.substring(KEY_PREFIX.length());
             try {
                 int configId = Integer.parseInt(idPart);
@@ -139,14 +138,20 @@ final class SshSecretStore {
         }
     }
 
+    /**
+     * Same keystore alias and AES schemes as {@code MasterKeys.AES256_GCM_SPEC}, so
+     * passwords already in {@code ssh_secrets} still decrypt.
+     */
     @NonNull
     private static SharedPreferences createEncryptedPrefs(@NonNull Context app)
             throws GeneralSecurityException, IOException {
-        String masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC);
+        MasterKey masterKey = new MasterKey.Builder(app)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build();
         return EncryptedSharedPreferences.create(
-                PREFS_NAME,
-                masterKeyAlias,
                 app,
+                PREFS_NAME,
+                masterKey,
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         );

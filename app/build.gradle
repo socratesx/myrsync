@@ -10,13 +10,18 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.linminitools.myrsync"
-    compileSdk = 36
+    // core 1.19.1 requires compile SDK 37. targetSdk stays 36 so runtime behavior is unchanged.
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 2
+        }
+    }
 
     defaultConfig {
         applicationId = "com.linminitools.myrsync"
         minSdk = 23
         targetSdk = 36
-        versionCode = 19
+        versionCode = 20
         versionName = "1.0.2"
         // Keep in sync with the one-time product id created in Play Console.
         buildConfigField "String", "PRO_PRODUCT_ID", "\"myrsync_pro\""
@@ -86,21 +91,21 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.activity:activity:1.10.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.core:core:1.13.1'
-    implementation 'androidx.fragment:fragment:1.8.2'
-    implementation 'androidx.lifecycle:lifecycle-runtime:2.8.4'
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation 'androidx.activity:activity:1.13.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.2'
+    implementation 'androidx.core:core:1.19.1'
+    implementation 'androidx.fragment:fragment:1.9.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime:2.11.0'
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'androidx.collection:collection:1.4.0'
-    implementation 'androidx.documentfile:documentfile:1.0.1'
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'
+    implementation 'androidx.collection:collection:1.7.0'
+    implementation 'androidx.documentfile:documentfile:1.1.0'
     implementation 'androidx.preference:preference:1.2.1'
-    implementation 'androidx.annotation:annotation:1.8.1'
-    implementation 'androidx.security:security-crypto:1.0.0'
-    implementation 'com.google.android.material:material:1.13.0'
-    implementation 'org.jetbrains:annotations:23.0.0'
+    implementation 'androidx.annotation:annotation:1.11.0'
+    implementation 'androidx.security:security-crypto:1.1.0'
+    implementation 'com.google.android.material:material:1.14.0'
+    implementation 'org.jetbrains:annotations:26.1.0'
     implementation 'com.android.billingclient:billing:9.1.0'
 }

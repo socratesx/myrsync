@@ -552,7 +552,7 @@ public class addConfig extends AppCompatActivity {
             int id = 1;
             SharedPreferences config_prefs = getSharedPreferences("configs", MODE_PRIVATE);
 
-            while (config_prefs.getInt("rs_id_" + String.valueOf(id), -1) > 0) {
+            while (config_prefs.getInt("rs_id_" + id, -1) > 0) {
                 id = id + 1;
             }
 
