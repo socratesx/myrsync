@@ -85,6 +85,9 @@
     <color name="day_toggle_text_checked">#FFFFFF</color>
 
     <!-- Legacy (kept for backward compat) -->
+    <!-- Nav bar scrim. Overridden per API: light scrim on 26–28 day, transparent on 29+. -->
+    <color name="navigation_bar_scrim">#801B1B1B</color>
+
     <color name="colorAccent">#006B5E</color>
     <color name="red">#BA1A1A</color>
     <color name="green">#006B5E</color>

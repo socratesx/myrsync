@@ -30,8 +30,7 @@ public class Settings extends AppCompatActivity {
             (preference, value) -> {
                 String stringValue = String.valueOf(value);
 
-                if (preference instanceof ListPreference) {
-                    ListPreference listPreference = (ListPreference) preference;
+                if (preference instanceof ListPreference listPreference) {
                     int index = listPreference.findIndexOfValue(stringValue);
                     preference.setSummary(index >= 0 ? listPreference.getEntries()[index] : null);
                 } else if (preference instanceof SwitchPreferenceCompat) {

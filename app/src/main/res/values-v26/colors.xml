@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- EdgeToEdge light scrim: Color.argb(0xe6, 0xFF, 0xFF, 0xFF) -->
+    <color name="navigation_bar_scrim">#E6FFFFFF</color>
+</resources>

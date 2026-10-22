@@ -193,21 +193,21 @@ public class Scheduler implements Comparable<Scheduler> {
         SharedPreferences prefs = appContext.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
 
-        this.addedOn = prefs.getLong("addedon_" + String.valueOf(this.id), 0);
+        this.addedOn = prefs.getLong("addedon_" + this.id, 0);
         if (this.addedOn == 0) this.addedOn = Calendar.getInstance().getTimeInMillis();
 
-        prefseditor.putInt("id_" + String.valueOf(this.id), this.id);
-        prefseditor.putInt("hour_" + String.valueOf(this.id), this.hour);
-        prefseditor.putInt("min_" + String.valueOf(this.id), this.min);
-        prefseditor.putString("days_" + String.valueOf(this.id), this.days);
-        prefseditor.putString("name_" + String.valueOf(this.id), this.name);
-        prefseditor.putString("ssid_" + String.valueOf(this.id), this.wifi_ssid);
-        prefseditor.putInt("config_id_" + String.valueOf(this.id), this.config_id);
-        prefseditor.putLong("addedon_" + String.valueOf(this.id), this.addedOn);
-        prefseditor.putLong("last_run_" + String.valueOf(this.id), -1);
-        prefseditor.putLong("last_save_" + String.valueOf(this.id), Calendar.getInstance().getTimeInMillis());
-        prefseditor.putBoolean("is_running_" + String.valueOf(this.id), false);
-        prefseditor.putBoolean("wifi_switch_" + String.valueOf(this.id), this.wifi_sw);
+        prefseditor.putInt("id_" + this.id, this.id);
+        prefseditor.putInt("hour_" + this.id, this.hour);
+        prefseditor.putInt("min_" + this.id, this.min);
+        prefseditor.putString("days_" + this.id, this.days);
+        prefseditor.putString("name_" + this.id, this.name);
+        prefseditor.putString("ssid_" + this.id, this.wifi_ssid);
+        prefseditor.putInt("config_id_" + this.id, this.config_id);
+        prefseditor.putLong("addedon_" + this.id, this.addedOn);
+        prefseditor.putLong("last_run_" + this.id, -1);
+        prefseditor.putLong("last_save_" + this.id, Calendar.getInstance().getTimeInMillis());
+        prefseditor.putBoolean("is_running_" + this.id, false);
+        prefseditor.putBoolean("wifi_switch_" + this.id, this.wifi_sw);
         prefseditor.commit();
 
         try {
@@ -231,18 +231,18 @@ public class Scheduler implements Comparable<Scheduler> {
         SharedPreferences prefs = appContext.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
 
-        prefseditor.remove("id_" + String.valueOf(this.id));
-        prefseditor.remove("hour_" + String.valueOf(this.id));
-        prefseditor.remove("min_" + String.valueOf(this.id));
-        prefseditor.remove("days_" + String.valueOf(this.id));
-        prefseditor.remove("name_" + String.valueOf(this.id));
-        prefseditor.remove("config_id_" + String.valueOf(this.id));
-        prefseditor.remove("addedon_" + String.valueOf(this.id));
-        prefseditor.remove("last_run_" + String.valueOf(this.id));
-        prefseditor.remove("last_save_" + String.valueOf(this.id));
-        prefseditor.remove("is_running_" + String.valueOf(this.id));
-        prefseditor.remove("ssid_" + String.valueOf(this.id));
-        prefseditor.remove("wifi_switch_" + String.valueOf(this.id));
+        prefseditor.remove("id_" + this.id);
+        prefseditor.remove("hour_" + this.id);
+        prefseditor.remove("min_" + this.id);
+        prefseditor.remove("days_" + this.id);
+        prefseditor.remove("name_" + this.id);
+        prefseditor.remove("config_id_" + this.id);
+        prefseditor.remove("addedon_" + this.id);
+        prefseditor.remove("last_run_" + this.id);
+        prefseditor.remove("last_save_" + this.id);
+        prefseditor.remove("is_running_" + this.id);
+        prefseditor.remove("ssid_" + this.id);
+        prefseditor.remove("wifi_switch_" + this.id);
 
         prefseditor.commit();
 

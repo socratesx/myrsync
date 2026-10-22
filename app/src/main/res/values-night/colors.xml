@@ -7,4 +7,6 @@
     <color name="day_toggle_stroke_checked">#001A16</color>
     <color name="day_toggle_text_unchecked">#F5FBF8</color>
     <color name="day_toggle_text_checked">#00140F</color>
+
+    <color name="navigation_bar_scrim">#801B1B1B</color>
 </resources>

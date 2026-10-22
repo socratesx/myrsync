@@ -26,7 +26,13 @@
         <item name="colorSurfaceContainerLow">@color/md_theme_light_surfaceContainerLow</item>
         <item name="colorSurfaceContainer">@color/md_theme_light_surfaceContainer</item>
         <item name="colorSurfaceContainerHigh">@color/md_theme_light_surfaceContainerHigh</item>
-        <!-- Bar colors come from EdgeToEdge.enable(); avoid deprecated Window setters / theme colors. -->
+        <!-- Transparent / scrim colors are applied by the framework from the theme.
+             Do not set them with Window.setStatusBarColor / setNavigationBarColor. -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/navigation_bar_scrim</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">true</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>
         <!-- Required by PreferenceFragmentCompat / SwitchPreferenceCompat. -->
@@ -59,6 +65,11 @@
         <item name="colorSurfaceContainerLow">@color/md_theme_light_surfaceContainerLow</item>
         <item name="colorSurfaceContainer">@color/md_theme_light_surfaceContainer</item>
         <item name="colorSurfaceContainerHigh">@color/md_theme_light_surfaceContainerHigh</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@color/navigation_bar_scrim</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">true</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay.v14.Material</item>

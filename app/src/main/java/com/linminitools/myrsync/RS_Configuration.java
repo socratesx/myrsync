@@ -69,7 +69,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
 
     RS_Configuration(int id){
         this.id=id;
-        this.name="Config "+String.valueOf(id);
+        this.name="Config "+ id;
     }
 
     void saveToDisk(){
@@ -78,29 +78,29 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         SharedPreferences.Editor prefseditor = prefs.edit();
         this.addedOn= Calendar.getInstance().getTimeInMillis();
 
-        prefseditor.putInt("rs_id_"+String.valueOf(this.id),this.id);
-        prefseditor.putString("rs_name_"+String.valueOf(this.id),name);
-        prefseditor.putString("rs_options_"+String.valueOf(this.id),rs_options);
-        prefseditor.putString("rs_user_"+String.valueOf(this.id),rs_user);
-        prefseditor.putString("rs_module_"+String.valueOf(this.id),rs_module);
-        prefseditor.putString("rs_ip_"+String.valueOf(this.id),rs_ip);
-        prefseditor.putString("rs_port_"+String.valueOf(this.id),rs_port);
-        prefseditor.putString("rs_mode_"+String.valueOf(this.id),rs_mode);
-        prefseditor.putString("local_path_"+String.valueOf(this.id),local_path);
+        prefseditor.putInt("rs_id_"+ this.id,this.id);
+        prefseditor.putString("rs_name_"+ this.id,name);
+        prefseditor.putString("rs_options_"+ this.id,rs_options);
+        prefseditor.putString("rs_user_"+ this.id,rs_user);
+        prefseditor.putString("rs_module_"+ this.id,rs_module);
+        prefseditor.putString("rs_ip_"+ this.id,rs_ip);
+        prefseditor.putString("rs_port_"+ this.id,rs_port);
+        prefseditor.putString("rs_mode_"+ this.id,rs_mode);
+        prefseditor.putString("local_path_"+ this.id,local_path);
         // Only initialize run history for a brand-new configuration; edits / schedule changes must keep it.
-        if (!prefs.contains("rs_id_" + String.valueOf(this.id))) {
-            prefseditor.putString("last_result_" + String.valueOf(this.id), "Never Run");
-            prefseditor.putString("last_run_" + String.valueOf(this.id), "Never Run");
+        if (!prefs.contains("rs_id_" + this.id)) {
+            prefseditor.putString("last_result_" + this.id, "Never Run");
+            prefseditor.putString("last_run_" + this.id, "Never Run");
         }
-        prefseditor.putString("rs_adv_options_"+String.valueOf(this.id),this.adv_options);
-        prefseditor.putLong("rs_addedon_"+String.valueOf(this.id),addedOn);
-        prefseditor.putString("rs_transport_type_"+String.valueOf(this.id), rs_transport_type);
-        prefseditor.putString("rs_ssh_private_key_path_"+String.valueOf(this.id), rs_ssh_private_key_path);
-        prefseditor.putString("rs_ssh_remote_path_"+String.valueOf(this.id), rs_ssh_remote_path);
-        prefseditor.putString("rs_ssh_auth_type_"+String.valueOf(this.id),
+        prefseditor.putString("rs_adv_options_"+ this.id,this.adv_options);
+        prefseditor.putLong("rs_addedon_"+ this.id,addedOn);
+        prefseditor.putString("rs_transport_type_"+ this.id, rs_transport_type);
+        prefseditor.putString("rs_ssh_private_key_path_"+ this.id, rs_ssh_private_key_path);
+        prefseditor.putString("rs_ssh_remote_path_"+ this.id, rs_ssh_remote_path);
+        prefseditor.putString("rs_ssh_auth_type_"+ this.id,
                 rs_ssh_auth_type != null ? rs_ssh_auth_type : SSH_AUTH_KEY);
         // Never persist SSH passwords in plaintext configs.xml.
-        prefseditor.remove("rs_ssh_password_"+String.valueOf(this.id));
+        prefseditor.remove("rs_ssh_password_"+ this.id);
 
         prefseditor.apply();
 
@@ -133,31 +133,31 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         SharedPreferences prefs = myRsyncApplication.appContext.getSharedPreferences("configs", Context.MODE_PRIVATE);
         SharedPreferences.Editor prefseditor = prefs.edit();
 
-        prefseditor.remove("rs_name_"+String.valueOf(this.id));
-        prefseditor.remove("rs_id_"+String.valueOf(this.id));
-        prefseditor.remove("rs_options_"+String.valueOf(this.id));
-        prefseditor.remove("rs_user_"+String.valueOf(this.id));
-        prefseditor.remove("rs_module_"+String.valueOf(this.id));
-        prefseditor.remove("rs_ip_"+String.valueOf(this.id));
-        prefseditor.remove("rs_port_"+String.valueOf(this.id));
-        prefseditor.remove("rs_mode_"+String.valueOf(this.id));
-        prefseditor.remove("local_path_"+String.valueOf(this.id));
-        prefseditor.remove("last_result_"+String.valueOf(this.id));
-        prefseditor.remove("last_run_"+String.valueOf(this.id));
-        prefseditor.remove("rs_addedon_"+String.valueOf(this.id));
-        prefseditor.remove("rs_adv_options_"+String.valueOf(this.id));
-        prefseditor.remove("rs_transport_type_"+String.valueOf(this.id));
-        prefseditor.remove("rs_ssh_private_key_path_"+String.valueOf(this.id));
-        prefseditor.remove("rs_ssh_remote_path_"+String.valueOf(this.id));
-        prefseditor.remove("rs_ssh_auth_type_"+String.valueOf(this.id));
-        prefseditor.remove("rs_ssh_password_"+String.valueOf(this.id));
+        prefseditor.remove("rs_name_"+ this.id);
+        prefseditor.remove("rs_id_"+ this.id);
+        prefseditor.remove("rs_options_"+ this.id);
+        prefseditor.remove("rs_user_"+ this.id);
+        prefseditor.remove("rs_module_"+ this.id);
+        prefseditor.remove("rs_ip_"+ this.id);
+        prefseditor.remove("rs_port_"+ this.id);
+        prefseditor.remove("rs_mode_"+ this.id);
+        prefseditor.remove("local_path_"+ this.id);
+        prefseditor.remove("last_result_"+ this.id);
+        prefseditor.remove("last_run_"+ this.id);
+        prefseditor.remove("rs_addedon_"+ this.id);
+        prefseditor.remove("rs_adv_options_"+ this.id);
+        prefseditor.remove("rs_transport_type_"+ this.id);
+        prefseditor.remove("rs_ssh_private_key_path_"+ this.id);
+        prefseditor.remove("rs_ssh_remote_path_"+ this.id);
+        prefseditor.remove("rs_ssh_auth_type_"+ this.id);
+        prefseditor.remove("rs_ssh_password_"+ this.id);
         prefseditor.apply();
 
         SshSecretStore.removePassword(myRsyncApplication.appContext, this.id);
         secureDeleteSshTempFiles(myRsyncApplication.appContext, this.id);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) myRsyncApplication.appContext.deleteSharedPreferences("CMD_"+String.valueOf(id));
-        else (new File(myRsyncApplication.appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+String.valueOf(id)+".xml")).delete();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) myRsyncApplication.appContext.deleteSharedPreferences("CMD_"+ id);
+        else (new File(myRsyncApplication.appContext.getApplicationInfo().dataDir+"/shared_prefs/CMD_"+ id +".xml")).delete();
 
         Locale current_locale = AppLocales.of(myRsyncApplication.appContext);
         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm", current_locale);
@@ -216,13 +216,13 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                 @Override
                 public void run() {
                     try {
-                        SharedPreferences pref = context.getSharedPreferences("CMD_"+String.valueOf(id),Context.MODE_PRIVATE);
+                        SharedPreferences pref = context.getSharedPreferences("CMD_"+ id,Context.MODE_PRIVATE);
                         SharedPreferences.Editor pref_Edit= pref.edit();
                         SharedPreferences sched_prefs = context.getSharedPreferences("schedulers", Context.MODE_PRIVATE);
                         Locale current_locale = AppLocales.of(context);
                         SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd/MM HH:mm",current_locale);
 
-                        if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), true).commit();
+                        if (scheduler_id!=null) sched_prefs.edit().putBoolean("is_running_" + scheduler_id, true).commit();
 
 
                         pref_Edit.putBoolean("is_running",true);
@@ -432,7 +432,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                         }
 
                         if (scheduler_id != null) {
-                            sched_prefs.edit().putBoolean("is_running_"+String.valueOf(scheduler_id),false).commit();
+                            sched_prefs.edit().putBoolean("is_running_"+ scheduler_id,false).commit();
                         }
                         update_result(context, result, scheduler_id != null ? scheduler_id : -1);
                         try {
@@ -453,7 +453,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
                             debug_writer.close();
                             e.printStackTrace();
                             if (scheduler_id != null) {
-                                sched_prefs.edit().putBoolean("is_running_" + String.valueOf(scheduler_id), false).commit();
+                                sched_prefs.edit().putBoolean("is_running_" + scheduler_id, false).commit();
                             }
                             update_result(context, "Error", scheduler_id != null ? scheduler_id : -1);
                         }
@@ -512,7 +512,7 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         Calendar cal = Calendar.getInstance();
         long time = cal.getTimeInMillis();
 
-        SharedPreferences cmdpref = context.getSharedPreferences("CMD_"+String.valueOf(id),Context.MODE_PRIVATE);
+        SharedPreferences cmdpref = context.getSharedPreferences("CMD_"+ id,Context.MODE_PRIVATE);
         SharedPreferences.Editor cmd_pref_Edit= cmdpref.edit();
         SharedPreferences config_prefs =  context.getSharedPreferences("configs", Context.MODE_PRIVATE);
         SharedPreferences.Editor configs_prefseditor = config_prefs.edit();
@@ -524,12 +524,12 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
         cmd_pref_Edit.putBoolean("is_running",false);
         cmd_pref_Edit.commit();
 
-        configs_prefseditor.putString("last_result_"+String.valueOf(this.id),result);
+        configs_prefseditor.putString("last_result_"+ this.id,result);
         if (scheduler_id >= 0) {
-            sched_prefs.edit().putLong("last_run_"+String.valueOf(scheduler_id),time).commit();
+            sched_prefs.edit().putLong("last_run_"+ scheduler_id,time).commit();
             Scheduler.refreshInMemoryAlarmCache(scheduler_id);
         }
-        configs_prefseditor.putString("last_run_"+String.valueOf(id),formatter.format(time));
+        configs_prefseditor.putString("last_run_"+ id,formatter.format(time));
         configs_prefseditor.commit();
 
     }
