@@ -61,6 +61,10 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_REQUEST_CODE = 1;
     private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 101;
+    private static final int LOCAL_NETWORK_PERMISSION_REQUEST_CODE = 102;
+    /** Android 17. No VERSION_CODES constant for API 37 in this SDK. */
+    private static final int ANDROID_17_SDK = 37;
+    private static final String LOCAL_NETWORK_REQUESTED_KEY = "local_network_permission_requested";
     public static Context appContext;
     static File log_file;
     static File debug_log;
@@ -418,6 +422,47 @@ public class MainActivity extends AppCompatActivity {
                         new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST_CODE);
             }
         }
+
+        requestLocalNetworkPermission();
+    }
+
+    /**
+     * Android 17 blocks LAN sockets until this runtime permission is granted.
+     * Schedules and Tasker cannot show the dialog, so it is requested at startup.
+     */
+    private void requestLocalNetworkPermission() {
+        if (Build.VERSION.SDK_INT < ANDROID_17_SDK) {
+            return;
+        }
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_LOCAL_NETWORK)
+                == PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        boolean asked = getPreferences(MODE_PRIVATE).getBoolean(LOCAL_NETWORK_REQUESTED_KEY, false);
+        boolean permanentDenial = asked
+                && !ActivityCompat.shouldShowRequestPermissionRationale(
+                        this, android.Manifest.permission.ACCESS_LOCAL_NETWORK);
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.local_network_access_title)
+                .setMessage(permanentDenial
+                        ? R.string.local_network_access_settings_message
+                        : R.string.local_network_access_message)
+                .setPositiveButton(R.string.storage_access_continue, (dialog, which) -> {
+                    if (permanentDenial) {
+                        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        intent.setData(Uri.parse("package:" + getPackageName()));
+                        startActivity(intent);
+                        return;
+                    }
+                    getPreferences(MODE_PRIVATE).edit()
+                            .putBoolean(LOCAL_NETWORK_REQUESTED_KEY, true)
+                            .apply();
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{android.Manifest.permission.ACCESS_LOCAL_NETWORK},
+                            LOCAL_NETWORK_PERMISSION_REQUEST_CODE);
+                })
+                .setNegativeButton(R.string.storage_access_not_now, null)
+                .show();
     }
 
     @Override
