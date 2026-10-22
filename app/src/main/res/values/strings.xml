@@ -177,6 +177,9 @@
     <string name="storage_access_message">myRSync needs All files access so scheduled and manual rsync jobs can read and write the folders you configure. On the next screen, enable access for this app.</string>
     <string name="storage_access_continue">Continue</string>
     <string name="storage_access_not_now">Not now</string>
+    <string name="local_network_access_title">Allow local network access</string>
+    <string name="local_network_access_message">myRSync needs access to your local network so it can sync with a computer on your Wi-Fi, such as a NAS or home server. Without this, those connections time out. A public internet address does not need it. Scheduled and Tasker runs use the choice you make here.</string>
+    <string name="local_network_access_settings_message">Local network access is turned off for myRSync. Syncs to a computer on your Wi-Fi will time out until you allow Nearby devices for this app. On the next screen, open Permissions and allow it.</string>
 
     <string name="pro_upgrade_title">Unlock myRSync Pro</string>
     <string name="pro_upgrade_buy">Unlock Pro</string>
