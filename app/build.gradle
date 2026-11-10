@@ -108,4 +108,5 @@ dependencies {
     implementation 'com.google.android.material:material:1.14.0'
     implementation 'org.jetbrains:annotations:26.1.0'
     implementation 'com.android.billingclient:billing:9.1.0'
+    testImplementation 'junit:junit:4.13.2'
 }

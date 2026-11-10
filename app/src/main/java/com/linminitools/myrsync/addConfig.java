@@ -424,18 +424,17 @@ public class addConfig extends AppCompatActivity {
         if (advanced == null || advanced.isEmpty() || checkedFlags == null || checkedFlags.isEmpty()) {
             return advanced == null ? "" : advanced.trim();
         }
-        String[] tokens = advanced.trim().split("\\s+");
         ArrayList<String> kept = new ArrayList<>();
-        for (String token : tokens) {
-            if (token.isEmpty()) {
+        for (ShellWords.Word word : ShellWords.split(advanced.trim())) {
+            String filtered = filterAdvancedToken(word.text, checkedFlags);
+            if (filtered == null || filtered.isEmpty()) {
                 continue;
             }
-            String filtered = filterAdvancedToken(token, checkedFlags);
-            if (filtered != null && !filtered.isEmpty()) {
-                kept.add(filtered);
-            }
+            // Keep the typed quotes when the token itself did not change, so a later
+            // shell split still sees one argument for patterns that contain spaces.
+            kept.add(filtered.equals(word.text) ? word.raw : filtered);
         }
-        return TextUtils.join(" ", kept);
+        return String.join(" ", kept);
     }
 
     @Nullable

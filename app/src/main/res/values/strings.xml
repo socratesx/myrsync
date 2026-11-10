@@ -164,6 +164,7 @@
         You can add options manually by using this textbox. \n\n
         Any options string you add here will be added as it is and after any selected checkbox options.\n\n
         You are completely responsible for the correct syntax of the options string of the rsync command. \n\n
+        Quotes around a value,are accepted and are not sent to rsync. Use them when the pattern contains spaces.\n\n
         The app cannot validate that the options string is correct. Use the view command button to see the path/option preview.\n\n
         Flags that duplicate a checked option above (for example -n / --dry-run when -n is checked) are ignored.\n\n
         This is a potentially dangerous feature that may result in data loss. Take caution when using options that delete files.
