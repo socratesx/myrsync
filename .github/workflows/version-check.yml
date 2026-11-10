@@ -1,0 +1,27 @@
+name: Version bump
+
+# Every pull request into main ships to Play after merge, and Play rejects a
+# reused versionCode. Fail the check unless both version fields move forward.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: versionCode and versionName
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Fetch base branch
+        run: git fetch --no-tags origin "${{ github.base_ref }}"
+
+      - name: Require a version bump
+        run: |
+          git show "origin/${{ github.base_ref }}:app/build.gradle" > /tmp/base-build.gradle
+          python3 .github/scripts/app_version.py check app/build.gradle /tmp/base-build.gradle

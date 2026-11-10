@@ -1,0 +1,99 @@
+name: Release
+
+# After a version bump is merged to main: build the bundle, sign it, publish a
+# GitHub release with that bundle attached, then upload it to the Play beta track.
+#
+# Secrets live in the "release" environment, not the repository. That
+# environment only accepts the main branch and waits for an approval, so
+# pull requests (including forks) never see them.
+#   ANDROID_KEYSTORE_BASE64    base64 of the upload .jks
+#   ANDROID_KEYSTORE_PASSWORD  store password
+#   ANDROID_KEY_ALIAS          key alias
+#   ANDROID_KEY_PASSWORD       key password
+#   PLAY_SERVICE_ACCOUNT_JSON  Play Console service account key
+#
+# Third-party actions are pinned to commits because they receive those secrets.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: play-release
+  cancel-in-progress: false
+
+env:
+  PLAY_TRACK: beta
+
+jobs:
+  release:
+    name: GitHub release and Play upload
+    if: github.repository == 'socratesx/myrsync'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require a version bump
+        id: version
+        run: |
+          BEFORE="${{ github.event.before }}"
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            echo "::error::This branch has no previous commit to compare."
+            exit 1
+          fi
+          git show "${BEFORE}:app/build.gradle" > /tmp/base-build.gradle
+          python3 .github/scripts/app_version.py check app/build.gradle /tmp/base-build.gradle
+          python3 .github/scripts/app_version.py print app/build.gradle >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Build release bundle
+        run: ./gradlew :app:bundleRelease
+
+      # v1 of this action is still Node 12. This commit is the Node 24 update.
+      - name: Sign release bundle
+        id: sign
+        uses: r0adkll/sign-android-release@d5f8436b702872ad5cdb1e6e4d5c8b983d25a997
+        env:
+          BUILD_TOOLS_VERSION: "36.0.0"
+        with:
+          releaseDirectory: app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: v${{ steps.version.outputs.version_name }}
+          name: v${{ steps.version.outputs.version_name }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: ${{ steps.sign.outputs.signedReleaseFile }}
+
+      - name: Upload to Play Console
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.linminitools.myrsync
+          releaseFiles: ${{ steps.sign.outputs.signedReleaseFile }}
+          tracks: internal
+          status: completed
+          releaseName: ${{ steps.version.outputs.version_name }}
+          mappingFile: app/build/outputs/mapping/release/mapping.txt
