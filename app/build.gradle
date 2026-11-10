@@ -21,8 +21,8 @@ android {
         applicationId = "com.linminitools.myrsync"
         minSdk = 24
         targetSdk = 37
-        versionCode = 20
-        versionName = "1.0.3"
+        versionCode = 21
+        versionName = "1.0.4"
         // Keep in sync with the one-time product id created in Play Console.
         buildConfigField "String", "PRO_PRODUCT_ID", "\"myrsync_pro\""
     }
