@@ -48,7 +48,7 @@ jobs:
           cache: 'gradle'
 
       - name: Publish to Google Play
-        uses: deep-rent/publish-android-release@v2
+        uses: deep-rent/publish-android-release@v2.1.3
         with:
           project-directory: './app'
           package-name: 'com.linminitools.myrsync'
