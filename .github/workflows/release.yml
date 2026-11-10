@@ -52,7 +52,7 @@ jobs:
       - name: Publish to Google Play
         uses: deep-rent/publish-android-release@v2.1.3
         with:
-          project-directory: './app'
+          project-directory: '.'
           package-name: 'com.linminitools.myrsync'
           keystore: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -62,12 +62,12 @@ jobs:
           track: 'internal'
           status: 'completed'
 
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
-        with:
-          tag_name: v${{ steps.version.outputs.version_name }}
-          name: v${{ steps.version.outputs.version_name }}
-          target_commitish: ${{ github.sha }}
-          generate_release_notes: true
-          fail_on_unmatched_files: true
-          files: ${{ steps.sign.outputs.signedReleaseFile }}
+      # - name: Create GitHub release
+      #   uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+      #   with:
+      #     tag_name: v${{ steps.version.outputs.version_name }}
+      #     name: v${{ steps.version.outputs.version_name }}
+      #     target_commitish: ${{ github.sha }}
+      #     generate_release_notes: true
+      #     fail_on_unmatched_files: true
+      #     files: ${{ steps.sign.outputs.signedReleaseFile }}
