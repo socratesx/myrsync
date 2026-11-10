@@ -93,7 +93,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.linminitools.myrsync
           releaseFiles: ${{ steps.sign.outputs.signedReleaseFile }}
-          tracks: ${{ env.PLAY_TRACK }}
+          tracks: internal
           status: completed
           releaseName: ${{ steps.version.outputs.version_name }}
           mappingFile: app/build/outputs/mapping/release/mapping.txt
