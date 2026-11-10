@@ -358,8 +358,8 @@ public class RS_Configuration implements Comparable<RS_Configuration>{
 
                                 String cleanOptions = options.strip();
                                 if (!cleanOptions.isEmpty()) {
-                                    String[] splitOptions = cleanOptions.split("\\s+");
-                                    cmdList.addAll(Arrays.asList(splitOptions));
+                                    // ProcessBuilder has no shell. Quotes are removed here. Root mode keeps the typed string for su -c.
+                                    cmdList.addAll(ShellWords.arguments(cleanOptions));
                                 }
 
                                 if ("SSH".equals(rs_transport_type)) {
