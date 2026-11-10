@@ -39,6 +39,8 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Set up JDK
         uses: actions/setup-java@v5
